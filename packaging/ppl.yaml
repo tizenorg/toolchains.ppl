@@ -1,0 +1,88 @@
+Name: ppl
+Summary: "The Parma Polyhedra Library: a library of numerical abstractions"
+Version: 0.10.2
+Release: 10
+Group: Development/Libraries
+License: GPLv3+
+URL: http://www.cs.unipr.it/ppl/
+Sources:
+    - ftp://ftp.cs.unipr.it/pub/ppl/releases/%{version}/%{name}-%{version}.tar.bz2
+    - ppl.hh
+    - ppl_c.h
+    - pwl.hh
+Patches:
+    - ppl-0.10.2-Makefile.patch
+    - ppl-missing-macro.patch
+Description: |
+    The Parma Polyhedra Library (PPL) is a library for the manipulation of
+    (not necessarily closed) convex polyhedra and other numerical
+    abstractions.  The applications of convex polyhedra include program
+    analysis, optimized compilation, integer and combinatorial
+    optimization and statistical data-editing.  The Parma Polyhedra
+    Library comes with several user friendly interfaces, is fully dynamic
+    (available virtual memory is the only limitation to the dimension of
+    anything), written in accordance to all the applicable standards,
+    exception-safe, rather efficient, thoroughly documented, and free
+    software.  This package provides all what is necessary to run
+    applications using the PPL through its C and C++ interfaces.
+
+RequiresPost:
+    - /sbin/ldconfig
+RequiresPostUn:
+    - /sbin/ldconfig
+
+PkgBR:
+    - gmp-devel >= 4.1.3
+    - m4 >= 1.4.8
+Configure: none
+Builder: none
+SubPackages:
+    - Name: pwl-devel
+      Summary: Development tools for the Parma Watchdog Library
+      Group: Development/Libraries
+      Description: |
+          -devel
+          The header files, documentation and static libraries for developing
+          applications using the Parma Watchdog Library.
+      Requires:
+          - "%{name}-pwl = %{version}-%{release}"
+
+    - Name: pwl-static
+      Summary: Static archive for the Parma Watchdog Library
+      Group: Development/Libraries
+      Description: |
+          -static
+          This package contains the static archive for the Parma Watchdog Library.
+      Requires:
+          - "%{name}-pwl-devel = %{version}-%{release}"
+
+    - Name: devel
+      Summary: Development tools for the Parma Polyhedra Library C and C++ interfaces
+      Group: Development/Libraries
+      Description: |
+          The header files, Autoconf macro and minimal documentation for
+          developing applications using the Parma Polyhedra Library through
+          its C and C++ interfaces.
+      Requires:
+          - "%{name} = %{version}-%{release}, gmp-devel >= 4.1.3"
+
+    - Name: static
+      Summary: Static archives for the Parma Polyhedra Library C and C++ interfaces
+      Group: Development/Libraries
+      Description: The static archives for the Parma Polyhedra Library C and C++ interfaces.
+      Requires:
+          - "%{name}-devel = %{version}-%{release}"
+
+    - Name: pwl
+      Summary: "The Parma Watchdog Library: a C++ library for watchdog timers"
+      Group: Development/Libraries
+      Description: |
+          The Parma Watchdog Library (PWL) provides support for multiple,
+          concurrent watchdog timers on systems providing setitimer(2).  This
+          package provides all what is necessary to run applications using the
+          PWL.  The PWL is currently distributed with the Parma Polyhedra
+          Library, but is totally independent from it.
+      RequiresPost:
+          - /sbin/ldconfig
+      RequiresPostUn:
+          - /sbin/ldconfig
