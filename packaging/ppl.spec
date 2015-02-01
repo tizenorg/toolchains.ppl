@@ -22,7 +22,6 @@ Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  gmp-devel >= 4.1.3
 BuildRequires:  m4 >= 1.4.8
-BuildRequires:  ppl-pwl
 
 %description
 The Parma Polyhedra Library (PPL) is a library for the manipulation of
@@ -139,8 +138,12 @@ rm -f %{buildroot}%{_libdir}/*.la %{buildroot}%{_libdir}/%{name}/*.la
 
 %ifarch %{arm}
 normalized_arch=arm
-%else
+%endif
+%ifarch %{ix86}
 normalized_arch=i386
+%endif
+%ifarch x86_64
+normalized_arch=x86_64
 %endif
 
 mv %{buildroot}/%{_includedir}/ppl.hh %{buildroot}/%{_includedir}/ppl-${normalized_arch}.hh
