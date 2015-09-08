@@ -1,5 +1,6 @@
 %% LaTeX package providing macros for typesetting the PPL manuals.
-%% Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+%% Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+%% Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 %%
 %% This file is part of the Parma Polyhedra Library (PPL).
 %%
@@ -24,6 +25,7 @@
 \ProvidesPackage{ppl}
 \RequirePackage{amsmath}
 \RequirePackage{amssymb}
+\RequirePackage{stmaryrd}
 
 %% Calligraphic alphabet
 \newcommand*{\cA}{\ensuremath{\mathcal{A}}}
@@ -135,6 +137,9 @@
 \newcommand*{\relsym}{\mathrel{\bowtie}}
 \newcommand*{\relsyms}[1]{\mathrel{\bowtie_{#1}}}
 
+% Absolute value.
+\newcommand*{\abs}[1]{\lvert #1 \rvert}
+
 % Vectors.
 \renewcommand*{\vec}[1]{\mathchoice{\mbox{\boldmath$\displaystyle#1$}}
 {\mbox{\boldmath$\textstyle#1$}}
@@ -176,3 +181,20 @@
 \newcommand*{\entailsP}{\entailss{\smallP}}
 \newcommand*{\NentailsP}{\Nentailss{\smallP}}
 \newcommand*{\sentailsP}{\sentailss{\smallP}}
+
+
+% Interval floating point arithmetics
+
+\newcommand*{\asifp}{\oplus^{\#}}
+\newcommand*{\adifp}{\ominus^{\#}}
+\newcommand*{\adivifp}{\oslash^{\#}}
+\newcommand*{\amifp}{\otimes^{\#}}
+
+% Linear form arithmetics
+
+\newcommand*{\aslf}{\boxplus^{\#}}
+\newcommand*{\adlf}{\boxminus^{\#}}
+\newcommand*{\adivlf}{\boxslash^{\#}}
+\newcommand*{\amlf}{\boxtimes^{\#}}
+\newcommand*{\linexpr}[1]{\llparenthesis #1 \rrparenthesis}
+\newcommand*{\linexprenv}[3]{\llparenthesis #1 \rrparenthesis \left \llbracket #2, #3 \right \rrbracket}

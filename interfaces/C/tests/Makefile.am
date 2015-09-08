@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -20,8 +21,18 @@
 # For the most up-to-date information see the Parma Polyhedra Library
 # site: http://www.cs.unipr.it/ppl/ .
 
+if VALGRIND_TESTS_ENABLED
+
+CHECKER = \
+$(VALGRIND) --tool=memcheck -q --trace-children=yes --leak-check=yes \
+--num-callers=40 --leak-resolution=high \
+--suppressions=$(top_srcdir)/tests/valgrind_suppressions
+
+else !VALGRIND_TESTS_ENABLED
+
 CHECKER =
-#CHECKER = valgrind --tool=memcheck -q --trace-children=yes --leak-check=yes --num-callers=100 --leak-resolution=high --suppressions=$(top_srcdir)/tests/valgrind_suppressions
+
+endif !VALGRIND_TESTS_ENABLED
 
 TESTS_ENVIRONMENT = $(CHECKER)
 
@@ -64,7 +75,8 @@ $(top_builddir)/interfaces/C/libppl_c.la \
 @extra_libraries@
 
 NORMAL_TESTS = \
-formatted_output
+formatted_output \
+pip_test
 
 #
 # Sources for the tests
@@ -80,25 +92,54 @@ print_to_buffer.c
 nodist_EXTRA_formatted_output_SOURCES = \
 dummy.cc
 
-#watchdog1_SRCS = watchdog1.cc
+pip_test_SOURCES = \
+pip_test.c
+
+# Dummy C++ source to cause C++ linking.
+# FIXME: why isn't enough to do this for libppl_c_tests.a?
+nodist_EXTRA_pip_test_SOURCES = \
+dummy.cc
+
+watchdog1_SRCS = watchdog1.c
+
+weightwatch1_SRCS = weightwatch1.c
 
 noinst_HEADERS = \
 ppl_c_test.h
 
 if BUILD_WATCHDOG_LIBRARY
-WATCHDOG_TESTS =
-# watchdog1
 
-# watchdog1_SOURCES = $(watchdog1_SRCS)
+WATCHDOG_TESTS = \
+watchdog1 \
+weightwatch1
 
-# watchdog1_CPPFLAGS = \
-# $(AM_CPPFLAGS) \
-# -I$(top_builddir)/Watchdog \
-# -I$(top_builddir)/Watchdog/src
+WATCHDOG_LIBRARY_CPPFLAGS = \
+$(AM_CPPFLAGS) \
+-I$(top_builddir)/Watchdog \
+-I$(top_builddir)/Watchdog/src
 
-# watchdog1_LDADD = \
-# $(LDADD) \
-# $(top_builddir)/Watchdog/src/libpwl.la
+WATCHDOG_LIBRARY_LDADD = \
+$(LDADD) \
+$(top_builddir)/Watchdog/src/libpwl.la
+
+watchdog1_SOURCES = $(watchdog1_SRCS)
+watchdog1_CPPFLAGS = $(WATCHDOG_LIBRARY_CPPFLAGS)
+watchdog1_LDADD = $(WATCHDOG_LIBRARY_LDADD)
+
+# Dummy C++ source to cause C++ linking.
+# FIXME: why isn't enough to do this for libppl_c_tests.a?
+nodist_EXTRA_watchdog1_SOURCES = \
+dummy.cc
+
+
+weightwatch1_SOURCES = $(weightwatch1_SRCS)
+weightwatch1_CPPFLAGS = $(WATCHDOG_LIBRARY_CPPFLAGS)
+weightwatch1_LDADD = $(WATCHDOG_LIBRARY_LDADD)
+
+# Dummy C++ source to cause C++ linking.
+# FIXME: why isn't enough to do this for libppl_c_tests.a?
+nodist_EXTRA_weightwatch1_SOURCES = \
+dummy.cc
 
 endif BUILD_WATCHDOG_LIBRARY
 

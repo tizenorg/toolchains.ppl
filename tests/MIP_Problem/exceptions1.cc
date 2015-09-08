@@ -1,5 +1,6 @@
 /* Test that the right exceptions are thrown in case of incorrect uses.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -485,8 +486,6 @@ test19() {
 } // namespace
 
 BEGIN_MAIN
-#ifndef __alpha__
-  // Exception handling is broken in GCC on the Alpha.
   DO_TEST(test01);
   DO_TEST(test02);
   DO_TEST(test03);
@@ -506,5 +505,4 @@ BEGIN_MAIN
   DO_TEST(test17);
   DO_TEST(test18);
   DO_TEST(test19);
-#endif
 END_MAIN

@@ -1,5 +1,6 @@
 /* Matrix class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -71,7 +72,7 @@ public:
   Matrix(dimension_type n_rows, dimension_type n_columns,
 	 Row::Flags row_flags = Row::Flags());
 
-  //! Copy-constructor.
+  //! Copy constructor.
   Matrix(const Matrix& y);
 
   //! Destructor.
@@ -109,7 +110,7 @@ public:
     */
     explicit const_iterator(const Iter& b);
 
-    //! Ordinary copy-constructor.
+    //! Ordinary copy constructor.
     const_iterator(const const_iterator& y);
 
     //! Assignment operator.
@@ -138,7 +139,8 @@ public:
       \p *this and \p y are different.
     */
     bool operator!=(const const_iterator& y) const;
-  };
+  }; // class const_iterator
+
 
   //! Returns <CODE>true</CODE> if and only if \p *this has no rows.
   /*!
@@ -227,7 +229,7 @@ public:
 
     Turns the \f$r \times c\f$ matrix \f$M\f$ into
     the \f$(r+1) \times c\f$ matrix
-    \f$\genfrac{(}{)}{0pt}{}{M}{0}\f$.
+    \f$\genfrac{(}{)}{0pt}{}{M}{y}\f$.
     The matrix is expanded avoiding reallocation whenever possible.
   */
   void add_row(const Row& y);
@@ -235,12 +237,13 @@ public:
   //! Adds the row \p y to the matrix.
   /*!
     \param y
-    The row to be added: it must have the same size and capacity as \p
-    *this.
+    The row to be added: it must have the same size and capacity as
+    \p *this. It is not declared <CODE>const</CODE> because its
+    data-structures will recycled to build the new matrix row.
 
     Turns the \f$r \times c\f$ matrix \f$M\f$ into
     the \f$(r+1) \times c\f$ matrix
-    \f$\genfrac{(}{)}{0pt}{}{M}{0}\f$.
+    \f$\genfrac{(}{)}{0pt}{}{M}{y}\f$.
     The matrix is expanded avoiding reallocation whenever possible.
   */
   void add_recycled_row(Row& y);
@@ -277,13 +280,17 @@ public:
 
     The \p cycles vector contains, one after the other, the
     non-trivial cycles (i.e., the cycles of length greater than one)
-    of a permutation of non-zero column indexes.  Each cycle is
-    terminated by zero.  For example, assuming the matrix has 6
+    of a permutation of \e non-zero column indexes.  Each cycle is
+    terminated by zero.  For example, assuming the matrix has 7
     columns, the permutation \f$ \{ 1 \mapsto 3, 2 \mapsto 4,
     3 \mapsto 6, 4 \mapsto 2, 5 \mapsto 5, 6 \mapsto 1 \}\f$ can be
     represented by the non-trivial cycles \f$(1 3 6)(2 4)\f$ that, in
     turn can be represented by a vector of 6 elements containing 1, 3,
     6, 0, 2, 4, 0.
+
+    \note
+    The first column of the matrix, having index zero, is never involved
+    in a permutation.
   */
   void permute_columns(const std::vector<dimension_type>& cycles);
 

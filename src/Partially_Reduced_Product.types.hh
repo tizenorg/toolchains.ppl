@@ -1,4 +1,5 @@
-/* Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+/* Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is free software; as a special exception the author gives
 unlimited permission to copy and/or distribute it, with or without
@@ -19,6 +20,12 @@ class Smash_Reduction;
 
 template <typename D1, typename D2>
 class Constraints_Reduction;
+
+template <typename D1, typename D2>
+class Congruences_Reduction;
+
+template <typename D1, typename D2>
+class Shape_Preserving_Reduction;
 
 template <typename D1, typename D2>
 class No_Reduction;

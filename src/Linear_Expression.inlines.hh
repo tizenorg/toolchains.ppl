@@ -1,5 +1,6 @@
 /* Linear_Expression class implementation: inline functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -82,9 +83,19 @@ Linear_Expression::inhomogeneous_term() const {
   return Linear_Row::inhomogeneous_term();
 }
 
+inline bool
+Linear_Expression::is_zero() const {
+  return Linear_Row::is_zero();
+}
+
+inline bool
+Linear_Expression::all_homogeneous_terms_are_zero() const {
+  return Linear_Row::all_homogeneous_terms_are_zero();
+}
+
 inline const Linear_Expression&
 Linear_Expression::zero() {
-  assert(zero_p != 0);
+  PPL_ASSERT(zero_p != 0);
   return *zero_p;
 }
 

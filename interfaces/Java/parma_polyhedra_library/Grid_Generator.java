@@ -1,5 +1,6 @@
 /* Grid Generator Java class declaration and implementation.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -20,12 +21,11 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02111-1307, USA.
 For the most up-to-date information see the Parma Polyhedra Library
 site: http://www.cs.unipr.it/ppl/ . */
 
-
 package parma_polyhedra_library;
-
 
 import java.io.Writer;
 import java.io.IOException;
+import javax.management.RuntimeErrorException;
 
 //! A grid line, parameter or grid point.
 /*! \ingroup PPL_Java_interface
@@ -36,6 +36,9 @@ import java.io.IOException;
 */
 public class Grid_Generator {
 
+    //! The grid generator type.
+    private Grid_Generator_Type gt;
+
     //! The linear expression.
     private Linear_Expression le;
 
@@ -43,15 +46,12 @@ public class Grid_Generator {
       The coefficient used if the grid generator is a
       parameter or a grid point a parameter.
     */
-    private Coefficient coeff;
+    private Coefficient div;
 
-    //! The grid generator type.
-    private Grid_Generator_Type gt;
-
-    private Grid_Generator(Linear_Expression e, Coefficient c,
+    private Grid_Generator(Linear_Expression e, Coefficient d,
 			   Grid_Generator_Type generator_type) {
 	le = e.clone();
-	coeff = new Coefficient(c);
+	div = new Coefficient(d);
 	gt = generator_type;
     }
 
@@ -66,30 +66,49 @@ public class Grid_Generator {
 				  Grid_Generator_Type.LINE);
     }
 
-    //! Returns the parameter of direction \p e and size \p e/d.
+    //! Returns the parameter at \p e / \p d.
     /*!
-      Both \p e and \p d are optional arguments, with default values
-      Linear_Expression::zero() and Coefficient_one(), respectively.
-
       \exception RuntimeErrorException
       Thrown if \p d is zero.
     */
     public static Grid_Generator parameter(Linear_Expression e,
-					   Coefficient c) {
-	return new Grid_Generator(e, c, Grid_Generator_Type.PARAMETER);
+					   Coefficient d) {
+	return new Grid_Generator(e, d, Grid_Generator_Type.PARAMETER);
     }
 
     //! Returns the point at \p e / \p d.
     /*!
-      Both \p e and \p d are optional arguments, with default values
-      Linear_Expression::zero() and Coefficient_one(), respectively.
-
       \exception RuntimeErrorException
       Thrown if \p d is zero.
     */
     public static Grid_Generator grid_point(Linear_Expression e,
-					    Coefficient c) {
-	return new Grid_Generator(e, c, Grid_Generator_Type.POINT);
+					    Coefficient d) {
+	return new Grid_Generator(e, d, Grid_Generator_Type.POINT);
+    }
+
+    //! Returns the generator type.
+    public Grid_Generator_Type type() {
+        return gt;
+    }
+
+    //! Returns the linear expression in \p this.
+    public Linear_Expression linear_expression() {
+        return le;
+    }
+
+    //! If \p this is either a grid point or a parameter, returns its divisor.
+    /*!
+      \exception RuntimeErrorException
+      Thrown if \p this is a line.
+    */
+    public Coefficient divisor() {
+        if (this.gt != Grid_Generator_Type.LINE)
+	    return div;
+	Error cause = new Error("parma_polyhedra_library."
+                                + "Grid_Generator::divisor:\n"
+				+ "this is neither a grid point"
+				+ " nor a parameter.");
+	throw new RuntimeErrorException(cause);
     }
 
     //! Returns an ascii formatted internal representation of \p this.
@@ -97,5 +116,10 @@ public class Grid_Generator {
 
     //! Returns a string representation of \p this.
     public native String toString();
+
+    private static native void initIDs();
+    static {
+        initIDs();
+    }
 }
 

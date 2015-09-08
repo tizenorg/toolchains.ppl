@@ -2,7 +2,8 @@ m4_divert(-1)
 
 dnl This m4 file contains the program code for generating Prolog_interface.dox
 
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -943,6 +944,27 @@ m4_define(`ppl_@CLASS@_unconstrain_space_dimensions_trans_doc',
   the space dimensions that are specified in \c List_of_PPL_Var.
   The presence of duplicates in \c List_of_PPL_Var is a waste
   but an innocuous one.</EM>
+
+')
+
+m4_define(`ppl_@CLASS@_wrap_assign_trans_doc',
+`dnl
+<P><CODE>ppl_@CLASS@_wrap_assign(+Handle, +List_of_PPL_Var, +Width, +Representation, +Overflow, +Constraint_System, +C_unsigned, +Boolean)</CODE><BR>
+  <EM>Transforms the m4_this_ppl_one_object \p P referenced by
+    <CODE>Handle</CODE> by wrapping the dimensions given by
+    <CODE>List_of_PPL_Vars</CODE> while respecting the specified
+    <CODE>Width</CODE>|COMMA| <CODE>Representation</CODE> and
+    <CODE>Overflow</CODE> behavior of all these variables. The
+    <CODE>Constraint_System</CODE> represents the conditional or
+    looping construct guard with respect to which wrapping is
+    performed.  The non-negative integer <CODE>C_unsigned</CODE> and
+    <CODE>Boolean</CODE> allow control of the complexity/precision
+    ratio; higher values for <CODE>C_unsigned</CODE> will lead to
+    possibly greater precision while a true value for
+    <CODE>Boolean</CODE> indicates that the space dimensions should be
+    wrapped individually.  See Section \extref{Wrapping_Operator|COMMA|
+    Wrapping Operator} for a more detailed description of this
+    operator.</EM>
 
 ')
 

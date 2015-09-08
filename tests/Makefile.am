@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -22,6 +23,7 @@
 
 SUBDIRS = \
 . \
+PIP_Problem \
 Powerset \
 Partially_Reduced_Product \
 Box \
@@ -39,8 +41,7 @@ check_LIBRARIES = libppl_tests.a
 libppl_tests_a_SOURCES = \
 files.hh \
 files.cc \
-ppl_test.cc \
-Partial_Function.cc
+ppl_test.cc
 
 LDADD = \
 $(top_builddir)/src/libppl.la \
@@ -49,9 +50,6 @@ libppl_tests.a \
 
 noinst_HEADERS = \
 ppl_test.hh \
-Partial_Function.defs.hh \
-Partial_Function.inlines.hh \
-Partial_Function.types.hh \
 Random_Number_Generator.defs.hh \
 Random_Number_Generator.inlines.hh \
 Random_Number_Generator.types.hh

@@ -1,6 +1,7 @@
 /* Parma_Polyhedra_Library Java test class of the
    Parma Polyhedra Library Java interface.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -32,15 +33,15 @@ static {
     try {
         System.loadLibrary("ppl_java");
     }
-
-   catch (UnsatisfiedLinkError  e) {
-       System.out.println("Unable to load the library");
-       System.exit(-1);
-   }
+    catch (UnsatisfiedLinkError  e) {
+        System.out.println("Unable to load the library");
+        System.out.println(e.getMessage());
+        System.exit(-1);
+    }
 }
 
     // This code tests the Parma_Polyhedra_Library methods.
-    public static Boolean test01() {
+    public static boolean test01() {
 
     PPL_Test.print_if_noisy("Version Major: ");
     PPL_Test.println_if_noisy(Parma_Polyhedra_Library.version_major());
@@ -56,14 +57,18 @@ static {
     PPL_Test.println_if_vnoisy(Parma_Polyhedra_Library.banner());
     Parma_Polyhedra_Library.set_rounding_for_PPL();
     Parma_Polyhedra_Library.restore_pre_PPL_rounding();
+    PPL_Test.print_if_noisy("Irrational precision: ");
+    PPL_Test.println_if_noisy(Parma_Polyhedra_Library.irrational_precision());
 
     return true;
     }
 
 
     public static void main(String[] args) {
+        Parma_Polyhedra_Library.initialize_library();
 	boolean test_result_ok =
 	    Test_Executor.executeTests(Parma_Polyhedra_Library_test1.class);
+        Parma_Polyhedra_Library.finalize_library();
 	if (!test_result_ok)
 	    System.exit(1);
 	System.exit(0);

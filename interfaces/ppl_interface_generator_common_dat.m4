@@ -5,7 +5,8 @@ dnl - processing the class list in ppl_interface_instantiations.m4;
 dnl - the control of the procedures to be generated for each class;
 dnl - the replacements for the patterns in the code files.
 
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -480,7 +481,8 @@ m4_define(`m4_box_group',
    Uint8_Box, Uint16_Box, Uint32_Box, Uint64_Box')
 m4_define(`m4_pointset_powerset_group', Pointset_Powerset)
 m4_define(`m4_product_group',
-  `Direct_Product, Smash_Product, Constraints_Product')
+  `Direct_Product, Smash_Product, Constraints_Product,
+   Shape_Preserving_Product')
 
 dnl =====================================================================
 dnl ===== The next set of macros define the replacements            =====
@@ -511,7 +513,6 @@ maxmin,
 comparison,
 refine_represent,
 binop,
-binminop,
 ub_exact,
 affimage,
 embedproject,
@@ -531,7 +532,8 @@ point,
 constrainer,
 disjunct,
 disjunct_topology,
-disjunct_extrapolation')
+disjunct_extrapolation,
+termination_id')
 
 dnl ---------------------------------------------------------------------
 dnl Define the replacement macros for all patterns
@@ -962,12 +964,6 @@ m4_define(`m4_binop_replacements',
 m4_define(`m4_Polyhedron_binop_replacements',
          `m4_binop_replacements, poly_hull_assign, poly_difference_assign')
 
-dnl  The different kinds of "and_minimize" binary operators.
-m4_define(`m4_binminop_replacements', `')
-m4_define(`m4_Polyhedron_binminop_replacements',
-         `intersection_assign_and_minimize,
-          poly_hull_assign_and_minimize')
-
 dnl  The different kinds of "upper_bound_if_exact" binary operators.
 m4_define(`m4_ub_exact_replacements', `upper_bound_assign_if_exact')
 m4_define(`m4_Polyhedron_ub_exact_replacements',
@@ -991,3 +987,10 @@ m4_define(`m4_membytes_replacements',
    `external_memory_in_bytes, total_memory_in_bytes')
 m4_define(`m4_Pointset_Powerset_membytes_replacements',
    `m4_membytes_replacements, size')
+
+dnl  The termination algorithms are either sourced from MS or PR.
+m4_define(`m4_termination_id_replacements', `MS, PR')
+
+dnl If sourced from MS, the last argument is C_Polyhedron,
+dnl If sourced from PR, the last argument is NNC_Polyhedron.
+m4_define(`m4_a_termination_id_replacements', `C_, NNC_')

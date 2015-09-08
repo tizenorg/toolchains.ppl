@@ -1,5 +1,6 @@
 /* BD_Shape class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -43,6 +44,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "DB_Matrix.defs.hh"
 #include "DB_Row.defs.hh"
 #include "Checked_Number.defs.hh"
+#include "WRD_coefficient_types.defs.hh"
 #include "Bit_Matrix.defs.hh"
 #include <cstddef>
 #include <iosfwd>
@@ -404,7 +406,11 @@ private:
     The (extended) numeric type of the inhomogeneous term of
     the inequalities defining a BDS.
   */
-  typedef Checked_Number<T, Extended_Number_Policy> N;
+#ifndef NDEBUG
+  typedef Checked_Number<T, Debug_WRD_Extended_Number_Policy> N;
+#else
+  typedef Checked_Number<T, WRD_Extended_Number_Policy> N;
+#endif
 
 public:
   //! The numeric base type upon which bounded differences are built.
@@ -443,7 +449,7 @@ public:
   explicit BD_Shape(dimension_type num_dimensions = 0,
                     Degenerate_Element kind = UNIVERSE);
 
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   /*!
     The complexity argument is ignored.
   */
@@ -463,10 +469,7 @@ public:
     The BDS inherits the space dimension of \p cs.
 
     \param cs
-    A system of constraints: constraints that are not
-    \ref Bounded_Difference_Shapes "bounded differences"
-    are ignored (even though they may have contributed
-    to the space dimension).
+    A system of BD constraints.
 
     \exception std::invalid_argument
     Thrown if \p cs contains a constraint which is not optimally supported
@@ -479,7 +482,11 @@ public:
     The BDS inherits the space dimension of \p cgs
 
     \param cgs
-    A system of congruences: some elements may be safely ignored.
+    A system of congruences.
+
+    \exception std::invalid_argument
+    Thrown if \p cgs contains congruences which are not optimally
+    supported by the BD shape domain.
   */
   explicit BD_Shape(const Congruence_System& cgs);
 
@@ -743,6 +750,38 @@ public:
                 Coefficient& inf_n, Coefficient& inf_d, bool& minimum,
                 Generator& g) const;
 
+  /*! \brief
+    Returns <CODE>true</CODE> if and only if there exist a
+    unique value \p val such that \p *this
+    saturates the equality <CODE>expr = val</CODE>.
+
+    \param expr
+    The linear expression for which the frequency is needed;
+
+    \param freq_n
+    If <CODE>true</CODE> is returned, the value is set to \f$0\f$;
+    Present for interface compatibility with class Grid, where
+    the \ref Grid_Frequency "frequency" can have a non-zero value;
+
+    \param freq_d
+    If <CODE>true</CODE> is returned, the value is set to \f$1\f$;
+
+    \param val_n
+    The numerator of \p val;
+
+    \param val_d
+    The denominator of \p val;
+
+    \exception std::invalid_argument
+    Thrown if \p expr and \p *this are dimension-incompatible.
+
+    If <CODE>false</CODE> is returned, then \p freq_n, \p freq_d,
+    \p val_n and \p val_d are left untouched.
+  */
+  bool frequency(const Linear_Expression& expr,
+                 Coefficient& freq_n, Coefficient& freq_d,
+                 Coefficient& val_n, Coefficient& val_d) const;
+
   //! Returns <CODE>true</CODE> if and only if \p *this contains \p y.
   /*!
     \exception std::invalid_argument
@@ -835,34 +874,13 @@ public:
     defining \p *this.
 
     \param c
-    The constraint to be added. If it is not a bounded difference, it
-    will be simply ignored.
+    The constraint to be added.
 
     \exception std::invalid_argument
     Thrown if \p *this and constraint \p c are dimension-incompatible,
     or \p c is not optimally supported by the BD shape domain.
   */
   void add_constraint(const Constraint& c);
-
-  /*! \brief
-    Adds a copy of constraint \p c to the system of bounded differences
-    defining \p *this.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \param c
-    The constraint to be added. If it is not a bounded difference, it
-    will be simply ignored.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and constraint \p c are dimension-incompatible,
-    or \p c is not optimally supported by the BD shape domain.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_constraint_and_minimize(const Constraint& c);
 
   /*! \brief
     Adds a copy of congruence \p cg to the system of congruences of \p *this.
@@ -877,31 +895,11 @@ public:
   void add_congruence(const Congruence& cg);
 
   /*! \brief
-    Adds a copy of congruence \p cg to the system of congruences
-    of \p *this, minimizing the result
-
-    \param cg
-    The congruence to be added.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and congruence \p cg are dimension-incompatible,
-    or \p cg is not optimally supported by the BD shape domain.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_congruence_and_minimize(const Congruence& cg);
-
-  /*! \brief
     Adds the constraints in \p cs to the system of bounded differences
     defining \p *this.
 
     \param  cs
-    The constraints that will be added. Constraints that are not bounded
-    differences will be simply ignored.
+    The constraints that will be added.
 
     \exception std::invalid_argument
     Thrown if \p *this and \p cs are dimension-incompatible,
@@ -930,51 +928,6 @@ public:
   void add_recycled_constraints(Constraint_System& cs);
 
   /*! \brief
-    Adds the constraints in \p cs to the system of bounded differences
-    defining \p *this.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \param  cs
-    The constraints that will be added.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p cs are dimension-incompatible,
-    or \p cs contains a constraint which is not optimally supported
-    by the BD shape domain.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_constraints_and_minimize(const Constraint_System& cs);
-
-  /*! \brief
-    Adds the constraints in \p cs to the system of constraints
-    of \p *this, minimizing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \param cs
-    The constraint system to be added to \p *this.  The constraints in
-    \p cs may be recycled.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p cs are dimension-incompatible,
-    or \p cs contains a constraint which is not optimally supported
-    by the BD shape domain.
-
-    \warning
-    The only assumption that can be made on \p cs upon successful or
-    exceptional return is that it can be safely destroyed.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_recycled_constraints_and_minimize(Constraint_System& cs);
-
-  /*! \brief
     Adds to \p *this constraints equivalent to the congruences in \p cgs.
 
     \param cgs
@@ -987,16 +940,6 @@ public:
     by the BD shape domain.
   */
   void add_congruences(const Congruence_System& cgs);
-
-  /*! \brief
-    Behaves as add_congruences(const Congruence_System&),
-    but minimizes the resulting BD shape, returning \c false
-    if and only if the result is empty.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_congruences_and_minimize(const Congruence_System& cgs);
 
   /*! \brief
     Adds to \p *this constraints equivalent to the congruences in \p cgs.
@@ -1015,16 +958,6 @@ public:
     exceptional return is that it can be safely destroyed.
   */
   void add_recycled_congruences(Congruence_System& cgs);
-
-  /*! \brief
-    Behaves as \c add_recycled_congruences, but minimizes the
-    resulting BD shape, returning \c false if and only if
-    the result is empty.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_recycled_congruences_and_minimize(Congruence_System& cgs);
 
   /*! \brief
     Uses a copy of constraint \p c to refine the system of bounded differences
@@ -1091,17 +1024,17 @@ public:
 
   /*! \brief
     Computes the \ref Cylindrification "cylindrification" of \p *this with
-    respect to the set of space dimensions \p to_be_unconstrained,
+    respect to the set of space dimensions \p vars,
     assigning the result to \p *this.
 
-    \param to_be_unconstrained
+    \param vars
     The set of space dimension that will be unconstrained.
 
     \exception std::invalid_argument
     Thrown if \p *this is dimension-incompatible with one of the
-    Variable objects contained in \p to_be_removed.
+    Variable objects contained in \p vars.
   */
-  void unconstrain(const Variables_Set& to_be_unconstrained);
+  void unconstrain(const Variables_Set& vars);
 
   //! Assigns to \p *this the intersection of \p *this and \p y.
   /*!
@@ -1109,19 +1042,6 @@ public:
     Thrown if \p *this and \p y are dimension-incompatible.
   */
   void intersection_assign(const BD_Shape& y);
-
-  //! Assigns to \p *this the intersection of \p *this and \p y.
-  /*!
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p y are dimension-incompatible.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool intersection_assign_and_minimize(const BD_Shape& y);
 
   /*! \brief
     Assigns to \p *this the smallest BDS containing the union
@@ -1133,21 +1053,6 @@ public:
   void upper_bound_assign(const BD_Shape& y);
 
   /*! \brief
-    Assigns to \p *this the smallest BDS containing the convex union
-    of \p *this and \p y.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p y are dimension-incompatible.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool upper_bound_assign_and_minimize(const BD_Shape& y);
-
-  /*! \brief
     If the upper bound of \p *this and \p y is exact, it is assigned
     to \p *this and <CODE>true</CODE> is returned,
     otherwise <CODE>false</CODE> is returned.
@@ -1156,6 +1061,22 @@ public:
     Thrown if \p *this and \p y are dimension-incompatible.
   */
   bool upper_bound_assign_if_exact(const BD_Shape& y);
+
+  /*! \brief
+    If the \e integer upper bound of \p *this and \p y is exact,
+    it is assigned to \p *this and <CODE>true</CODE> is returned;
+    otherwise <CODE>false</CODE> is returned.
+
+    \exception std::invalid_argument
+    Thrown if \p *this and \p y are dimension-incompatible.
+
+    \note
+    The integer upper bound of two rational BDS is the smallest rational
+    BDS containing all the integral points of the two arguments.
+    This method requires that the coefficient type parameter \c T is
+    an integral type.
+  */
+  bool integer_upper_bound_assign_if_exact(const BD_Shape& y);
 
   /*! \brief
     Assigns to \p *this the smallest BD shape containing
@@ -1403,6 +1324,93 @@ public:
   */
   void time_elapse_assign(const BD_Shape& y);
 
+  /*! \brief
+    \ref Wrapping_Operator "Wraps" the specified dimensions of the
+    vector space.
+
+    \param vars
+    The set of Variable objects corresponding to the space dimensions
+    to be wrapped.
+
+    \param w
+    The width of the bounded integer type corresponding to
+    all the dimensions to be wrapped.
+
+    \param r
+    The representation of the bounded integer type corresponding to
+    all the dimensions to be wrapped.
+
+    \param o
+    The overflow behavior of the bounded integer type corresponding to
+    all the dimensions to be wrapped.
+
+    \param pcs
+    Possibly null pointer to a constraint system whose variables
+    are contained in \p vars.  If <CODE>*pcs</CODE> depends on
+    variables not in \p vars, the behavior is undefined.
+    When non-null, the pointed-to constraint system is assumed to
+    represent the conditional or looping construct guard with respect
+    to which wrapping is performed.  Since wrapping requires the
+    computation of upper bounds and due to non-distributivity of
+    constraint refinement over upper bounds, passing a constraint
+    system in this way can be more precise than refining the result of
+    the wrapping operation with the constraints in <CODE>*pcs</CODE>.
+
+    \param complexity_threshold
+    A precision parameter of the \ref Wrapping_Operator "wrapping operator":
+    higher values result in possibly improved precision.
+
+    \param wrap_individually
+    <CODE>true</CODE> if the dimensions should be wrapped individually
+    (something that results in much greater efficiency to the detriment of
+    precision).
+
+    \exception std::invalid_argument
+    Thrown if <CODE>*pcs</CODE> is dimension-incompatible with
+    \p vars, or if \p *this is dimension-incompatible \p vars or with
+    <CODE>*pcs</CODE>.
+  */
+  void wrap_assign(const Variables_Set& vars,
+                   Bounded_Integer_Type_Width w,
+                   Bounded_Integer_Type_Representation r,
+                   Bounded_Integer_Type_Overflow o,
+                   const Constraint_System* pcs = 0,
+                   unsigned complexity_threshold = 16,
+                   bool wrap_individually = true);
+
+  /*! \brief
+    Possibly tightens \p *this by dropping some points with non-integer
+    coordinates.
+
+    \param complexity
+    The maximal complexity of any algorithms used.
+
+    \note
+    Currently there is no optimality guarantee, not even if
+    \p complexity is <CODE>ANY_COMPLEXITY</CODE>.
+  */
+   void drop_some_non_integer_points(Complexity_Class complexity
+                                    = ANY_COMPLEXITY);
+
+  /*! \brief
+    Possibly tightens \p *this by dropping some points with non-integer
+    coordinates for the space dimensions corresponding to \p vars.
+
+    \param vars
+    Points with non-integer coordinates for these variables/space-dimensions
+    can be discarded.
+
+    \param complexity
+    The maximal complexity of any algorithms used.
+
+    \note
+    Currently there is no optimality guarantee, not even if
+    \p complexity is <CODE>ANY_COMPLEXITY</CODE>.
+  */
+  void drop_some_non_integer_points(const Variables_Set& vars,
+                                    Complexity_Class complexity
+                                    = ANY_COMPLEXITY);
+
   //! Assigns to \p *this its topological closure.
   void topological_closure_assign();
 
@@ -1638,14 +1646,14 @@ public:
 
   //! Removes all the specified dimensions.
   /*!
-    \param to_be_removed
+    \param vars
     The set of Variable objects corresponding to the dimensions to be removed.
 
     \exception std::invalid_argument
     Thrown if \p *this is dimension-incompatible with one of the Variable
-    objects contained in \p to_be_removed.
+    objects contained in \p vars.
   */
-  void remove_space_dimensions(const Variables_Set& to_be_removed);
+  void remove_space_dimensions(const Variables_Set& vars);
 
   /*! \brief
     Removes the higher dimensions so that the resulting space
@@ -1664,8 +1672,8 @@ public:
     \param pfunc
     The partial function specifying the destiny of each dimension.
 
-    The template class Partial_Function must provide the following
-    methods.
+    The template type parameter Partial_Function must provide
+    the following methods.
     \code
       bool has_empty_codomain() const
     \endcode
@@ -1720,30 +1728,30 @@ public:
   */
   void expand_space_dimension(Variable var, dimension_type m);
 
-  //! Folds the space dimensions in \p to_be_folded into \p var.
+  //! Folds the space dimensions in \p vars into \p dest.
   /*!
-    \param to_be_folded
+    \param vars
     The set of Variable objects corresponding to the space dimensions
     to be folded;
 
-    \param var
+    \param dest
     The variable corresponding to the space dimension that is the
     destination of the folding operation.
 
     \exception std::invalid_argument
-    Thrown if \p *this is dimension-incompatible with \p var or with
-    one of the Variable objects contained in \p to_be_folded.
-    Also thrown if \p var is contained in \p to_be_folded.
+    Thrown if \p *this is dimension-incompatible with \p dest or with
+    one of the Variable objects contained in \p vars.
+    Also thrown if \p dest is contained in \p vars.
 
     If \p *this has space dimension \f$n\f$, with \f$n > 0\f$,
-    <CODE>var</CODE> has space dimension \f$k \leq n\f$,
-    \p to_be_folded is a set of variables whose maximum space dimension
-    is also less than or equal to \f$n\f$, and \p var is not a member
-    of \p to_be_folded, then the space dimensions corresponding to
-    variables in \p to_be_folded are \ref fold_space_dimensions "folded"
+    <CODE>dest</CODE> has space dimension \f$k \leq n\f$,
+    \p vars is a set of variables whose maximum space dimension
+    is also less than or equal to \f$n\f$, and \p dest is not a member
+    of \p vars, then the space dimensions corresponding to
+    variables in \p vars are \ref fold_space_dimensions "folded"
     into the \f$k\f$-th space dimension.
   */
-  void fold_space_dimensions(const Variables_Set& to_be_folded, Variable var);
+  void fold_space_dimensions(const Variables_Set& vars, Variable dest);
 
   //@} // Member Functions that May Modify the Dimension of the Vector Space
 
@@ -1983,6 +1991,23 @@ private:
   */
   bool BFT00_upper_bound_assign_if_exact(const BD_Shape& y);
 
+  /*! \brief
+    If the upper bound of \p *this and \p y is exact it is assigned
+    to \p *this and \c true is returned, otherwise \c false is returned.
+
+    Implementation for the rational (resp., integer) case is based on
+    Theorem 5.2 (resp. Theorem 5.3) of \ref BHZ09b "[BHZ09b]".
+    The Boolean template parameter \c integer_upper_bound allows for
+    choosing between the rational and integer upper bound algorithms.
+
+    \note
+    It is assumed that \p *this and \p y are dimension-compatible;
+    if the assumption does not hold, the behavior is undefined.
+
+    \note
+    The integer case is only enabled if T is an integer datatype.
+  */
+  template <bool integer_upper_bound>
   bool BHZ09_upper_bound_assign_if_exact(const BD_Shape& y);
 
   /*! \brief
@@ -2096,6 +2121,8 @@ private:
     It is assumed that the BDS is not empty and shortest-path closed.
   */
   void compute_leaders(std::vector<dimension_type>& leaders) const;
+
+  void drop_some_non_integer_points_helper(N& elem);
 
   friend std::ostream&
   Parma_Polyhedra_Library::IO_Operators

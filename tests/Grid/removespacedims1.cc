@@ -1,5 +1,6 @@
 /* Test Grid::remove_space_dimensions().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -203,7 +204,7 @@ test07() {
   Grid gr(3, EMPTY);
   gr.add_grid_generator(grid_point());
   gr.add_grid_generator(grid_point(A));
-  gr.add_grid_generator_and_minimize(grid_point(B));
+  gr.add_grid_generator(grid_point(B));
   gr.add_grid_generator(grid_line(C));
   print_generators(gr, "*** gr ***");
 
@@ -262,7 +263,7 @@ test09() {
   Grid gr(3, EMPTY);
   gr.add_grid_generator(grid_point());
   gr.add_grid_generator(grid_point(A));
-  gr.add_grid_generator_and_minimize(grid_point(B));
+  gr.add_grid_generator(grid_point(B));
   gr.add_grid_generator(grid_line(C));
   print_generators(gr, "*** gr ***");
 
@@ -289,7 +290,7 @@ test10() {
   Grid gr(3, EMPTY);
   gr.add_grid_generator(grid_point());
   gr.add_grid_generator(grid_point(A));
-  gr.add_grid_generator_and_minimize(grid_point(B));
+  gr.add_grid_generator(grid_point(B));
   gr.add_grid_generator(grid_line(C));
   print_generators(gr, "*** gr ***");
 

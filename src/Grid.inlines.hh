@@ -1,5 +1,6 @@
 /* Grid class implementation: inline functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -128,7 +129,7 @@ Grid::Grid(dimension_type num_dimensions,
 	       0)
 	    : num_dimensions) {
   construct(num_dimensions, kind);
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 inline
@@ -232,12 +233,12 @@ Grid::hash_code() const {
 
 inline Constraint_System
 Grid::constraints() const {
-    return Constraint_System(congruences());;
+  return Constraint_System(congruences());;
 }
 
 inline Constraint_System
 Grid::minimized_constraints() const {
-    return Constraint_System(minimized_congruences());;
+  return Constraint_System(minimized_congruences());;
 }
 
 inline void
@@ -272,12 +273,6 @@ Grid::add_congruences(const Congruence_System& cgs) {
   }
 }
 
-inline bool
-Grid::add_congruences_and_minimize(const Congruence_System& cgs) {
-  Congruence_System cgs_copy = cgs;
-  return add_recycled_congruences_and_minimize(cgs_copy);
-}
-
 inline void
 Grid::refine_with_congruence(const Congruence& cg) {
   add_congruence(cg);
@@ -307,28 +302,10 @@ Grid::add_constraint(const Constraint& c) {
     add_constraint_no_check(c);
 }
 
-inline bool
-Grid::add_constraint_and_minimize(const Constraint& c) {
-  add_constraint(c);
-  return minimize();
-}
-
-inline bool
-Grid::add_constraints_and_minimize(const Constraint_System& cs) {
-  add_constraints(cs);
-  return minimize();
-}
-
 inline void
 Grid::add_recycled_constraints(Constraint_System& cs) {
   // TODO: really recycle the constraints.
   add_constraints(cs);
-}
-
-inline bool
-Grid::add_recycled_constraints_and_minimize(Constraint_System& cs) {
-  add_constraints(cs);
-  return minimize();
 }
 
 inline bool
@@ -388,7 +365,6 @@ Grid::strictly_contains(const Grid& y) const {
 
 inline void
 Grid::topological_closure_assign() {
-  return;
 }
 
 } // namespace Parma_Polyhedra_Library

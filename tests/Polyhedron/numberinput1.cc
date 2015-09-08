@@ -1,5 +1,6 @@
 /* Test number input.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -48,7 +49,7 @@ struct Test_Extended_Number_Policy {
 
 inline void
 Test_Extended_Number_Policy::handle_result(Result r) {
-  if (r == VC_NAN)
+  if (r == V_NAN)
     return;
   Extended_Number_Policy::handle_result(r);
 }
@@ -61,6 +62,9 @@ aux_test(std::string input_string,
   std::stringstream input_stream(input_string);
   Checked_Number<mpq_class, Test_Extended_Number_Policy> value;
   Result result = input(value, input_stream, ROUND_UP);
+  // NOTE: clear input_stream status bits, since otherwise the next call
+  // to getline will retrieve nothing at all.
+  input_stream.clear();
   std::string residual;
   getline(input_stream, residual, '\0');
   std::stringstream output_stream;
@@ -89,27 +93,27 @@ aux_test(std::string input_string,
 // Testing symbols.
 bool
 test01() {
-  return aux_test("inf", "+inf", "", V_EQ)
-    && aux_test("InF", "+inf", "", V_EQ)
-    && aux_test("+inF", "+inf", "", V_EQ)
-    && aux_test("-InF", "-inf", "", V_EQ)
-    && aux_test("-InFinity", "-inf", "inity", V_EQ)
-    && aux_test("Inf7", "+inf", "7", V_EQ)
-    && aux_test("nan", "nan", "", VC_NAN)
-    && aux_test("NAN", "nan", "", VC_NAN)
-    && aux_test("Nan", "nan", "", VC_NAN);
+  return aux_test("inf", "+inf", "", V_EQ_PLUS_INFINITY)
+    && aux_test("InF", "+inf", "", V_EQ_PLUS_INFINITY)
+    && aux_test("+inF", "+inf", "", V_EQ_PLUS_INFINITY)
+    && aux_test("-InF", "-inf", "", V_EQ_MINUS_INFINITY)
+    && aux_test("-InFinity", "-inf", "inity", V_EQ_MINUS_INFINITY)
+    && aux_test("Inf7", "+inf", "7", V_EQ_PLUS_INFINITY)
+    && aux_test("nan", "nan", "", V_NAN)
+    && aux_test("NAN", "nan", "", V_NAN)
+    && aux_test("Nan", "nan", "", V_NAN);
 }
 
 // Testing symbols with trailing input and errors.
 bool
 test02() {
-  return aux_test("nAn+", "nan", "+", VC_NAN)
-    && aux_test("naN/", "nan", "/", VC_NAN)
-    && aux_test("nAN/0", "nan", "/0", VC_NAN)
-    && aux_test("nAN/-3", "nan", "/-3", VC_NAN)
-    && aux_test("inF/3", "+inf", "/3", V_EQ)
-    && aux_test("Inf/-3", "+inf", "/-3", V_EQ)
-    && aux_test("-inf/-3", "-inf", "/-3", V_EQ)
+  return aux_test("nAn+", "nan", "+", V_NAN)
+    && aux_test("naN/", "nan", "/", V_NAN)
+    && aux_test("nAN/0", "nan", "/0", V_NAN)
+    && aux_test("nAN/-3", "nan", "/-3", V_NAN)
+    && aux_test("inF/3", "+inf", "/3", V_EQ_PLUS_INFINITY)
+    && aux_test("Inf/-3", "+inf", "/-3", V_EQ_PLUS_INFINITY)
+    && aux_test("-inf/-3", "-inf", "/-3", V_EQ_MINUS_INFINITY)
     && aux_test("-NAn", "nan", "NAn", V_CVT_STR_UNK);
 }
 
@@ -144,7 +148,11 @@ test04() {
     && aux_test("0.123456 101", "1929/15625", " 101", V_EQ)
     && aux_test("0.123456   101", "1929/15625", "   101", V_EQ)
     && aux_test("0.123456     ", "1929/15625", "     ", V_EQ)
-    && aux_test(".333", "nan", ".333", V_CVT_STR_UNK);
+    && aux_test(".499975", "19999/40000", "", V_EQ)
+    && aux_test(".333", "333/1000", "", V_EQ)
+    && aux_test("+.333", "333/1000", "", V_EQ)
+    && aux_test("-.333", "-333/1000", "", V_EQ)
+    && aux_test(".0x333", "0", "x333", V_EQ);
 }
 
 // Testing exponent.
@@ -192,6 +200,11 @@ test07() {
     && aux_test("0xx", "nan", "x", V_CVT_STR_UNK)
     && aux_test("0x0.f", "15/16", "", V_EQ)
     && aux_test("0x.f", "15/16", "", V_EQ)
+    && aux_test("0x.fp3", "15/2", "", V_EQ)
+    && aux_test("16^^.fp3", "15/2", "", V_EQ)
+    && aux_test("0x100p-9", "1/2", "", V_EQ)
+    && aux_test("16^^100p-9", "1/2", "", V_EQ)
+    && aux_test("100p-9", "nan", "p-9", V_CVT_STR_UNK)
     && aux_test("0x.f*^1", "15", "", V_EQ)
     && aux_test("0x-f", "nan", "-f", V_CVT_STR_UNK)
     && aux_test("0xfa", "250", "", V_EQ)
@@ -254,7 +267,7 @@ test09() {
 bool
 test10() {
   return
-  // Fraction.
+    // Fraction.
     aux_test("2^^11.1", "7/2", "", V_EQ)
     && aux_test("2^^11.1a", "7/2", "a", V_EQ)
     && aux_test("2^^11.1.", "7/2", ".", V_EQ)
@@ -273,7 +286,7 @@ test10() {
 // Testing denominators.
 bool
 test11() {
-  return aux_test("15/0", "nan", "", VC_NAN)
+  return aux_test("15/0", "nan", "", V_NAN)
     && aux_test("15/1", "15", "", V_EQ)
     && aux_test("15/3", "5", "", V_EQ)
     && aux_test("15/-3", "-5", "", V_EQ)
@@ -325,7 +338,7 @@ test14() {
 
 BEGIN_MAIN
   DO_TEST(test01);
-  DO_TEST(test03);
+  DO_TEST(test02);
   DO_TEST(test03);
   DO_TEST(test04);
   DO_TEST(test05);

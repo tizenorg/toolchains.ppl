@@ -1,5 +1,6 @@
 /* Domain-independent part of the OCaml interface: declarations.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -71,6 +72,15 @@ build_ppl_Complexity_Class(value cc);
 Relation_Symbol
 build_ppl_relsym(value caml_relsym);
 
+Bounded_Integer_Type_Overflow
+build_ppl_bounded_integer_type_overflow(value caml_oflow);
+
+Bounded_Integer_Type_Representation
+build_ppl_bounded_integer_type_representation(value caml_rep);
+
+Bounded_Integer_Type_Width
+build_ppl_bounded_integer_type_width(value caml_width);
+
 Coefficient
 build_ppl_Coefficient(value coeff);
 
@@ -140,25 +150,8 @@ build_ocaml_generator_system(const Generator_System& gs);
 value
 build_ocaml_grid_generator_system(const Grid_Generator_System& ggs);
 
-class Partial_Function {
-public:
-  Partial_Function();
-
-  bool has_empty_codomain() const;
-
-  dimension_type max_in_codomain() const;
-
-  bool maps(dimension_type i, dimension_type& j) const;
-
-  bool insert(dimension_type i, dimension_type j);
-
-private:
-  std::set<dimension_type> codomain;
-
-  std::vector<dimension_type> vec;
-};
-
-class timeout_exception : public Parma_Polyhedra_Library::Throwable {
+class timeout_exception
+  : public Parma_Polyhedra_Library::Throwable {
 public:
   void throw_me() const {
     throw *this;
@@ -166,11 +159,22 @@ public:
   int priority() const {
     return 0;
   }
-  timeout_exception() {
+};
+
+class deterministic_timeout_exception
+  : public Parma_Polyhedra_Library::Throwable {
+public:
+  void throw_me() const {
+    throw *this;
+  }
+  int priority() const {
+    return 0;
   }
 };
 
 void reset_timeout();
+
+void reset_deterministic_timeout();
 
 } // namespace OCaml
 
@@ -189,6 +193,18 @@ catch(std::overflow_error& e) {					        \
   caml_raise_with_string(*caml_named_value("PPL_arithmetic_overflow"),  \
                          (const_cast<char*>(e.what())));		\
 }									\
+catch(std::domain_error& e) {					\
+  caml_raise_with_string(*caml_named_value("PPL_domain_error"),  \
+                         (const_cast<char*>(e.what())));		\
+}									\
+catch(std::length_error& e) {					\
+  caml_raise_with_string(*caml_named_value("PPL_length_error"),  \
+                         (const_cast<char*>(e.what())));		\
+}									\
+catch(std::logic_error& e) {						\
+  caml_raise_with_string(*caml_named_value("PPL_logic_error"),		\
+                         (const_cast<char*>(e.what())));		\
+}									\
 catch(std::runtime_error& e) {                                          \
   caml_raise_with_string(*caml_named_value("PPL_internal_error"),	\
                          (const_cast<char*>(e.what())));		\
@@ -199,6 +215,10 @@ catch(std::exception& e) {						\
 }									\
 catch(timeout_exception&) {                                             \
   reset_timeout();                                                      \
+  caml_raise_constant(*caml_named_value("PPL_timeout_exception"));      \
+}                                                                       \
+catch(deterministic_timeout_exception&) {                               \
+  reset_deterministic_timeout();                                        \
   caml_raise_constant(*caml_named_value("PPL_timeout_exception"));      \
 }                                                                       \
 catch(...) {								\

@@ -1,5 +1,6 @@
 /* Test Polyhedron::add_generators().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -49,7 +50,7 @@ test01() {
   gs2.insert(point(4*y));
   gs2.insert(point(4*x + 4*y));
 
-  ph.add_generators_and_minimize(gs2);
+  ph.add_generators(gs2);
 
   Generator_System gs3;
   gs3.insert(point());
@@ -65,7 +66,7 @@ test01() {
   bool ok = (ph == known_result
 	     && closed_ph == closed_known_result);
 
-  print_generators(ph, "*** after add_generators_and_minimize(gs) ***");
+  print_generators(ph, "*** after add_generators(gs) ***");
   print_generators(closed_ph, "*** closed_ph ***");
 
   return ok;
@@ -113,7 +114,7 @@ test03() {
   print_generators(gs2, "*** gs2 ***");
 
   C_Polyhedron ph2(2, EMPTY);
-  ph2.add_generators_and_minimize(gs2);
+  ph2.add_generators(gs2);
 
   print_constraints(ph2, "*** ph2 ***");
 

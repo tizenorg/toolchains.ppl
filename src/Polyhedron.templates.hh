@@ -1,5 +1,6 @@
 /* Polyhedron class implementation: non-inline template functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -25,6 +26,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 
 #include "Generator.defs.hh"
 #include "MIP_Problem.defs.hh"
+#include "Interval.defs.hh"
 #include <algorithm>
 #include <deque>
 
@@ -141,7 +143,7 @@ Polyhedron::Polyhedron(Topology topol,
 
   // Constraints are up-to-date.
   set_constraints_up_to_date();
-  assert(OK());
+  PPL_ASSERT_HEAVY(OK());
 }
 
 template <typename Partial_Function>
@@ -164,7 +166,7 @@ Polyhedron::map_space_dimensions(const Partial_Function& pfunc) {
       // Removing all dimensions from a non-empty polyhedron.
       set_zero_dim_univ();
 
-    assert(OK());
+    PPL_ASSERT_HEAVY(OK());
     return;
   }
 
@@ -230,7 +232,7 @@ Polyhedron::map_space_dimensions(const Partial_Function& pfunc) {
     if (generators_are_up_to_date())
       gen_sys.permute_columns(cycles);
 
-    assert(OK());
+    PPL_ASSERT_HEAVY(OK());
     return;
   }
 
@@ -244,7 +246,7 @@ Polyhedron::map_space_dimensions(const Partial_Function& pfunc) {
     // The polyhedron is empty.
     Polyhedron new_polyhedron(topology(), new_space_dimension, EMPTY);
     std::swap(*this, new_polyhedron);
-    assert(OK());
+    PPL_ASSERT_HEAVY(OK());
     return;
   }
 
@@ -290,7 +292,7 @@ Polyhedron::map_space_dimensions(const Partial_Function& pfunc) {
   }
   Polyhedron new_polyhedron(topology(), new_gensys);
   std::swap(*this, new_polyhedron);
-  assert(OK(true));
+  PPL_ASSERT_HEAVY(OK(true));
 }
 
 } // namespace Parma_Polyhedra_Library

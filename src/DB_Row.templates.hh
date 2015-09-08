@@ -1,5 +1,6 @@
 /* DB_Row class implementation: non-inline template functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -39,9 +40,8 @@ DB_Row_Impl_Handler<T>::Impl::construct_upward_approximation(const U& y) {
     bump_size();
   }
 #else // PPL_CXX_SUPPORTS_FLEXIBLE_ARRAYS
-  assert(y_size > 0);
   if (y_size > 0) {
-    vec_[0] = y[0];
+    assign_r(vec_[0], y[0], ROUND_UP);
     bump_size();
     // Construct in direct order: will destroy in reverse order.
     for (dimension_type i = 1; i < y_size; ++i) {
@@ -56,11 +56,13 @@ template <typename T>
 void
 DB_Row_Impl_Handler<T>::
 Impl::expand_within_capacity(const dimension_type new_size) {
-  assert(size() <= new_size && new_size <= max_size());
+  PPL_ASSERT(size() <= new_size && new_size <= max_size());
 #if !PPL_CXX_SUPPORTS_FLEXIBLE_ARRAYS
-  // vec_[0] is already constructed.
-  if (size() == 0 && new_size > 0)
+  if (size() == 0 && new_size > 0) {
+    // vec_[0] is already constructed: we just need to assign +infinity.
+    assign_r(vec_[0], PLUS_INFINITY, ROUND_NOT_NEEDED);
     bump_size();
+  }
 #endif
   // Construct in direct order: will destroy in reverse order.
   for (dimension_type i = size(); i < new_size; ++i) {
@@ -73,7 +75,7 @@ template <typename T>
 void
 DB_Row_Impl_Handler<T>::Impl::shrink(dimension_type new_size) {
   const dimension_type old_size = size();
-  assert(new_size <= old_size);
+  PPL_ASSERT(new_size <= old_size);
   // Since ~T() does not throw exceptions, nothing here does.
   set_size(new_size);
 #if !PPL_CXX_SUPPORTS_FLEXIBLE_ARRAYS
@@ -98,7 +100,6 @@ DB_Row_Impl_Handler<T>::Impl::copy_construct_coefficients(const Impl& y) {
     bump_size();
   }
 #else // PPL_CXX_SUPPORTS_FLEXIBLE_ARRAYS
-  assert(y_size > 0);
   if (y_size > 0) {
     vec_[0] = y.vec_[0];
     bump_size();

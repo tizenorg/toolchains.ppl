@@ -1,6 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 
+/* BEGIN ppl-config.h */
+
 /* Unique (nonzero) code for the IEEE 754 Single Precision
    floating point format.  */
 #define PPL_FLOAT_IEEE754_SINGLE 1
@@ -67,6 +69,10 @@
    don't. */
 #undef PPL_HAVE_DECL_RLIMIT_VMEM
 
+/* Define to 1 if you have the declaration of `sigaction', and to 0 if you
+   don't. */
+#undef PPL_HAVE_DECL_SIGACTION
+
 /* Define to 1 if you have the declaration of `strtod', and to 0 if you don't.
    */
 #undef PPL_HAVE_DECL_STRTOD
@@ -120,11 +126,8 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef PPL_HAVE_MEMORY_H
 
-/* Define to 1 if you have the `setitimer' function. */
-#undef HAVE_SETITIMER
-
 /* Define to 1 if the system has the type `siginfo_t'. */
-#undef HAVE_SIGINFO_T
+#undef PPL_HAVE_SIGINFO_T
 
 /* Define to 1 if you have the <signal.h> header file. */
 #undef PPL_HAVE_SIGNAL_H
@@ -159,6 +162,9 @@
 /* Define to 1 if typeof works with your compiler. */
 #undef PPL_HAVE_TYPEOF
 
+/* Define to 1 if the system has the type `uintptr_t'. */
+#undef PPL_HAVE_UINTPTR_T
+
 /* Define to 1 if the system has the type `uint_fast16_t'. */
 #undef PPL_HAVE_UINT_FAST16_T
 
@@ -171,13 +177,13 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef PPL_HAVE_UNISTD_H
 
-/* Define to 1 if `_mp_alloc' is member of `__mpz_struct'. */
+/* Define to 1 if `_mp_alloc' is a member of `__mpz_struct'. */
 #undef PPL_HAVE___MPZ_STRUCT__MP_ALLOC
 
-/* Define to 1 if `_mp_d' is member of `__mpz_struct'. */
+/* Define to 1 if `_mp_d' is a member of `__mpz_struct'. */
 #undef PPL_HAVE___MPZ_STRUCT__MP_D
 
-/* Define to 1 if `_mp_size' is member of `__mpz_struct'. */
+/* Define to 1 if `_mp_size' is a member of `__mpz_struct'. */
 #undef PPL_HAVE___MPZ_STRUCT__MP_SIZE
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
@@ -195,6 +201,9 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PPL_PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PPL_PACKAGE_VERSION
@@ -241,6 +250,9 @@
 /* Not zero if C++ supports exact output for long doubles. */
 #undef PPL_CXX_LONG_DOUBLE_EXACT_OUTPUT
 
+/* Not zero if the the plain char type is signed. */
+#undef PPL_CXX_PLAIN_CHAR_IS_SIGNED
+
 /* Not zero if the C++ compiler provides long double numbers that have bigger
    range or precision than double. */
 #undef PPL_CXX_PROVIDES_PROPER_LONG_DOUBLE
@@ -257,10 +269,10 @@
 /* Not zero if it is possible to limit memory using setrlimit(). */
 #undef PPL_CXX_SUPPORTS_LIMITING_MEMORY
 
-/* Defined if floating point arithmetics may use the 387 unit. */
+/* Defined if floating point arithmetic may use the 387 unit. */
 #undef PPL_FPMATH_MAY_USE_387
 
-/* Defined if floating point arithmetics may use the SSE instruction set. */
+/* Defined if floating point arithmetic may use the SSE instruction set. */
 #undef PPL_FPMATH_MAY_USE_SSE
 
 /* Defined if GLPK provides glp_term_hook(). */
@@ -369,6 +381,10 @@
 /* Define to __typeof__ if your compiler spells it that way. */
 #undef typeof
 
+/* Define to the type of an unsigned integer type wide enough to hold a
+   pointer, if such a type exists, and if the system does not define it. */
+#undef uintptr_t
+
 
 #if defined(PPL_NDEBUG) && !defined(NDEBUG)
 # define NDEBUG PPL_NDEBUG
@@ -390,4 +406,6 @@
 #ifdef PPL_HAVE_INTTYPES_H
 # include <inttypes.h>
 #endif
+
+/* END ppl-config.h */
 

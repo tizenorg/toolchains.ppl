@@ -1,5 +1,6 @@
 /* Test the construction of a polyhedron using generators.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -202,7 +203,7 @@ test08() {
 
   C_Polyhedron ph(2, EMPTY);
   ph.add_generator(point());
-  ph.add_generator_and_minimize(ray(A));
+  ph.add_generator(ray(A));
   ph.add_generator(ray(B));
 
   print_generators(ph, "*** ph ***");
@@ -217,7 +218,7 @@ test08() {
   known_result.add_constraint(A >= 0);
   known_result.add_constraint(B >= 0);
 
-  return (C_Polyhedron(gs) == known_result);
+  return C_Polyhedron(gs) == known_result;
 }
 
 } // namespace

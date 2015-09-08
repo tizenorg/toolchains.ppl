@@ -1,5 +1,6 @@
 /* Octagonal_Shape class implementation: inline functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -31,17 +32,28 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "BD_Shape.defs.hh"
 #include "Poly_Con_Relation.defs.hh"
 #include "Poly_Gen_Relation.defs.hh"
-#include <cassert>
+#include "wrap_assign.hh"
+#include "assert.hh"
 #include <algorithm>
 
 namespace Parma_Polyhedra_Library {
 
-// FIXME: find the appropriate place for this.
-/*! \relates Octagonal_Shape */
+namespace Implementation {
+
+namespace Octagonal_Shapes {
+
+#ifdef PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS
+//! Returns the index coherent to \p i.
+/*! \relates Parma_Polyhedra_Library::Octagonal_Shape */
+#endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
 inline dimension_type
 coherent_index(const dimension_type i) {
   return (i % 2 != 0) ? i-1 : i+1;
 }
+
+} // namespace Octagonal_Shapes
+
+} // namespace Implementation
 
 template <typename T>
 inline dimension_type
@@ -101,7 +113,7 @@ Octagonal_Shape<T>::Octagonal_Shape(const dimension_type num_dimensions,
   else if (num_dimensions > 0)
     // A (non zero-dim) universe octagon is strongly closed.
     set_strongly_closed();
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 template <typename T>
@@ -303,8 +315,6 @@ Octagonal_Shape<T>::is_topologically_closed() const {
 template <typename T>
 inline void
 Octagonal_Shape<T>::topological_closure_assign() {
-  // Nothing to be done.
-  return;
 }
 
 /*! \relates Octagonal_Shape */
@@ -346,7 +356,8 @@ template <typename T>
 inline const typename Octagonal_Shape<T>::coefficient_type&
 Octagonal_Shape<T>::matrix_at(const dimension_type i,
 			      const dimension_type j) const {
-  assert(i < matrix.num_rows() && j < matrix.num_rows());
+  PPL_ASSERT(i < matrix.num_rows() && j < matrix.num_rows());
+  using namespace Implementation::Octagonal_Shapes;
   return (j < matrix.row_size(i))
     ? matrix[i][j]
     : matrix[coherent_index(j)][coherent_index(i)];
@@ -356,7 +367,8 @@ template <typename T>
 inline typename Octagonal_Shape<T>::coefficient_type&
 Octagonal_Shape<T>::matrix_at(const dimension_type i,
 			      const dimension_type j) {
-  assert(i < matrix.num_rows() && j < matrix.num_rows());
+  PPL_ASSERT(i < matrix.num_rows() && j < matrix.num_rows());
+  using namespace Implementation::Octagonal_Shapes;
   return (j < matrix.row_size(i))
     ? matrix[i][j]
     : matrix[coherent_index(j)][coherent_index(i)];
@@ -376,9 +388,9 @@ Octagonal_Shape<T>::add_octagonal_constraint(const dimension_type i,
 					     const N& k) {
   // Private method: the caller has to ensure the following.
 #ifndef NDEBUG
-  assert(i < 2*space_dim && j < 2*space_dim && i != j);
+  PPL_ASSERT(i < 2*space_dim && j < 2*space_dim && i != j);
   typename OR_Matrix<N>::row_iterator m_i = matrix.row_begin() + i;
-  assert(j < m_i.row_size());
+  PPL_ASSERT(j < m_i.row_size());
 #endif
   N& r_i_j = matrix[i][j];
   if (r_i_j > k) {
@@ -397,10 +409,10 @@ Octagonal_Shape<T>
 			   Coefficient_traits::const_reference den) {
 #ifndef NDEBUG
   // Private method: the caller has to ensure the following.
-  assert(i < 2*space_dim && j < 2*space_dim && i != j);
+  PPL_ASSERT(i < 2*space_dim && j < 2*space_dim && i != j);
   typename OR_Matrix<N>::row_iterator m_i = matrix.row_begin() + i;
-  assert(j < m_i.row_size());
-  assert(den != 0);
+  PPL_ASSERT(j < m_i.row_size());
+  PPL_ASSERT(den != 0);
 #endif
   PPL_DIRTY_TEMP(N, k);
   div_round_up(k, num, den);
@@ -487,8 +499,8 @@ Octagonal_Shape<T>::refine_with_congruences(const Congruence_System& cgs) {
 template <typename T>
 inline void
 Octagonal_Shape<T>::refine_no_check(const Congruence& cg) {
-  assert(!marked_empty());
-  assert(cg.space_dimension() <= space_dimension());
+  PPL_ASSERT(!marked_empty());
+  PPL_ASSERT(cg.space_dimension() <= space_dimension());
 
   if (cg.is_proper_congruence()) {
     if (cg.is_inconsistent())
@@ -497,7 +509,7 @@ Octagonal_Shape<T>::refine_no_check(const Congruence& cg) {
     return;
   }
 
-  assert(cg.is_equality());
+  PPL_ASSERT(cg.is_equality());
   Constraint c(cg);
   refine_no_check(c);
 }
@@ -526,7 +538,7 @@ Octagonal_Shape<T>
   // Note that this case also captures the only legal removal of
   // dimensions from an octagon in a 0-dim space.
   if (new_dimension == space_dim) {
-    assert(OK());
+    PPL_ASSERT(OK());
     return;
   }
 
@@ -537,7 +549,22 @@ Octagonal_Shape<T>
   if (new_dimension == 0 && !marked_empty())
     set_zero_dim_univ();
   space_dim = new_dimension;
-  assert(OK());
+  PPL_ASSERT(OK());
+}
+
+template <typename T>
+void
+Octagonal_Shape<T>::wrap_assign(const Variables_Set& vars,
+                                Bounded_Integer_Type_Width w,
+                                Bounded_Integer_Type_Representation r,
+                                Bounded_Integer_Type_Overflow o,
+                                const Constraint_System* pcs,
+                                unsigned complexity_threshold,
+                                bool wrap_individually) {
+  Implementation::wrap_assign(*this,
+                              vars, w, r, o, pcs,
+                              complexity_threshold, wrap_individually,
+                              "Octagonal_Shape");
 }
 
 template <typename T>
@@ -576,7 +603,7 @@ Octagonal_Shape<T>::time_elapse_assign(const Octagonal_Shape& y) {
   px.time_elapse_assign(py);
   Octagonal_Shape<T> x(px);
   swap(x);
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 template <typename T>
@@ -584,12 +611,6 @@ inline bool
 Octagonal_Shape<T>::strictly_contains(const Octagonal_Shape& y) const {
   const Octagonal_Shape<T>& x = *this;
   return x.contains(y) && !y.contains(x);
-}
-
-template <typename T>
-inline bool
-Octagonal_Shape<T>::upper_bound_assign_if_exact(const Octagonal_Shape& y) {
-  return BHZ09_upper_bound_assign_if_exact(y);
 }
 
 /*! \relates Octagonal_Shape */
@@ -797,6 +818,19 @@ template <typename T>
 inline int32_t
 Octagonal_Shape<T>::hash_code() const {
   return space_dimension() & 0x7fffffff;
+}
+
+template <typename T>
+inline void
+Octagonal_Shape<T>::drop_some_non_integer_points_helper(N& elem) {
+  if (!is_integer(elem)) {
+#ifndef NDEBUG
+    Result r =
+#endif
+    floor_assign_r(elem, elem, ROUND_DOWN);
+    PPL_ASSERT(r == V_EQ);
+    reset_strongly_closed();
+  }
 }
 
 } // namespace Parma_Polyhedra_Library

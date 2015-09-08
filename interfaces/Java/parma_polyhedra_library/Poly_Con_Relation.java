@@ -1,5 +1,6 @@
 /* Poly_Con_Relation Java class declaration and implementation.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -83,5 +84,10 @@ public class Poly_Con_Relation {
     //! True if and only if \p *this implies \p y.
     public boolean implies(Poly_Con_Relation y) {
 	return (this.mask_value & y.mask_value) ==  y.mask_value;
+    }
+
+    private static native void initIDs();
+    static {
+        initIDs();
     }
 }

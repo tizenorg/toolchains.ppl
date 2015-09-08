@@ -1,5 +1,6 @@
 /* Grid_Generator class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -260,7 +261,7 @@ public:
 				   Coefficient_traits::const_reference d
 				   = Coefficient_one());
 
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   Grid_Generator(const Grid_Generator& g);
 
   //! Destructor.

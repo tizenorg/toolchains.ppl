@@ -1,5 +1,6 @@
 /* Row class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -114,7 +115,7 @@ public:
     /*!
       Returns <CODE>true</CODE> if successful, <CODE>false</CODE>
       otherwise.  The ASCII representation is as output by
-      \ref Parma_Polyhedra_Library::Row::Flags::ascii_dump.
+      \ref Parma_Polyhedra_Library::Row::Flags::ascii_dump().
     */
     bool ascii_load(std::istream& s);
 
@@ -390,19 +391,34 @@ public:
   //! \name Custom allocator and deallocator
   //@{
 
-  /*! \brief
-    Allocates a chunk of memory able to contain \p capacity Coefficient objects
-    beyond the specified \p fixed_size and returns a pointer to the new
-    allocated memory.
+  //! Placement allocation function.
+  /*!
+    Allocates a chunk of memory able to contain \p capacity Coefficient
+    objects beyond the specified \p fixed_size and returns a pointer to
+    the newly allocated memory.
   */
   static void* operator new(size_t fixed_size, dimension_type capacity);
 
-  //! Uses the standard delete operator to free the memory \p p points to.
+  //! Usual (non-placement) deallocation function.
+  /*!
+    Uses the standard delete operator to free the memory \p p points to.
+
+    \note
+    The definition of this custom deallocation function is required
+    since otherwise the placement deallocation function
+    <code>
+    static void operator delete(void* p, dimension_type capacity);
+    </code>
+    would be wrongly interpreted as a usual (non-placement) deallocation
+    function (see C++98 3.7.3.2p2). This happens because \c dimension_type
+    is just an alias for \c std::size_t.
+    See also http://gcc.gnu.org/bugzilla/show_bug.cgi?id=42115
+  */
   static void operator delete(void* p);
 
-  /*! \brief
-    Placement version:
-    uses the standard operator delete to free the memory \p p points to.
+  //! Placement deallocation function.
+  /*!
+    Uses the standard operator delete to free the memory \p p points to.
   */
   static void operator delete(void* p, dimension_type capacity);
   //@} // Custom allocator and deallocator

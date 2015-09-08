@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -24,7 +25,7 @@ if VALGRIND_TESTS_ENABLED
 
 CHECKER = \
 $(VALGRIND) --tool=memcheck -q --trace-children=yes --leak-check=yes \
---num-callers=100 --leak-resolution=high \
+--num-callers=40 --leak-resolution=high \
 --suppressions=$(top_srcdir)/tests/valgrind_suppressions
 
 else !VALGRIND_TESTS_ENABLED
@@ -77,6 +78,7 @@ empty1 \
 equality1 \
 expandspacedim1 \
 foldspacedims1 \
+frequency1 \
 frombdshape1 \
 frombox1 \
 fromgensys1 \
@@ -100,6 +102,7 @@ propagateconstraints1 propagateconstraints2 \
 relations1 relations2 relations3 relations4 \
 refinewithconstraint1 refinewithconstraint2 \
 refinewithconstraints1 \
+refinewithcongruence1 \
 refinewithcongruences1 \
 removespacedims1 \
 simplifyusingcontext1 \
@@ -109,6 +112,7 @@ unconstrain1 \
 universe1 \
 upperbound1 \
 upperboundifexact1 \
+wrap1 \
 writebox1
 
 DERIVED_TESTS = \
@@ -125,7 +129,7 @@ TESTS = run_tests.stamp
 
 .PHONY: run_tests.stamp
 run_tests.stamp: run_tests
-	+MAKE=$(MAKE) $(srcdir)/run_tests
+	+MAKE="$(MAKE)" $(srcdir)/run_tests
 	echo "true" >run_tests.stamp
 	chmod +x run_tests.stamp
 
@@ -209,6 +213,8 @@ expandspacedim1_SOURCES = expandspacedim1.cc
 
 foldspacedims1_SOURCES = foldspacedims1.cc
 
+frequency1_SOURCES = frequency1.cc
+
 frombdshape1_SOURCES = frombdshape1.cc
 
 frombox1_SOURCES = frombox1.cc
@@ -255,12 +261,14 @@ relations4_SOURCES = relations4.cc
 propagateconstraints1_SOURCES = propagateconstraints1.cc
 propagateconstraints2_SOURCES = propagateconstraints2.cc
 
+refinewithcongruence1_SOURCES = refinewithcongruence1.cc
+
+refinewithcongruences1_SOURCES = refinewithcongruences1.cc
+
 refinewithconstraint1_SOURCES = refinewithconstraint1.cc
 refinewithconstraint2_SOURCES = refinewithconstraint2.cc
 
 refinewithconstraints1_SOURCES = refinewithconstraints1.cc
-
-refinewithcongruences1_SOURCES = refinewithcongruences1.cc
 
 removespacedims1_SOURCES = removespacedims1.cc
 
@@ -277,6 +285,8 @@ universe1_SOURCES = universe1.cc
 upperbound1_SOURCES = upperbound1.cc
 
 upperboundifexact1_SOURCES = upperboundifexact1.cc
+
+wrap1_SOURCES = wrap1.cc
 
 writebox1_SOURCES = writebox1.cc
 

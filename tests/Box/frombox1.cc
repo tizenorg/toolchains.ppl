@@ -1,5 +1,6 @@
 /* Test Box<Interval>::Box(const Box<Other_Interval>&).
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -79,7 +80,7 @@ test04() {
 bool
 test05() {
   const int DIM = 10;
-  typedef Checked_Number<mpq_class> Q;
+  typedef Checked_Number<mpq_class, Checked_Number_Transparent_Policy<mpq_class> > Q;
   Rational_Box src(DIM, UNIVERSE);
   Q k;
   Q a;

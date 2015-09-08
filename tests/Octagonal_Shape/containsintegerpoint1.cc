@@ -1,5 +1,6 @@
 /* Test Octagonal_Shape::contains_integer_point().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -97,7 +98,7 @@ test03() {
   // NOTE: results depends on whether or not the rational constraints
   // on y have been approximated as integral constraints.
   typedef TOctagonal_Shape::coefficient_type_base T;
-  return (std::numeric_limits<T>::is_integer ? contains : !contains);
+  return std::numeric_limits<T>::is_integer ? contains : !contains;
 }
 
 bool

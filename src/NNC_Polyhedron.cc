@@ -1,5 +1,6 @@
 /* NNC_Polyhedron class implementation (non-inline functions).
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -32,7 +33,7 @@ namespace PPL = Parma_Polyhedra_Library;
 PPL::NNC_Polyhedron::NNC_Polyhedron(const C_Polyhedron& y, Complexity_Class)
   : Polyhedron(NOT_NECESSARILY_CLOSED, y.space_dimension(), UNIVERSE) {
   add_constraints(y.constraints());
-  assert(OK());
+  PPL_ASSERT_HEAVY(OK());
 }
 
 PPL::NNC_Polyhedron::NNC_Polyhedron(const Congruence_System& cgs)
@@ -46,7 +47,7 @@ PPL::NNC_Polyhedron::NNC_Polyhedron(const Congruence_System& cgs)
 						 "space dimension"), 0),
 	       UNIVERSE) {
   add_congruences(cgs);
-  assert(OK());
+  PPL_ASSERT_HEAVY(OK());
 }
 
 PPL::NNC_Polyhedron::NNC_Polyhedron(Congruence_System& cgs, Recycle_Input)
@@ -61,7 +62,7 @@ PPL::NNC_Polyhedron::NNC_Polyhedron(Congruence_System& cgs, Recycle_Input)
 						 "space dimension"), 0),
 	       UNIVERSE) {
   add_congruences(cgs);
-  assert(OK());
+  PPL_ASSERT_HEAVY(OK());
 }
 
 PPL::NNC_Polyhedron::NNC_Polyhedron(const Grid& grid, Complexity_Class)

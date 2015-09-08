@@ -1,5 +1,6 @@
 /* Test Grid::ascii_dump() and Grid::ascii_load().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -332,7 +333,7 @@ test10() {
 
   open(f, my_file, ios_base::in);
   Grid gr2;
-  bool ok =! gr2.ascii_load(f);
+  bool ok = !gr2.ascii_load(f);
   close(f);
 
   return ok;
@@ -349,7 +350,7 @@ test11() {
 
   open(f, my_file, ios_base::in);
   Grid gr2;
-  bool ok =! gr2.ascii_load(f);
+  bool ok = !gr2.ascii_load(f);
   close(f);
 
   return ok;
@@ -366,7 +367,7 @@ test12() {
 
   open(f, my_file, ios_base::in);
   Grid gr2;
-  bool ok =! gr2.ascii_load(f);
+  bool ok = !gr2.ascii_load(f);
   close(f);
 
   return ok;

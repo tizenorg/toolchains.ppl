@@ -1,5 +1,6 @@
 /* Bit_Matrix class implementation (non-inline functions).
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -36,26 +37,34 @@ PPL::Bit_Matrix&
 PPL::Bit_Matrix::operator=(const Bit_Matrix& y){
   rows = y.rows;
   row_size = y.row_size;
-  assert(OK());
+  PPL_ASSERT(OK());
   return *this;
 }
 
 void
 PPL::Bit_Matrix::sort_rows() {
-  typedef std::vector<Bit_Row>::iterator Iter;
-  // Sorting without removing duplicates.
-  Iter first = rows.begin();
-  Iter last = rows.end();
-  swapping_sort(first, last, Bit_Row_Less_Than());
-  // Moving all the duplicate elements at the end of the vector.
-  Iter new_last = swapping_unique(first, last);
-  // Removing duplicates.
-  rows.erase(new_last, last);
-  assert(OK());
+  const dimension_type num_elems = rows.size();
+  if (num_elems < 2)
+    return;
+
+  // Build the function objects implementing indirect sort comparison,
+  // indirect unique comparison and indirect swap operation.
+  typedef std::vector<Bit_Row> Cont;
+  Indirect_Sort_Compare<Cont, Bit_Row_Less_Than> sort_cmp(rows);
+  Indirect_Unique_Compare<Cont> unique_cmp(rows);
+  Indirect_Swapper<Cont> swapper(rows);
+
+  const dimension_type num_duplicates
+    = indirect_sort_and_unique(num_elems, sort_cmp, unique_cmp, swapper);
+
+  if (num_duplicates > 0)
+    rows.erase(rows.end() - num_duplicates, rows.end());
+
+  PPL_ASSERT(OK());
 }
 
 void
-PPL::Bit_Matrix::add_row(const Bit_Row& row) {
+PPL::Bit_Matrix::add_recycled_row(Bit_Row& row) {
   const dimension_type new_rows_size = rows.size() + 1;
   if (rows.capacity() < new_rows_size) {
     // Reallocation will take place.
@@ -64,7 +73,7 @@ PPL::Bit_Matrix::add_row(const Bit_Row& row) {
     new_rows.insert(new_rows.end(), new_rows_size, Bit_Row());
     // Put the new row in place.
     dimension_type i = new_rows_size-1;
-    new_rows[i] = row;
+    new_rows[i].swap(row);
     // Steal the old rows.
     while (i-- > 0)
       new_rows[i].swap(rows[i]);
@@ -72,9 +81,10 @@ PPL::Bit_Matrix::add_row(const Bit_Row& row) {
     std::swap(rows, new_rows);
   }
   else
-    // Reallocation will NOT take place: append a new empty row.
-    rows.push_back(row);
-  assert(OK());
+    // Reallocation will NOT take place: append an empty row
+    // and swap it with the new row.
+    rows.insert(rows.end(), Bit_Row())->swap(row);
+  PPL_ASSERT(OK());
 }
 
 void
@@ -87,7 +97,7 @@ PPL::Bit_Matrix::transpose() {
     for (unsigned long j = x[i].last(); j != ULONG_MAX; j = x[i].prev(j))
       tmp[j].set(i);
   swap(tmp);
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 void
@@ -99,13 +109,13 @@ PPL::Bit_Matrix::transpose_assign(const Bit_Matrix& y) {
     for (unsigned long j = y[i].last(); j != ULONG_MAX; j = y[i].prev(j))
       tmp[j].set(i);
   swap(tmp);
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 void
 PPL::Bit_Matrix::resize(dimension_type new_n_rows,
 		       dimension_type new_n_columns) {
-  assert(OK());
+  PPL_ASSERT(OK());
   const dimension_type old_num_rows = num_rows();
   if (new_n_columns < row_size) {
     const dimension_type num_preserved_rows
@@ -135,7 +145,7 @@ PPL::Bit_Matrix::resize(dimension_type new_n_rows,
     // Drop some rows.
     rows.erase(rows.begin() + new_n_rows, rows.end());
 
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 void
@@ -179,7 +189,7 @@ PPL::Bit_Matrix::ascii_load(std::istream& s) {
     }
 
   // Check invariants.
-  assert(OK());
+  PPL_ASSERT(OK());
   return true;
 }
 

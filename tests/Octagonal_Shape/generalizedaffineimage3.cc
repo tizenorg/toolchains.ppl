@@ -1,5 +1,6 @@
 /* Test Octagonal_Shape::generalized_affine_image().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -579,8 +580,6 @@ BEGIN_MAIN
   DO_TEST(test08);
   DO_TEST(test09);
   DO_TEST(test10);
-#ifndef __alpha__
-  // Exception handling is broken in GCC on the Alpha.
   DO_TEST(test11);
   DO_TEST(test12);
   DO_TEST(test13);
@@ -589,7 +588,6 @@ BEGIN_MAIN
   DO_TEST(test16);
   DO_TEST(test17);
   DO_TEST(test18);
-#endif
   DO_TEST(test19);
   DO_TEST(test20);
 END_MAIN

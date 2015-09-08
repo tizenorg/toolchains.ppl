@@ -1,5 +1,6 @@
 /* Congruence class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -209,7 +210,7 @@ swap(Parma_Polyhedra_Library::Congruence& x,
 */
 class Parma_Polyhedra_Library::Congruence : private Row {
 public:
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   Congruence(const Congruence& cg);
 
   //! Copy-constructs (modulo 0) from equality constraint \p c.

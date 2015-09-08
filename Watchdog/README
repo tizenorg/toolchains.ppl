@@ -1,6 +1,14 @@
+Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
+See below for the copying conditions.
 
-This is the release 0.6 of the Parma Watchdog Library:
-a C++ library for software timeouts.
+
+Parma Watchdog Library (Release 0.8)
+====================================
+
+This is the release 0.8 of the Parma Watchdog Library, a C++ library for
+software timeouts and other devices able to throttle the complexity of
+expensive algorithms.
 
 To be continued...
 
@@ -12,14 +20,15 @@ See the file BUGS for known bugs and how to report new ones.
 See the file CREDITS for a list of people and organizations that
 contributed to the PWL.
 
-Here is the contents of the PWL 0.7 source distribution
-(5 directories, 97 files):
+Here is the contents of the PWL 0.8 source distribution
+(5 directories, 102 files):
 
-pwl-0.7
+pwl-0.8
 |-- BUGS
 |-- COPYING
 |-- CREDITS
 |-- ChangeLog
+|-- ChangeLog_2001-2008
 |-- INSTALL
 |-- Makefile.am
 |-- Makefile.in
@@ -51,9 +60,9 @@ pwl-0.7
 |   |-- gpl.ps.gz
 |   |-- gpl.tex
 |   |-- gpl.txt
-|   |-- pwl-user-0.7-html.tar.gz
-|   |-- pwl-user-0.7.pdf
-|   |-- pwl-user-0.7.ps.gz
+|   |-- pwl-user-0.8-html.tar.gz
+|   |-- pwl-user-0.8.pdf
+|   |-- pwl-user-0.8.ps.gz
 |   |-- pwl.sty
 |   |-- user.doxyconf-html.in
 |   |-- user.doxyconf-latex.in
@@ -89,14 +98,18 @@ pwl-0.7
 |   |-- Handler.types.hh
 |   |-- Makefile.am
 |   |-- Makefile.in
-|   |-- Pending_Element.cc
 |   |-- Pending_Element.defs.hh
 |   |-- Pending_Element.inlines.hh
 |   |-- Pending_Element.types.hh
-|   |-- Pending_List.cc
 |   |-- Pending_List.defs.hh
 |   |-- Pending_List.inlines.hh
+|   |-- Pending_List.templates.hh
 |   |-- Pending_List.types.hh
+|   |-- Threshold_Watcher.cc
+|   |-- Threshold_Watcher.defs.hh
+|   |-- Threshold_Watcher.inlines.hh
+|   |-- Threshold_Watcher.templates.hh
+|   |-- Threshold_Watcher.types.hh
 |   |-- Time.cc
 |   |-- Time.defs.hh
 |   |-- Time.inlines.hh
@@ -112,8 +125,8 @@ pwl-0.7
 |   |-- Makefile.in
 |   |-- pwl_test.cc
 |   |-- pwl_test.hh
-|   |-- simple1.cc
-|   `-- valgrind_suppressions
+|   |-- valgrind_suppressions
+|   `-- watchdog1.cc
 `-- utils
     |-- Makefile.am
     |-- Makefile.in
@@ -122,7 +135,8 @@ pwl-0.7
 
 --------
 
-Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 The Parma Watchdog Library is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as

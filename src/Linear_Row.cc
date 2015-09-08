@@ -1,5 +1,6 @@
 /* Linear_Row class implementation (non-inline functions).
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -103,8 +104,8 @@ void
 PPL::Linear_Row::linear_combine(const Linear_Row& y, const dimension_type k) {
   Linear_Row& x = *this;
   // We can combine only vector of the same dimension.
-  assert(x.size() == y.size());
-  assert(y[k] != 0 && x[k] != 0);
+  PPL_ASSERT(x.size() == y.size());
+  PPL_ASSERT(y[k] != 0 && x[k] != 0);
   // Let g be the GCD between `x[k]' and `y[k]'.
   // For each i the following computes
   //   x[i] = x[i]*y[k]/g - y[i]*x[k]/g.
@@ -119,6 +120,15 @@ PPL::Linear_Row::linear_combine(const Linear_Row& y, const dimension_type k) {
     }
   x[k] = 0;
   x.strong_normalize();
+}
+
+bool
+PPL::Linear_Row::is_zero() const {
+  const Linear_Row& x = *this;
+  for (dimension_type i = x.size(); i-- > 0; )
+    if (x[i] != 0)
+      return false;
+  return true;
 }
 
 bool

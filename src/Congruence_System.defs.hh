@@ -1,5 +1,6 @@
 /* Congruence_System class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -29,6 +30,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "Congruence.types.hh"
 #include "Grid_Generator.types.hh"
 #include "Matrix.defs.hh"
+#include "Grid.types.hh"
 #include "Grid_Certificate.types.hh"
 #include <iosfwd>
 
@@ -138,7 +140,7 @@ public:
   //! Builds a system containing copies of any equalities in \p cs.
   explicit Congruence_System(const Constraint_System& cs);
 
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   Congruence_System(const Congruence_System& cgs);
 
   //! Destructor.
@@ -240,7 +242,7 @@ public:
     //! Default constructor.
     const_iterator();
 
-    //! Ordinary copy-constructor.
+    //! Ordinary copy constructor.
     const_iterator(const const_iterator& y);
 
     //! Destructor.

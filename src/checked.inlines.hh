@@ -1,5 +1,6 @@
 /* Abstract checked arithmetic functions: fall-backs.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -26,7 +27,16 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "globals.types.hh"
 #include "meta_programming.hh"
 #include "C_Integer.hh"
-#include <cassert>
+#include "assert.hh"
+
+/*! \brief
+  Performs the test <CODE>a < b</CODE> avoiding the warning about the
+  comparison being always false due to limited range of data type.
+  FIXME: we don't have found a working solution. gcc option
+  -Wno-type-limits suppress the warning
+*/
+#define PPL_LT_SILENT(a, b) ((a) < (b))
+#define PPL_GT_SILENT(a, b) ((a) > (b))
 
 namespace Parma_Polyhedra_Library {
 
@@ -42,24 +52,42 @@ struct Safe_Conversion<T, T> : public True {
 #define PPL_SAFE_CONVERSION(To, From)					\
   template <> struct Safe_Conversion<To, From> : public True { }
 
+#if PPL_CXX_PLAIN_CHAR_IS_SIGNED
+PPL_SAFE_CONVERSION(signed short, char);
+#endif
 PPL_SAFE_CONVERSION(signed short, signed char);
 #if PPL_SIZEOF_CHAR < PPL_SIZEOF_SHORT
+#if !PPL_CXX_PLAIN_CHAR_IS_SIGNED
+PPL_SAFE_CONVERSION(signed short, char);
+#endif
 PPL_SAFE_CONVERSION(signed short, unsigned char);
 #endif
 
+#if PPL_CXX_PLAIN_CHAR_IS_SIGNED
+PPL_SAFE_CONVERSION(signed int, char);
+#endif
 PPL_SAFE_CONVERSION(signed int, signed char);
 PPL_SAFE_CONVERSION(signed int, signed short);
 #if PPL_SIZEOF_CHAR < PPL_SIZEOF_INT
+#if !PPL_CXX_PLAIN_CHAR_IS_SIGNED
+PPL_SAFE_CONVERSION(signed int, char);
+#endif
 PPL_SAFE_CONVERSION(signed int, unsigned char);
 #endif
 #if PPL_SIZEOF_SHORT < PPL_SIZEOF_INT
 PPL_SAFE_CONVERSION(signed int, unsigned short);
 #endif
 
+#if PPL_CXX_PLAIN_CHAR_IS_SIGNED
+PPL_SAFE_CONVERSION(signed long, char);
+#endif
 PPL_SAFE_CONVERSION(signed long, signed char);
 PPL_SAFE_CONVERSION(signed long, signed short);
 PPL_SAFE_CONVERSION(signed long, signed int);
 #if PPL_SIZEOF_CHAR < PPL_SIZEOF_LONG
+#if !PPL_CXX_PLAIN_CHAR_IS_SIGNED
+PPL_SAFE_CONVERSION(signed long, char);
+#endif
 PPL_SAFE_CONVERSION(signed long, unsigned char);
 #endif
 #if PPL_SIZEOF_SHORT < PPL_SIZEOF_LONG
@@ -69,11 +97,17 @@ PPL_SAFE_CONVERSION(signed long, unsigned short);
 PPL_SAFE_CONVERSION(signed long, unsigned int);
 #endif
 
+#if PPL_CXX_PLAIN_CHAR_IS_SIGNED
+PPL_SAFE_CONVERSION(signed long long, char);
+#endif
 PPL_SAFE_CONVERSION(signed long long, signed char);
 PPL_SAFE_CONVERSION(signed long long, signed short);
 PPL_SAFE_CONVERSION(signed long long, signed int);
 PPL_SAFE_CONVERSION(signed long long, signed long);
 #if PPL_SIZEOF_CHAR < PPL_SIZEOF_LONG_LONG
+#if !PPL_CXX_PLAIN_CHAR_IS_SIGNED
+PPL_SAFE_CONVERSION(signed long long, char);
+#endif
 PPL_SAFE_CONVERSION(signed long long, unsigned char);
 #endif
 #if PPL_SIZEOF_SHORT < PPL_SIZEOF_LONG_LONG
@@ -86,15 +120,27 @@ PPL_SAFE_CONVERSION(signed long long, unsigned int);
 PPL_SAFE_CONVERSION(signed long long, unsigned long);
 #endif
 
+#if !PPL_CXX_PLAIN_CHAR_IS_SIGNED
+PPL_SAFE_CONVERSION(unsigned short, char);
+#endif
 PPL_SAFE_CONVERSION(unsigned short, unsigned char);
 
+#if !PPL_CXX_PLAIN_CHAR_IS_SIGNED
+PPL_SAFE_CONVERSION(unsigned int, char);
+#endif
 PPL_SAFE_CONVERSION(unsigned int, unsigned char);
 PPL_SAFE_CONVERSION(unsigned int, unsigned short);
 
+#if !PPL_CXX_PLAIN_CHAR_IS_SIGNED
+PPL_SAFE_CONVERSION(unsigned long, char);
+#endif
 PPL_SAFE_CONVERSION(unsigned long, unsigned char);
 PPL_SAFE_CONVERSION(unsigned long, unsigned short);
 PPL_SAFE_CONVERSION(unsigned long, unsigned int);
 
+#if !PPL_CXX_PLAIN_CHAR_IS_SIGNED
+PPL_SAFE_CONVERSION(unsigned long long, char);
+#endif
 PPL_SAFE_CONVERSION(unsigned long long, unsigned char);
 PPL_SAFE_CONVERSION(unsigned long long, unsigned short);
 PPL_SAFE_CONVERSION(unsigned long long, unsigned int);
@@ -102,6 +148,7 @@ PPL_SAFE_CONVERSION(unsigned long long, unsigned long);
 
 
 #if PPL_SIZEOF_CHAR <= PPL_SIZEOF_FLOAT - 2
+PPL_SAFE_CONVERSION(float, char);
 PPL_SAFE_CONVERSION(float, signed char);
 PPL_SAFE_CONVERSION(float, unsigned char);
 #endif
@@ -123,6 +170,7 @@ PPL_SAFE_CONVERSION(float, unsigned long long);
 #endif
 
 #if PPL_SIZEOF_CHAR <= PPL_SIZEOF_DOUBLE - 4
+PPL_SAFE_CONVERSION(double, char);
 PPL_SAFE_CONVERSION(double, signed char);
 PPL_SAFE_CONVERSION(double, unsigned char);
 #endif
@@ -145,6 +193,7 @@ PPL_SAFE_CONVERSION(double, unsigned long long);
 PPL_SAFE_CONVERSION(double, float);
 
 #if PPL_SIZEOF_CHAR <= PPL_SIZEOF_LONG_DOUBLE - 4
+PPL_SAFE_CONVERSION(long double, char);
 PPL_SAFE_CONVERSION(long double, signed char);
 PPL_SAFE_CONVERSION(long double, unsigned char);
 #endif
@@ -167,6 +216,7 @@ PPL_SAFE_CONVERSION(long double, unsigned long long);
 PPL_SAFE_CONVERSION(long double, float);
 PPL_SAFE_CONVERSION(long double, double);
 
+PPL_SAFE_CONVERSION(mpz_class, char);
 PPL_SAFE_CONVERSION(mpz_class, signed char);
 PPL_SAFE_CONVERSION(mpz_class, signed short);
 PPL_SAFE_CONVERSION(mpz_class, signed int);
@@ -178,6 +228,7 @@ PPL_SAFE_CONVERSION(mpz_class, unsigned int);
 PPL_SAFE_CONVERSION(mpz_class, unsigned long);
 //PPL_SAFE_CONVERSION(mpz_class, unsigned long long);
 
+PPL_SAFE_CONVERSION(mpq_class, char);
 PPL_SAFE_CONVERSION(mpq_class, signed char);
 PPL_SAFE_CONVERSION(mpq_class, signed short);
 PPL_SAFE_CONVERSION(mpq_class, signed int);
@@ -212,7 +263,7 @@ struct PPL_FUNCTION_CLASS(construct) {
 
 template <typename To_Policy, typename To>
 struct PPL_FUNCTION_CLASS(construct_special) {
-  static inline Result function(To& to, Result r, Rounding_Dir dir) {
+  static inline Result function(To& to, Result_Class r, Rounding_Dir dir) {
     new (&to) To();
     return assign_special<To_Policy>(to, r, dir);
   }
@@ -238,37 +289,6 @@ abs_generic(To& to, const From& from, Rounding_Dir dir) {
     return neg<To_Policy, From_Policy>(to, from, dir);
   else
     return assign<To_Policy, From_Policy>(to, from, dir);
-}
-
-inline Result
-neg(Result r) {
-  assert(!is_special(r));
-  Result ret = static_cast<Result>(r & V_EQ);
-  if (r & V_LT)
-    ret = static_cast<Result>(ret | V_GT);
-  if (r & V_GT)
-    ret = static_cast<Result>(ret | V_LT);
-  return ret;
-}
-
-inline Result
-add(Result r1, Result r2) {
-  assert(!is_special(r1));
-  assert(!is_special(r2));
-  if (r1 == V_EQ)
-    return r2;
-  if (r2 == V_EQ)
-    return r1;
-  if (((r1 & V_LT) && (r2 & V_GT))
-      || ((r1 & V_GT) && (r2 & V_LT)))
-    return V_LGE;
-  return static_cast<Result>((((r1 & r2) & V_EQ) ? V_EQ : 0) |
-			       (r1 & (V_LT | V_GT)));
-}
-
-inline Result
-sub(Result r1, Result r2) {
-  return add(r1, neg(r2));
 }
 
 template <typename To_Policy, typename From1_Policy, typename From2_Policy,
@@ -410,13 +430,13 @@ lcm_gcd_exact(To& to, const From1& x, const From2& y, Rounding_Dir dir) {
 }
 
 template <typename Policy, typename Type>
-inline Result
+inline Result_Relation
 sgn_generic(const Type& x) {
   if (x > 0)
-    return V_GT;
+    return VR_GT;
   if (x == 0)
-    return V_EQ;
-  return V_LT;
+    return VR_EQ;
+  return VR_LT;
 }
 
 template <typename T1, typename T2, typename Enable = void>
@@ -462,7 +482,7 @@ inline typename Enable_If<(!Safe_Int_Comparison<S, U>::value
 			   && C_Integer<U>::value
 			   && C_Integer<S>::is_signed), bool>::type
 lt(const S& x, const U& y) {
-  return x < 0 || x < y;
+  return x < 0 || static_cast<typename C_Integer<S>::other_type>(x) < y;
 }
 
 template <typename U, typename S>
@@ -470,7 +490,7 @@ inline typename Enable_If<(!Safe_Int_Comparison<S, U>::value
 			   && C_Integer<U>::value
 			   && C_Integer<S>::is_signed), bool>::type
 lt(const U& x, const S& y) {
-  return y >= 0 && x < y;
+  return y >= 0 && x < static_cast<typename C_Integer<S>::other_type>(y);
 }
 
 template <typename S, typename U>
@@ -478,7 +498,7 @@ inline typename Enable_If<(!Safe_Int_Comparison<S, U>::value
 			   && C_Integer<U>::value
 			   && C_Integer<S>::is_signed), bool>::type
 le(const S& x, const U& y) {
-  return x < 0 || x <= y;
+  return x < 0 || static_cast<typename C_Integer<S>::other_type>(x) <= y;
 }
 
 template <typename U, typename S>
@@ -486,7 +506,7 @@ inline typename Enable_If<(!Safe_Int_Comparison<S, U>::value
 			   && C_Integer<U>::value
 			   && C_Integer<S>::is_signed), bool>::type
 le(const U& x, const S& y) {
-  return y >= 0 && x <= y;
+  return y >= 0 && x <= static_cast<typename C_Integer<S>::other_type>(y);
 }
 
 template <typename S, typename U>
@@ -494,7 +514,7 @@ inline typename Enable_If<(!Safe_Int_Comparison<S, U>::value
 			   && C_Integer<U>::value
 			   && C_Integer<S>::is_signed), bool>::type
 eq(const S& x, const U& y) {
-  return x >= 0 && x == y;
+  return x >= 0 && static_cast<typename C_Integer<S>::other_type>(x) == y;
 }
 
 template <typename U, typename S>
@@ -502,7 +522,7 @@ inline typename Enable_If<(!Safe_Int_Comparison<S, U>::value
 			   && C_Integer<U>::value
 			   && C_Integer<S>::is_signed), bool>::type
 eq(const U& x, const S& y) {
-  return y >= 0 && x == y;
+  return y >= 0 && x == static_cast<typename C_Integer<S>::other_type>(y);
 }
 
 template <typename T1, typename T2>
@@ -511,12 +531,12 @@ inline typename Enable_If<(!Safe_Conversion<T1, T2>::value
 			   && (!C_Integer<T1>::value || !C_Integer<T2>::value)), bool>::type
 eq(const T1& x, const T2& y) {
   PPL_DIRTY_TEMP(T1, tmp);
-  Result r = assign_r(tmp, y, static_cast<Rounding_Dir>(ROUND_DIRECT | ROUND_FPU_CHECK_INEXACT));
+  Result r = assign_r(tmp, y, ROUND_CHECK);
   // FIXME: We can do this also without fpu inexact check using a
   // conversion back and forth and then testing equality.  We should
   // code this in checked_float.inlines.hh, probably it's faster also
   // if fpu supports inexact check.
-  assert(r != V_LE && r != V_GE && r != V_LGE);
+  PPL_ASSERT(r != V_LE && r != V_GE && r != V_LGE);
   return r == V_EQ && x == tmp;
 }
 
@@ -527,13 +547,12 @@ inline typename Enable_If<(!Safe_Conversion<T1, T2>::value
 lt(const T1& x, const T2& y) {
   PPL_DIRTY_TEMP(T1, tmp);
   Result r = assign_r(tmp, y, ROUND_UP);
-  switch (r) {
-  case V_POS_OVERFLOW:
-  case VC_PLUS_INFINITY:
+  if (!result_representable(r))
     return true;
-  case V_EQ:
-  case V_LT:
-  case V_LE:
+  switch (result_relation(r)) {
+  case VR_EQ:
+  case VR_LT:
+  case VR_LE:
     return x < tmp;
   default:
     return false;
@@ -550,20 +569,19 @@ le(const T1& x, const T2& y) {
   Result r
     = assign_r(tmp,
                y,
-               static_cast<Rounding_Dir>(ROUND_UP | ROUND_FPU_CHECK_INEXACT));
-  switch (r) {
-  case V_POS_OVERFLOW:
-  case VC_PLUS_INFINITY:
+               static_cast<Rounding_Dir>(ROUND_UP | ROUND_STRICT_RELATION));
+  if (!result_representable(r))
     return true;
-  case V_EQ:
+  switch (result_relation(r)) {
+  case VR_EQ:
     return x <= tmp;
-  case V_LT:
+  case VR_LT:
     return x < tmp;
-  case V_LE:
-  case V_GE:
-  case V_LGE:
+  case VR_LE:
+  case VR_GE:
+  case VR_LGE:
     // FIXME: See comment above.
-    assert(0);
+    PPL_ASSERT(0);
   default:
     return false;
   }
@@ -592,13 +610,20 @@ eq_p(const Type1& x, const Type2& y) {
 
 template <typename Policy1, typename Policy2,
 	  typename Type1, typename Type2>
-inline Result
+inline Result_Relation
 cmp_generic(const Type1& x, const Type2& y) {
   if (lt(y, x))
-    return V_GT;
+    return VR_GT;
   if (lt(x, y))
-    return V_LT;
-  return V_EQ;
+    return VR_LT;
+  return VR_EQ;
+}
+
+template <typename Policy, typename Type>
+inline Result
+assign_nan(Type& to, Result r) {
+  assign_special<Policy>(to, VC_NAN, ROUND_IGNORE);
+  return r;
 }
 
 template <typename Policy, typename Type>
@@ -606,12 +631,18 @@ inline Result
 input_generic(Type& to, std::istream& is, Rounding_Dir dir) {
   PPL_DIRTY_TEMP0(mpq_class, q);
   Result r = input_mpq(q, is);
-  if (is_special(r))
-    return assign_special<Policy>(to, r, dir);
-  if (r == V_EQ)
-    return assign<Policy, void>(to, q, dir);
-  assert(0);
-  return VC_NAN;
+  Result_Class c = result_class(r);
+  switch (c) {
+  case VC_MINUS_INFINITY:
+  case VC_PLUS_INFINITY:
+    return assign_special<Policy>(to, c, dir);
+  case VC_NAN:
+    return assign_nan<Policy>(to, r);
+  default:
+    break;
+  }
+  PPL_ASSERT(r == V_EQ);
+  return assign<Policy, void>(to, q, dir);
 }
 
 } // namespace Checked

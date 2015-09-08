@@ -1,5 +1,6 @@
 /* Relation_Symbol enum declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -34,5 +35,10 @@ public enum Relation_Symbol {
     //! Greater than or equal to.
     GREATER_OR_EQUAL,
     //! Greater than.
-    GREATER_THAN
+    GREATER_THAN;
+
+    private static native void initIDs();
+    static {
+        initIDs();
+    }
 }

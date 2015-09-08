@@ -5,7 +5,8 @@ dnl ppl_prolog_generated_test_<CLASS_NAME>.pl, which test
 dnl the generated Prolog interface predicates
 dnl and the main file ppl_prolog_generated_test_main.pl.
 
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -609,8 +610,12 @@ ppl_@CLASS@_linear_@PARTITION@_4_test :-
    (
      ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA1, PS1, Space_Dim),
      ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA2, PS2, Space_Dim),
-     ppl_@CLASS@_linear_partition(PS1, PS2, PS3, _PPS),
-     ppl_@CLASS@_OK(PS3)
+     ppl_@CLASS@_linear_partition(PS1, PS2, PS3, PPS),
+     ppl_@CLASS@_OK(PS3),
+     ppl_delete_@CLASS@(PS1),
+     ppl_delete_@CLASS@(PS2),
+     ppl_delete_@CLASS@(PS3),
+     ppl_delete_Pointset_Powerset_NNC_Polyhedron(PPS)
    ->
      fail ; (class_@CLASS@ == class_BD_Shape_int8_t -> fail ; true))
   ).
@@ -625,8 +630,12 @@ ppl_@CLASS@_approximate_@PARTITION@_4_test :-
    (
      ppl_@CLASS@_build_test_object(TEST_DATA1, PS1, Space_Dim),
      ppl_@CLASS@_build_test_object(TEST_DATA2, PS2, Space_Dim),
-     ppl_@CLASS@_approximate_partition(PS1, PS2, PS3, _PPS, _Is_finite),
-     ppl_@CLASS@_OK(PS3)
+     ppl_@CLASS@_approximate_partition(PS1, PS2, PS3, PPS, _Is_finite),
+     ppl_@CLASS@_OK(PS3),
+     ppl_delete_@CLASS@(PS1),
+     ppl_delete_@CLASS@(PS2),
+     ppl_delete_@CLASS@(PS3),
+     ppl_delete_Pointset_Powerset_NNC_Polyhedron(PPS)
    ->
      fail ; (class_@CLASS@ == class_BD_Shape_int8_t -> fail ; true))
   ).
@@ -897,6 +906,31 @@ ppl_@CLASS@_@MAXMIN@_with_point_6_test :-
   ).
 
 ')
+m4_define(`ppl_@CLASS@_frequency_code',
+`
+ppl_@CLASS@_frequency_6_test :-
+  (
+   choose_test(TEST_DATA, Space_Dim),
+   (
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA, PS, Space_Dim),
+     ppl_frequency_test_data(TEST_DATA, t_@TOPOLOGY@, @CONSTRAINER@,
+                             LE, F_Nexptd, F_Dexptd, V_Nexptd, V_Dexptd,
+                             SuccessFlag),
+     (SuccessFlag == true
+     ->
+       (ppl_@CLASS@_frequency(PS, LE, F_N, F_D, V_N, V_D),
+        F_N == F_Nexptd, F_D == F_Dexptd,
+        V_N == V_Nexptd, V_D == V_Dexptd)
+     ;
+       \+ ppl_@CLASS@_frequency(PS, LE, F_N, F_D, V_N, V_D)
+     ),
+     ppl_@CLASS@_OK(PS),
+     ppl_delete_@CLASS@(PS)
+   ->
+     fail ; true)
+  ).
+
+')
 
 m4_define(`ppl_@CLASS@_@COMPARISON@_@CLASS@_code',
 `
@@ -959,56 +993,6 @@ ppl_@CLASS@_add_@CLASS_REPRESENT@_2_test1(PS, PS1, [R | RS]) :-
 
 ')
 
-m4_define(`ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize_code',
-`
-:- discontiguous(ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize_2_test1/3).
-
-ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize_2_test :-
-  (
-   member(TEST_DATA, [test00, test02, test03, test04, test05]),
-   choose_test(TEST_DATA, Space_Dim),
-   (
-     ppl_build_test_data(TEST_DATA, t_@TOPOLOGY@, @CLASS_REPRESENT@s, RS),
-     ppl_initial_test_system(@CLASS_REPRESENT@, U_or_E),
-     clean_ppl_new_@TOPOLOGY@@CLASS@_from_space_dimension(Space_Dim,
-                                                          U_or_E, PS),
-     ppl_@CLASS@_add_@CLASS_REPRESENT@s(PS, RS),
-     clean_ppl_new_@TOPOLOGY@@CLASS@_from_space_dimension(Space_Dim,
-                                                        U_or_E, PS1),
-     (predicate_exists(ppl_@CLASS@_is_empty)
-     ->
-       (\+ ppl_@CLASS@_is_empty(PS)
-       ->
-         ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize_2_test1(PS, PS1, RS)
-       ;
-         true
-       )
-     ;
-       true
-     ),
-     ppl_delete_@CLASS@(PS),
-     ppl_delete_@CLASS@(PS1)
-   ->
-     fail ; true)
-  ).
-
-ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize_2_test1(PS, PS1, []) :-
-  (
-   (predicate_exists(ppl_@CLASS@_equals_@CLASS@)
-   ->
-     ppl_@CLASS@_equals_@CLASS@(PS, PS1)
-   ;
-     true
-   )
-  ).
-ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize_2_test1(PS, PS1, [R | RS]) :-
-  (
-   ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize(PS1, R),
-   ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize_2_test1(PS, PS1, RS)
-  ).
-
-')
-
 m4_define(`ppl_@CLASS@_add_@CLASS_REPRESENT@s_code',
 `
 ppl_@CLASS@_add_@CLASS_REPRESENT@s_2_test :-
@@ -1034,69 +1018,6 @@ ppl_@CLASS@_add_@CLASS_REPRESENT@s_2_test :-
      ),
      ppl_delete_@CLASS@(PS),
      ppl_delete_@CLASS@(PS1)
-   ->
-     fail ; true)
-  ).
-
-')
-
-m4_define(`ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize_code',
-`
-ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize_2_test :-
-  (
-   member(TEST_DATA1, [test00, test02, test03, test04, test05]),
-   member(TEST_DATA2, [test00, test02, test03, test04, test05]),
-   choose_2_tests(TEST_DATA1, TEST_DATA2, Dim),
-   (
-     ppl_build_test_data(TEST_DATA1, t_@TOPOLOGY@, @CLASS_REPRESENT@s, RS),
-     ppl_build_test_data(TEST_DATA2, t_@TOPOLOGY@, @CLASS_REPRESENT@s, RS1),
-     ppl_initial_test_system(@CLASS_REPRESENT@, U_or_E),
-     ppl_new_@TOPOLOGY@@CLASS@_from_space_dimension(Dim, U_or_E, PS),
-     ppl_new_@TOPOLOGY@@CLASS@_from_space_dimension(Dim, U_or_E, PS1),
-     ppl_new_@TOPOLOGY@@CLASS@_from_space_dimension(Dim, U_or_E, PS_min),
-     ppl_new_@TOPOLOGY@@CLASS@_from_space_dimension(Dim, U_or_E, PS1_min),
-     ppl_@CLASS@_add_@CLASS_REPRESENT@s(PS, RS),
-     ppl_@CLASS@_add_@CLASS_REPRESENT@s(PS, RS1),
-     ppl_@CLASS@_add_@CLASS_REPRESENT@s(PS_min, RS),
-     (predicate_exists(ppl_@CLASS@_is_empty)
-     ->
-       (ppl_@CLASS@_is_empty(PS)
-       ->
-         \+ ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize(PS_min, RS1),
-         ppl_@CLASS@_add_@CLASS_REPRESENT@s(PS_min, RS1)
-       ;
-         ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize(PS_min, RS1)
-       )
-     ;
-       true
-     ),
-     ppl_@CLASS@_add_@CLASS_REPRESENT@s(PS1, RS1),
-     ppl_@CLASS@_add_@CLASS_REPRESENT@s(PS1, RS),
-     ppl_@CLASS@_add_@CLASS_REPRESENT@s(PS1_min, RS1),
-     (predicate_exists(ppl_@CLASS@_is_empty)
-     ->
-       (ppl_@CLASS@_is_empty(PS1)
-       ->
-         \+ ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize(PS1_min, RS),
-         ppl_@CLASS@_add_@CLASS_REPRESENT@s(PS1_min, RS)
-       ;
-         ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize(PS1_min, RS)
-       )
-     ;
-       true
-     ),
-     (predicate_exists(ppl_@CLASS@_equals_@CLASS@)
-     ->
-       ppl_@CLASS@_equals_@CLASS@(PS_min, PS1_min),
-       ppl_@CLASS@_equals_@CLASS@(PS, PS1_min),
-       ppl_@CLASS@_equals_@CLASS@(PS1, PS1_min)
-     ;
-       true
-     ),
-     ppl_delete_@CLASS@(PS),
-     ppl_delete_@CLASS@(PS_min),
-     ppl_delete_@CLASS@(PS1),
-     ppl_delete_@CLASS@(PS1_min)
    ->
      fail ; true)
   ).
@@ -1785,6 +1706,240 @@ ppl_@CLASS@_map_space_dimensions_2_test :-
      ppl_delete_@CLASS@(PS),
      ppl_delete_@CLASS@(PSa),
      ppl_delete_@CLASS@(PS_Copy)
+   ->
+    fail ; true)
+  ).
+
+')
+
+m4_define(`ppl_@CLASS@_wrap_assign_code',
+`
+ppl_@CLASS@_wrap_assign_8_test :-
+  (
+   choose_test(TEST_DATA, Dim),
+   (
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA, PS, Dim),
+     ppl_new_@TOPOLOGY@@CLASS@_from_@TOPOLOGY@@CLASS@(PS, PS_Copy),
+     ppl_@CLASS@_wrap_assign(PS, [], bits_8, unsigned, overflow_wraps,
+                             [], 0, true),
+     ppl_@CLASS@_equals_@CLASS@(PS, PS_Copy),
+     ppl_@CLASS@_OK(PS),
+     ppl_delete_@CLASS@(PS),
+     ppl_delete_@CLASS@(PS_Copy)
+   ->
+    fail ; true)
+  ).
+
+')
+
+m4_define(`ppl_@CLASS@_drop_some_non_integer_points_code',
+`
+ppl_@CLASS@_drop_some_non_integer_points_2_test :-
+  (
+   choose_test(TEST_DATA, Dim),
+   (
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA, PS, Dim),
+     ppl_new_@TOPOLOGY@@CLASS@_from_@TOPOLOGY@@CLASS@(PS, PS_Copy),
+     ppl_@CLASS@_drop_some_non_integer_points(PS, any),
+     ppl_@CLASS@_OK(PS),
+     ppl_delete_@CLASS@(PS),
+     ppl_delete_@CLASS@(PS_Copy)
+   ->
+    fail ; true)
+  ).
+
+')
+
+m4_define(`ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+`
+ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_1_test :-
+  (
+   choose_2_tests(TEST_DATA1, TEST_DATA2, Space_Dim),
+   (
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA1, PS1, Space_Dim),
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA2, PS2, Space_Dim),
+     ppl_@CLASS@_concatenate_assign(PS1, PS2),
+     (ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@(PS1) ->
+        true
+     ;
+        true
+     ),
+     ppl_@CLASS@_OK(PS1),
+     ppl_delete_@CLASS@(PS1),
+     ppl_delete_@CLASS@(PS2)
+   ->
+    fail ; true)
+  ).
+
+')
+
+m4_define(`ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+`
+ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_2_test :-
+  (
+   choose_2_tests(TEST_DATA1, TEST_DATA2, Space_Dim),
+   (
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA1, PS1, Space_Dim),
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA2, PS2, Space_Dim),
+     ppl_@CLASS@_concatenate_assign(PS1, PS2),
+     (ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2(PS2, PS1) ->
+        true
+     ;
+        true
+     ),
+     ppl_@CLASS@_OK(PS1),
+     ppl_@CLASS@_OK(PS2),
+     ppl_delete_@CLASS@(PS1),
+     ppl_delete_@CLASS@(PS2)
+   ->
+    fail ; true)
+  ).
+
+')
+
+m4_define(
+  `ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+`
+ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_test :-
+  (
+   choose_2_tests(TEST_DATA1, TEST_DATA2, Space_Dim),
+   (
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA1, PS1, Space_Dim),
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA2, PS2, Space_Dim),
+     ppl_@CLASS@_concatenate_assign(PS1, PS2),
+     (ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@(PS1,
+                                                                         _Pt)
+     ->
+        true
+     ;
+        true
+     ),
+     ppl_@CLASS@_OK(PS1),
+     ppl_@CLASS@_OK(PS2),
+     ppl_delete_@CLASS@(PS1),
+     ppl_delete_@CLASS@(PS2)
+   ->
+    fail ; true)
+  ).
+
+')
+
+m4_define(
+  `ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+`
+ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_2_test :-
+  (
+   choose_2_tests(TEST_DATA1, TEST_DATA2, Space_Dim),
+   (
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA1, PS1, Space_Dim),
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA2, PS2, Space_Dim),
+     ppl_@CLASS@_concatenate_assign(PS1, PS2),
+     (ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2(PS2,
+                                                                           PS1,
+                                                                           _Pt)
+     ->
+        true
+     ;
+        true
+     ),
+     ppl_@CLASS@_OK(PS1),
+     ppl_@CLASS@_OK(PS2),
+     ppl_delete_@CLASS@(PS1),
+     ppl_delete_@CLASS@(PS2)
+   ->
+    fail ; true)
+  ).
+
+')
+
+m4_define(
+  `ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+`
+ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_test :-
+  (
+   choose_2_tests(TEST_DATA1, TEST_DATA2, Space_Dim),
+   (
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA1, PS1, Space_Dim),
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA2, PS2, Space_Dim),
+     ppl_@CLASS@_concatenate_assign(PS1, PS2),
+     ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@(PS1,
+                                                                         Ph),
+     ppl_Polyhedron_OK(Ph),
+     ppl_@CLASS@_OK(PS1),
+     ppl_@CLASS@_OK(PS2),
+     ppl_delete_@CLASS@(PS1),
+     ppl_delete_@CLASS@(PS2)
+   ->
+    fail ; true)
+  ).
+
+')
+
+m4_define(
+  `ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+`
+ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_2_test :-
+  (
+   choose_2_tests(TEST_DATA1, TEST_DATA2, Space_Dim),
+   (
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA1, PS1, Space_Dim),
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA2, PS2, Space_Dim),
+     ppl_@CLASS@_concatenate_assign(PS1, PS2),
+     ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2(PS2,
+                                                                           PS1,
+                                                                           Ph),
+     ppl_Polyhedron_OK(Ph),
+     ppl_@CLASS@_OK(PS1),
+     ppl_@CLASS@_OK(PS2),
+     ppl_delete_@CLASS@(PS1),
+     ppl_delete_@CLASS@(PS2)
+   ->
+    fail ; true)
+  ).
+
+')
+
+m4_define(
+  `ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_code',
+`
+ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_3_test :-
+  (
+   choose_2_tests(TEST_DATA1, TEST_DATA2, Space_Dim),
+   (
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA1, PS1, Space_Dim),
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA2, PS2, Space_Dim),
+     ppl_@CLASS@_concatenate_assign(PS1, PS2),
+     ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@(PS1, Ph1, Ph2),
+     ppl_Polyhedron_OK(Ph1),
+     ppl_Polyhedron_OK(Ph2),
+     ppl_@CLASS@_OK(PS1),
+     ppl_@CLASS@_OK(PS2),
+     ppl_delete_@CLASS@(PS1),
+     ppl_delete_@CLASS@(PS2)
+   ->
+    fail ; true)
+  ).
+
+')
+
+m4_define(
+  `ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2_code',
+`
+ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2_4_test :-
+  (
+   choose_2_tests(TEST_DATA1, TEST_DATA2, Space_Dim),
+   (
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA1, PS1, Space_Dim),
+     ppl_@TOPOLOGY@@CLASS@_build_test_object(TEST_DATA2, PS2, Space_Dim),
+     ppl_@CLASS@_concatenate_assign(PS1, PS2),
+     ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2(PS2, PS1,
+                                                                   Ph1, Ph2),
+     ppl_Polyhedron_OK(Ph1),
+     ppl_Polyhedron_OK(Ph2),
+     ppl_@CLASS@_OK(PS1),
+     ppl_@CLASS@_OK(PS2),
+     ppl_delete_@CLASS@(PS1),
+     ppl_delete_@CLASS@(PS2)
    ->
     fail ; true)
   ).

@@ -1,5 +1,6 @@
 /* Grid_Generator_Type enum declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -30,5 +31,10 @@ public enum Grid_Generator_Type {
     //! The generator is a parameter.
     PARAMETER,
     //! The generator is a point.
-    POINT
+    POINT;
+
+    private static native void initIDs();
+    static {
+        initIDs();
+    }
 }

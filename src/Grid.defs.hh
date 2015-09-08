@@ -1,5 +1,6 @@
 /* Grid class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -28,7 +29,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "Variable.defs.hh"
 #include "Variables_Set.types.hh"
 #include "Linear_Expression.defs.hh"
-#include "Constraint.defs.hh"
+#include "Constraint.types.hh"
 #include "Constraint_System.defs.hh"
 #include "Constraint_System.inlines.hh"
 #include "Congruence_System.defs.hh"
@@ -40,9 +41,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "Poly_Gen_Relation.defs.hh"
 #include "Grid_Certificate.types.hh"
 #include "Box.types.hh"
-#include "Polyhedron.defs.hh"
 #include "Polyhedron.types.hh"
-#include "Polyhedron.inlines.hh"
 #include "BD_Shape.types.hh"
 #include "Octagonal_Shape.types.hh"
 #include <vector>
@@ -325,10 +324,10 @@ bool operator!=(const Grid& x, const Grid& y);
   Grid_Generator_System gs;
   gs.insert(grid_point(3*x + y +0*z + 2*w));
   Grid gr(gs);
-  Variables_Set to_be_removed;
-  to_be_removed.insert(y);
-  to_be_removed.insert(z);
-  gr.remove_space_dimensions(to_be_removed);
+  Variables_Set vars;
+  vars.insert(y);
+  vars.insert(z);
+  gr.remove_space_dimensions(vars);
   \endcode
   The starting grid is the singleton set
   \f$\bigl\{ (3, 1, 0, 2)^\transpose \bigr\} \sseq \Rset^4\f$, while
@@ -341,16 +340,16 @@ bool operator!=(const Grid& x, const Grid& y);
   For instance, by using the following code we would obtain
   a different result:
   \code
-  set<Variable> to_be_removed1;
-  to_be_removed1.insert(y);
-  gr.remove_space_dimensions(to_be_removed1);
-  set<Variable> to_be_removed2;
-  to_be_removed2.insert(z);
-  gr.remove_space_dimensions(to_be_removed2);
+  set<Variable> vars1;
+  vars1.insert(y);
+  gr.remove_space_dimensions(vars1);
+  set<Variable> vars2;
+  vars2.insert(z);
+  gr.remove_space_dimensions(vars2);
   \endcode
   In this case, the result is the grid
   \f$\bigl\{(3, 0)^\transpose \bigr\} \sseq \Rset^2\f$:
-  when removing the set of dimensions \p to_be_removed2
+  when removing the set of dimensions \p vars2
   we are actually removing variable \f$w\f$ of the original grid.
   For the same reason, the operator \p remove_space_dimensions
   is not idempotent: removing twice the same non-empty set of dimensions
@@ -367,13 +366,13 @@ public:
 
   /*! \brief
     Returns true indicating that this domain has methods that
-    can recycle congruences
+    can recycle congruences.
   */
   static bool can_recycle_congruence_systems();
 
   /*! \brief
     Returns true indicating that this domain has methods that
-    can recycle constraints
+    can recycle constraints.
   */
   static bool can_recycle_constraint_systems();
 
@@ -556,77 +555,6 @@ public:
   explicit Grid(const Octagonal_Shape<U>& os,
                 Complexity_Class complexity = ANY_COMPLEXITY);
 
-  //! Builds a grid out of a generic, interval-based covering box.
-  /*!
-    The covering box is a set of upper and lower values for each
-    dimension.  When a covering box is tiled onto empty space the
-    corners of the tiles form a rectilinear grid.
-
-    A box interval with only one bound fixes the values of all grid
-    points in the dimension associated with the box to the value of
-    the bound.  A box interval which has upper and lower bounds of
-    equal value allows all grid points with any value in the dimension
-    associated with the interval.  The presence of a universe interval
-    results in the empty grid.  The empty box produces the empty grid
-    of the same dimension as the box.
-
-    \param box
-    The covering box representing the grid to be built;
-
-    \param dummy
-    A dummy tag to make this constructor syntactically unique.
-
-    \exception std::length_error
-    Thrown if the space dimension of \p box exceeds the maximum
-    allowed space dimension.
-
-    \exception std::invalid_argument
-    Thrown if \p box contains any topologically open bounds.
-
-    The template class Box must provide the following methods.
-    \code
-      dimension_type space_dimension() const
-    \endcode
-    returns the dimension of the vector space enclosing the grid
-    represented by the covering box.
-    \code
-      bool is_empty() const
-    \endcode
-    returns <CODE>true</CODE> if and only if the covering box
-    describes the empty set.
-    \code
-      bool get_lower_bound(dimension_type k, bool& closed,
-                           Coefficient& n, Coefficient& d) const
-    \endcode
-    Let \f$I\f$ be the interval corresponding to the <CODE>k</CODE>-th
-    space dimension.  If \f$I\f$ is not bounded from below, simply return
-    <CODE>false</CODE>.  Otherwise, set <CODE>closed</CODE>,
-    <CODE>n</CODE> and <CODE>d</CODE> as follows: <CODE>closed</CODE>
-    is set to <CODE>true</CODE> if the lower boundary of \f$I\f$
-    is closed and is set to <CODE>false</CODE> otherwise;
-    <CODE>n</CODE> and <CODE>d</CODE> are assigned the integers
-    \f$n\f$ and \f$d\f$ such that the canonical fraction \f$n/d\f$
-    corresponds to the greatest lower bound of \f$I\f$.  The fraction
-    \f$n/d\f$ is in canonical form if and only if \f$n\f$ and \f$d\f$
-    have no common factors and \f$d\f$ is positive, \f$0/1\f$ being
-    the unique representation for zero.
-    \code
-      bool get_upper_bound(dimension_type k, bool& closed,
-                           Coefficient& n, Coefficient& d) const
-    \endcode
-    Let \f$I\f$ be the interval corresponding to the <CODE>k</CODE>-th
-    space dimension.  If \f$I\f$ is not bounded from above, simply return
-    <CODE>false</CODE>.  Otherwise, set <CODE>closed</CODE>,
-    <CODE>n</CODE> and <CODE>d</CODE> as follows: <CODE>closed</CODE>
-    is set to <CODE>true</CODE> if the upper boundary of \f$I\f$
-    is closed and is set to <CODE>false</CODE> otherwise;
-    <CODE>n</CODE> and <CODE>d</CODE> are assigned the integers
-    \f$n\f$ and \f$d\f$ such that the canonical fraction \f$n/d\f$
-    corresponds to the least upper bound of \f$I\f$.
-  */
-  template <typename Box>
-  Grid(const Box& box, From_Covering_Box dummy);
-
   /*! \brief
     Builds a grid from a polyhedron using algorithms whose complexity
     does not exceed the one specified by \p complexity.
@@ -648,7 +576,7 @@ public:
   explicit Grid(const Polyhedron& ph,
                 Complexity_Class complexity = ANY_COMPLEXITY);
 
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   /*!
     The complexity argument is ignored.
   */
@@ -932,6 +860,40 @@ public:
 		Coefficient& inf_n, Coefficient& inf_d, bool& minimum,
 		Generator& point) const;
 
+  /*! \brief
+    Returns <CODE>true</CODE> if and only if \p *this is not empty and
+    \ref Grid_Frequency "frequency" for \p *this with respect to \p expr
+    is defined, in which case the frequency and the value for \p expr
+    that is closest to zero are computed.
+
+    \param expr
+    The linear expression for which the frequency is needed;
+
+    \param freq_n
+    The numerator of the maximum frequency of \p expr;
+
+    \param freq_d
+    The denominator of the maximum frequency of \p expr;
+
+    \param val_n
+    The numerator of them value of \p expr at a point in the grid
+    that is closest to zero;
+
+    \param val_d
+    The denominator of a value of \p expr at a point in the grid
+    that is closest to zero;
+
+    \exception std::invalid_argument
+    Thrown if \p expr and \p *this are dimension-incompatible.
+
+    If \p *this is empty or frequency is undefined with respect to \p expr,
+    then <CODE>false</CODE> is returned and \p freq_n, \p freq_d,
+    \p val_n and \p val_d are left untouched.
+  */
+  bool frequency(const Linear_Expression& expr,
+                 Coefficient& freq_n, Coefficient& freq_d,
+                 Coefficient& val_n, Coefficient& val_d) const;
+
   //! Returns <CODE>true</CODE> if and only if \p *this contains \p y.
   /*!
     \exception std::invalid_argument
@@ -947,36 +909,6 @@ public:
     Thrown if \p *this and \p y are dimension-incompatible.
   */
   bool strictly_contains(const Grid& y) const;
-
-  //! Writes the covering box for \p *this into \p box.
-  /*!
-    The covering box is a set of upper and lower values for each
-    dimension.  When the covering box written into \p box is tiled
-    onto empty space the corners of the tiles form the sparsest
-    rectilinear grid that includes \p *this.
-
-    The value of the lower bound of each interval of the resulting \p
-    box are as close as possible to the origin, with positive values
-    taking preference when the lowest positive value equals the lowest
-    negative value.
-
-    If all the points have a single value in a particular dimension of
-    the grid then there is only a lower bound on the interval produced
-    in \p box, and the lower bound denotes the single value for the
-    dimension.  If the coordinates of the points in a particular
-    dimension include every value then the upper and lower bounds of
-    the associated interval in \p box are set equal.  The empty grid
-    produces the empty \p box.  The zero dimension universe grid
-    produces the zero dimension universe box.
-
-    \param box
-    The Box into which the covering box is written.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p box are dimension-incompatible.
-  */
-  template <typename Interval>
-  void get_covering_box(Box<Interval>& box) const;
 
   //! Checks if all the invariants are satisfied.
   /*!
@@ -1011,21 +943,6 @@ public:
   void add_congruence(const Congruence& cg);
 
   /*! \brief
-    Adds a copy of congruence \p cg to the system of congruences of \p
-    *this, reducing the result
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and congruence \p cg are dimension-incompatible.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_congruence_and_minimize(const Congruence& c);
-
-  /*! \brief
     Adds a copy of grid generator \p g to the system of generators of
     \p *this.
 
@@ -1034,22 +951,6 @@ public:
     or if \p *this is an empty grid and \p g is not a point.
   */
   void add_grid_generator(const Grid_Generator& g);
-
-  /*! \brief
-    Adds a copy of grid generator \p g to the system of generators of
-    \p *this, reducing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and generator \p g are dimension-incompatible,
-    or if \p *this is an empty grid and \p g is not a point.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_grid_generator_and_minimize(const Grid_Generator& g);
 
   //! Adds a copy of each congruence in \p cgs to \p *this.
   /*!
@@ -1069,55 +970,13 @@ public:
     \p cgs may be recycled.
 
     \exception std::invalid_argument
-    Thrown if \p *this and \p cs are dimension-incompatible.
+    Thrown if \p *this and \p cgs are dimension-incompatible.
 
     \warning
     The only assumption that can be made about \p cgs upon successful
     or exceptional return is that it can be safely destroyed.
   */
   void add_recycled_congruences(Congruence_System& cgs);
-
-  /*! \brief
-    Adds a copy of the congruences in \p cgs to the system of
-    congruences of \p *this, reducing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \param cgs
-    Contains the congruences that will be added to the system of
-    congruences of \p *this.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p cgs are dimension-incompatible.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_congruences_and_minimize(const Congruence_System& cgs);
-
-  /*! \brief
-    Adds the congruences in \p cgs to the system of congruences of \p
-    *this, reducing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \param cgs
-    The congruence system to be added to \p *this.  The congruences in
-    \p cgs may be recycled.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p cgs are dimension-incompatible.
-
-    \warning
-    The only assumption that can be made about \p cgs upon successful
-    or exceptional return is that it can be safely destroyed.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_recycled_congruences_and_minimize(Congruence_System& cgs);
 
   /*! \brief
     Adds to \p *this a congruence equivalent to constraint \p c.
@@ -1132,25 +991,6 @@ public:
   void add_constraint(const Constraint& c);
 
   /*! \brief
-    Adds to \p *this a congruence equivalent to constraint \p c,
-    also minimizing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \param c
-    The constraint to be added.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p c are dimension-incompatible
-    or if constraint \p c is not optimally supported by the grid domain.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_constraint_and_minimize(const Constraint& c);
-
-  /*! \brief
     Adds to \p *this congruences equivalent to the constraints in \p cs.
 
     \param cs
@@ -1162,26 +1002,6 @@ public:
     by the grid domain.
   */
   void add_constraints(const Constraint_System& cs);
-
-  /*! \brief
-    Adds to \p *this congruences equivalent to the constraints in \p cs,
-    minimizing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \param cs
-    The constraints to be added.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p cs are dimension-incompatible
-    or if \p cs contains a constraint whcih is not optimally supported
-    by the grid domain.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_constraints_and_minimize(const Constraint_System& cs);
 
   /*! \brief
     Adds to \p *this congruences equivalent to the constraints in \p cs.
@@ -1199,30 +1019,6 @@ public:
     or exceptional return is that it can be safely destroyed.
   */
   void add_recycled_constraints(Constraint_System& cs);
-
-  /*! \brief
-    Adds to \p *this congruences equivalent to the constraints in \p cs,
-    minimizing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \param cs
-    The constraints to be added. They may be recycled.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p cs are dimension-incompatible
-    or if \p cs contains a constraint whcih is not optimally supported
-    by the grid domain.
-
-    \warning
-    The only assumption that can be made about \p cs upon successful
-    or exceptional return is that it can be safely destroyed.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_recycled_constraints_and_minimize(Constraint_System& cs);
 
   //! Uses a copy of the congruence \p cg to refine \p *this.
   /*!
@@ -1298,50 +1094,6 @@ public:
   void add_recycled_grid_generators(Grid_Generator_System& gs);
 
   /*! \brief
-    Adds a copy of the generators in \p gs to the system of generators
-    of \p *this, reducing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \param gs
-    Contains the generators that will be added to the system of
-    generators of \p *this.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p gs are dimension-incompatible, or if \p
-    *this is empty and the system of generators \p gs is not empty,
-    but has no points.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_grid_generators_and_minimize(const Grid_Generator_System& gs);
-
-  /*! \brief
-    Adds the generators in \p gs to the system of generators of \p
-    *this, reducing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \param gs
-    The generator system to be added to \p *this.  The generators in
-    \p gs may be recycled.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p gs are dimension-incompatible.
-
-    \warning
-    The only assumption that can be made about \p gs upon successful
-    or exceptional return is that it can be safely destroyed.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_recycled_grid_generators_and_minimize(Grid_Generator_System& gs);
-
-  /*! \brief
     Computes the \ref Cylindrification "cylindrification" of \p *this with
     respect to space dimension \p var, assigning the result to \p *this.
 
@@ -1355,17 +1107,17 @@ public:
 
   /*! \brief
     Computes the \ref Cylindrification "cylindrification" of \p *this with
-    respect to the set of space dimensions \p to_be_unconstrained,
+    respect to the set of space dimensions \p vars,
     assigning the result to \p *this.
 
-    \param to_be_unconstrained
+    \param vars
     The set of space dimension that will be unconstrained.
 
     \exception std::invalid_argument
     Thrown if \p *this is dimension-incompatible with one of the
-    Variable objects contained in \p to_be_removed.
+    Variable objects contained in \p vars.
   */
-  void unconstrain(const Variables_Set& to_be_unconstrained);
+  void unconstrain(const Variables_Set& vars);
 
   /*! \brief
     Assigns to \p *this the intersection of \p *this and \p y.
@@ -1376,42 +1128,12 @@ public:
   void intersection_assign(const Grid& y);
 
   /*! \brief
-    Assigns to \p *this the intersection of \p *this and \p y,
-    reducing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p y are dimension-incompatible.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool intersection_assign_and_minimize(const Grid& y);
-
-  /*! \brief
     Assigns to \p *this the least upper bound of \p *this and \p y.
 
     \exception std::invalid_argument
     Thrown if \p *this and \p y are dimension-incompatible.
   */
   void upper_bound_assign(const Grid& y);
-
-  /*! \brief
-    Assigns to \p *this the least upper bound of \p *this and \p y,
-    reducing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p y are dimension-incompatible.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool upper_bound_assign_and_minimize(const Grid& y);
 
   /*! \brief
     If the upper bound of \p *this and \p y is exact it is assigned to \p
@@ -1424,8 +1146,8 @@ public:
   bool upper_bound_assign_if_exact(const Grid& y);
 
   /*! \brief
-    Assigns to \p *this the \ref Grid_Difference "grid-difference" of
-    \p *this and \p y.
+    Assigns to \p *this the \ref Convex_Polyhedral_Difference "grid-difference"
+    of \p *this and \p y.
 
     The grid difference between grids x and y is the smallest grid
     containing all the points from x and y that are only in x.
@@ -1789,6 +1511,86 @@ public:
   */
   void time_elapse_assign(const Grid& y);
 
+  /*! \brief
+    \ref Wrapping_Operator "Wraps" the specified dimensions of the
+    vector space.
+
+    \param vars
+    The set of Variable objects corresponding to the space dimensions
+    to be wrapped.
+
+    \param w
+    The width of the bounded integer type corresponding to
+    all the dimensions to be wrapped.
+
+    \param r
+    The representation of the bounded integer type corresponding to
+    all the dimensions to be wrapped.
+
+    \param o
+    The overflow behavior of the bounded integer type corresponding to
+    all the dimensions to be wrapped.
+
+    \param pcs
+    Possibly null pointer to a constraint system.
+    This argument is for compatibility with wrap_assign()
+    for the other domains and only checked for dimension-compatibility.
+
+    \param complexity_threshold
+    A precision parameter of the \ref Wrapping_Operator "wrapping operator".
+    This argument is for compatibility with wrap_assign()
+    for the other domains and is ignored.
+
+    \param wrap_individually
+    <CODE>true</CODE> if the dimensions should be wrapped individually.
+    As wrapping dimensions collectively does not improve the precision,
+    this argument is ignored.
+
+    \exception std::invalid_argument
+    Thrown if \p *this is dimension-incompatible with one of the
+    Variable objects contained in \p vars or with <CODE>*pcs</CODE>.
+
+    \warning
+    It is assumed that variables in \p Vars represent integers.  Thus,
+    where the extra cost is negligible, the integrality of these
+    variables is enforced; possibly causing a non-integral grid to
+    become empty.
+  */
+  void wrap_assign(const Variables_Set& vars,
+                   Bounded_Integer_Type_Width w,
+                   Bounded_Integer_Type_Representation r,
+                   Bounded_Integer_Type_Overflow o,
+                   const Constraint_System* pcs = 0,
+                   unsigned complexity_threshold = 16,
+                   bool wrap_individually = true);
+
+  /*! \brief
+    Possibly tightens \p *this by dropping all points with non-integer
+    coordinates.
+
+    \param complexity
+    This argument is ignored as the algorithm used has polynomial
+    complexity.
+  */
+   void drop_some_non_integer_points(Complexity_Class complexity
+                                    = ANY_COMPLEXITY);
+
+  /*! \brief
+    Possibly tightens \p *this by dropping all points with non-integer
+    coordinates for the space dimensions corresponding to \p vars.
+
+    \param vars
+    Points with non-integer coordinates for these variables/space-dimensions
+    can be discarded.
+
+    \param complexity
+    This argument is ignored as the algorithm used has polynomial
+    complexity.
+  */
+  void drop_some_non_integer_points(const Variables_Set& vars,
+                                    Complexity_Class complexity
+                                    = ANY_COMPLEXITY);
+
   //! Assigns to \p *this its topological closure.
   void topological_closure_assign();
 
@@ -1865,7 +1667,7 @@ public:
     \ref Grid_Widening_with_Tokens "widening with tokens" delay technique).
 
     \exception std::invalid_argument
-    Thrown if \p *this, \p y and \p cs are dimension-incompatible.
+    Thrown if \p *this, \p y and \p cgs are dimension-incompatible.
   */
   void limited_congruence_extrapolation_assign(const Grid& y,
 					       const Congruence_System& cgs,
@@ -1889,7 +1691,7 @@ public:
     \ref Grid_Widening_with_Tokens "widening with tokens" delay technique).
 
     \exception std::invalid_argument
-    Thrown if \p *this, \p y and \p cs are dimension-incompatible.
+    Thrown if \p *this, \p y and \p cgs are dimension-incompatible.
   */
   void limited_generator_extrapolation_assign(const Grid& y,
 					      const Congruence_System& cgs,
@@ -1912,7 +1714,7 @@ public:
     \ref Grid_Widening_with_Tokens "widening with tokens" delay technique).
 
     \exception std::invalid_argument
-    Thrown if \p *this, \p y and \p cs are dimension-incompatible.
+    Thrown if \p *this, \p y and \p cgs are dimension-incompatible.
   */
   void limited_extrapolation_assign(const Grid& y,
 				    const Congruence_System& cgs,
@@ -1924,7 +1726,8 @@ public:
   //@{
 
   /*! \brief
-    Adds \p m new space dimensions and embeds the old grid in the new
+    \ref Adding_New_Dimensions_to_the_Vector_Space "Adds"
+    \p m new space dimensions and embeds the old grid in the new
     vector space.
 
     \param m
@@ -1951,7 +1754,8 @@ public:
   void add_space_dimensions_and_embed(dimension_type m);
 
   /*! \brief
-    Adds \p m new space dimensions to the grid and does not embed it
+    \ref Adding_New_Dimensions_to_the_Vector_Space "Adds"
+    \p m new space dimensions to the grid and does not embed it
     in the new vector space.
 
     \param m
@@ -1978,7 +1782,7 @@ public:
   void add_space_dimensions_and_project(dimension_type m);
 
   /*! \brief
-    Assigns to \p *this the \ref Grid_Concatenate "concatenation" of
+    Assigns to \p *this the \ref Concatenating_Polyhedra "concatenation" of
     \p *this and \p y, taken in this order.
 
     \exception std::length_error
@@ -1989,19 +1793,20 @@ public:
 
   //! Removes all the specified dimensions from the vector space.
   /*!
-    \param to_be_removed
+    \param vars
     The set of Variable objects corresponding to the space dimensions
     to be removed.
 
     \exception std::invalid_argument
     Thrown if \p *this is dimension-incompatible with one of the
-    Variable objects contained in \p to_be_removed.
+    Variable objects contained in \p vars.
   */
-  void remove_space_dimensions(const Variables_Set& to_be_removed);
+  void remove_space_dimensions(const Variables_Set& vars);
 
   /*! \brief
     Removes the higher dimensions of the vector space so that the
-    resulting space will have dimension \p new_dimension.
+    resulting space will have \ref Removing_Dimensions_from_the_Vector_Space
+    "dimension \p new_dimension."
 
     \exception std::invalid_argument
     Thrown if \p new_dimensions is greater than the space dimension of
@@ -2011,7 +1816,7 @@ public:
 
   /*! \brief
     Remaps the dimensions of the vector space according to
-    a \ref Grid_Map_Space_Dimensions "partial function".
+    a \ref Mapping_the_Dimensions_of_the_Vector_Space "partial function".
 
     If \p pfunc maps only some of the dimensions of \p *this then the
     rest will be projected away.
@@ -2025,8 +1830,8 @@ public:
     The partial function specifying the destiny of each space
     dimension.
 
-    The template class Partial_Function must provide the following
-    methods.
+    The template type parameter Partial_Function must provide
+    the following methods.
     \code
       bool has_empty_codomain() const
     \endcode
@@ -2054,7 +1859,7 @@ public:
 
     The result is undefined if \p pfunc does not encode a partial
     function with the properties described in the
-    \ref Grid_Map_Space_Dimensions "specification of the mapping operator".
+    \ref Mapping_the_Dimensions_of_the_Vector_Space "specification of the mapping operator".
   */
   template <typename Partial_Function>
   void map_space_dimensions(const Partial_Function& pfunc);
@@ -2078,35 +1883,37 @@ public:
     If \p *this has space dimension \f$n\f$, with \f$n > 0\f$,
     and <CODE>var</CODE> has space dimension \f$k \leq n\f$,
     then the \f$k\f$-th space dimension is
-    \ref Grid_Expand_Space_Dimension "expanded" to \p m new space dimensions
+    \ref Expanding_One_Dimension_of_the_Vector_Space_to_Multiple_Dimensions
+    "expanded" to \p m new space dimensions
     \f$n\f$, \f$n+1\f$, \f$\dots\f$, \f$n+m-1\f$.
   */
   void expand_space_dimension(Variable var, dimension_type m);
 
-  //! Folds the space dimensions in \p to_be_folded into \p var.
+  //! Folds the space dimensions in \p vars into \p dest.
   /*!
-    \param to_be_folded
+    \param vars
     The set of Variable objects corresponding to the space dimensions
     to be folded;
 
-    \param var
+    \param dest
     The variable corresponding to the space dimension that is the
     destination of the folding operation.
 
     \exception std::invalid_argument
-    Thrown if \p *this is dimension-incompatible with \p var or with
-    one of the Variable objects contained in \p to_be_folded.  Also
-    thrown if \p var is contained in \p to_be_folded.
+    Thrown if \p *this is dimension-incompatible with \p dest or with
+    one of the Variable objects contained in \p vars.  Also
+    thrown if \p dest is contained in \p vars.
 
     If \p *this has space dimension \f$n\f$, with \f$n > 0\f$,
-    <CODE>var</CODE> has space dimension \f$k \leq n\f$,
-    \p to_be_folded is a set of variables whose maximum space dimension
-    is also less than or equal to \f$n\f$, and \p var is not a member
-    of \p to_be_folded, then the space dimensions corresponding to
-    variables in \p to_be_folded are \ref Grid_Fold_Space_Dimensions "folded"
+    <CODE>dest</CODE> has space dimension \f$k \leq n\f$,
+    \p vars is a set of variables whose maximum space dimension
+    is also less than or equal to \f$n\f$, and \p dest is not a member
+    of \p vars, then the space dimensions corresponding to
+    variables in \p vars are
+    \ref Folding_Multiple_Dimensions_of_the_Vector_Space_into_One_Dimension "folded"
     into the \f$k\f$-th space dimension.
   */
-  void fold_space_dimensions(const Variables_Set& to_be_folded, Variable var);
+  void fold_space_dimensions(const Variables_Set& vars, Variable dest);
 
   //@} // Member Functions that May Modify the Dimension of the Vector Space
 
@@ -2398,11 +2205,60 @@ private:
 	       Generator* point = NULL) const;
 
   /*! \brief
+    Returns <CODE>true</CODE> if and only if \p *this is not empty and
+    \ref Grid_Frequency "frequency" for \p *this with respect to \p expr
+    is defined, in which case the frequency and the value for \p expr
+    that is closest to zero are computed.
+
+    \param expr
+    The linear expression for which the frequency is needed;
+
+    \param freq_n
+    The numerator of the maximum frequency of \p expr;
+
+    \param freq_d
+    The denominator of the maximum frequency of \p expr;
+
+    \param val_n
+    The numerator of a value of \p expr at a point in the grid
+    that is closest to zero;
+
+    \param val_d
+    The denominator of a value of \p expr at a point in the grid
+    that is closest to zero;
+
+    If \p *this is empty or frequency is undefined with respect to \p expr,
+    then <CODE>false</CODE> is returned and \p freq_n, \p freq_d,
+    \p val_n and \p val_d are left untouched.
+
+    \warning
+    If \p expr and \p *this are dimension-incompatible,
+    the grid generator system is not minimized or \p *this is
+    empty, then the behavior is undefined.
+  */
+  bool frequency_no_check(const Linear_Expression& expr,
+		Coefficient& freq_n, Coefficient& freq_d,
+		Coefficient& val_n, Coefficient& val_d) const;
+
+  //! Checks if and how \p expr is bounded in \p *this.
+  /*!
+    Returns <CODE>true</CODE> if and only if \p from_above is
+    <CODE>true</CODE> and \p expr is bounded from above in \p *this,
+    or \p from_above is <CODE>false</CODE> and \p expr is bounded
+    from below in \p *this.
+
+    \param expr
+    The linear expression to test;
+  */
+  bool bounds_no_check(const Linear_Expression& expr) const;
+
+  /*! \brief
     Adds the congruence \p cg to \p *this.
 
     \warning
     If \p cg and \p *this are dimension-incompatible,
-    the behavior is undefined.
+    the grid generator system is not minimized or \p *this is
+    empty, then the behavior is undefined.
   */
   void add_congruence_no_check(const Congruence& cg);
 
@@ -2754,9 +2610,9 @@ protected:
 					     const char* reason);
 
   void throw_invalid_constraint(const char* method,
-			       const char* c_name) const;
+                                const char* c_name) const;
   void throw_invalid_constraints(const char* method,
-				const char* cs_name) const;
+                                 const char* cs_name) const;
   void throw_invalid_generator(const char* method,
 			       const char* g_name) const;
   void throw_invalid_generators(const char* method,

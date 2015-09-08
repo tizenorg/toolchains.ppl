@@ -1,5 +1,6 @@
 /* Pointset_Powerset class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -49,7 +50,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 /*!
   \warning
   At present, the supported instantiations for the
-  disjunct domain template \p PS are the simple pointset domains:
+  disjunct domain template \p PSET are the simple pointset domains:
   <CODE>C_Polyhedron</CODE>,
   <CODE>NNC_Polyhedron</CODE>,
   <CODE>Grid</CODE>,
@@ -57,19 +58,19 @@ site: http://www.cs.unipr.it/ppl/ . */
   <CODE>BD_Shape<T></CODE>,
   <CODE>Box<T></CODE>.
 */
-template <typename PS>
+template <typename PSET>
 class Parma_Polyhedra_Library::Pointset_Powerset
   : public Parma_Polyhedra_Library::Powerset
-<Parma_Polyhedra_Library::Determinate<PS> > {
+<Parma_Polyhedra_Library::Determinate<PSET> > {
 public:
-  typedef PS element_type;
+  typedef PSET element_type;
 
 private:
-  typedef Determinate<PS> CS;
-  typedef Powerset<CS> Base;
+  typedef Determinate<PSET> Det_PSET;
+  typedef Powerset<Det_PSET> Base;
 
 public:
-  //! Returns the maximum space dimension a Pointset_Powerset<PS> can handle.
+  //! Returns the maximum space dimension a Pointset_Powerset<PSET> can handle.
   static dimension_type max_space_dimension();
 
   //! \name Constructors
@@ -87,7 +88,7 @@ public:
   Pointset_Powerset(dimension_type num_dimensions = 0,
 		    Degenerate_Element kind = UNIVERSE);
 
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   /*!
     The complexity argument is ignored.
   */
@@ -96,7 +97,7 @@ public:
 
   /*! \brief
     Conversion constructor: the type <CODE>QH</CODE> of the disjuncts
-    in the source powerset is different from <CODE>PS</CODE>.
+    in the source powerset is different from <CODE>PSET</CODE>.
 
     \param y
     The powerset to be used to build the new powerset.
@@ -110,7 +111,7 @@ public:
 
   /*! \brief
     Creates a Pointset_Powerset from a product
-    This will be created as a single disjunct of type PS that
+    This will be created as a single disjunct of type PSET that
     approximates the product.
   */
    template <typename QH1, typename QH2, typename R>
@@ -571,7 +572,7 @@ public:
     \exception std::invalid_argument
     Thrown if \p *this and \p ph are dimension-incompatible.
   */
-  void add_disjunct(const PS& ph);
+  void add_disjunct(const PSET& ph);
 
   //! Intersects \p *this with constraint \p c.
   /*!
@@ -591,20 +592,6 @@ public:
     Thrown if \p *this and \p c are dimension-incompatible.
   */
   void refine_with_constraint(const Constraint& c);
-
-  //! Intersects \p *this with the constraint \p c, minimizing the result.
-  /*!
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p c are topology-incompatible or
-    dimension-incompatible.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_constraint_and_minimize(const Constraint& c);
 
   //! Intersects \p *this with the constraints in \p cs.
   /*!
@@ -628,25 +615,6 @@ public:
   */
   void refine_with_constraints(const Constraint_System& cs);
 
-  /*! \brief
-    Intersects \p *this with the constraints in \p cs,
-    minimizing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \param cs
-    The constraints to intersect with.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p cs are topology-incompatible or
-    dimension-incompatible.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_constraints_and_minimize(const Constraint_System& cs);
-
   //! Intersects \p *this with congruence \p c.
   /*!
     \exception std::invalid_argument
@@ -665,20 +633,6 @@ public:
     Thrown if \p *this and \p cg are dimension-incompatible.
   */
   void refine_with_congruence(const Congruence& cg);
-
-  //! Intersects \p *this with the congruence \p c, minimizing the result.
-  /*!
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p c are topology-incompatible or
-    dimension-incompatible.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_congruence_and_minimize(const Congruence& c);
 
   //! Intersects \p *this with the congruences in \p cgs.
   /*!
@@ -703,25 +657,6 @@ public:
   void refine_with_congruences(const Congruence_System& cgs);
 
   /*! \brief
-    Intersects \p *this with the congruences in \p cs,
-    minimizing the result.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \param cs
-    The congruences to intersect with.
-
-    \exception std::invalid_argument
-    Thrown if \p *this and \p cs are topology-incompatible or
-    dimension-incompatible.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool add_congruences_and_minimize(const Congruence_System& cs);
-
-  /*! \brief
     Computes the \ref Cylindrification "cylindrification" of \p *this with
     respect to space dimension \p var, assigning the result to \p *this.
 
@@ -735,17 +670,50 @@ public:
 
   /*! \brief
     Computes the \ref Cylindrification "cylindrification" of \p *this with
-    respect to the set of space dimensions \p to_be_unconstrained,
+    respect to the set of space dimensions \p vars,
     assigning the result to \p *this.
 
-    \param to_be_unconstrained
+    \param vars
     The set of space dimension that will be unconstrained.
 
     \exception std::invalid_argument
     Thrown if \p *this is dimension-incompatible with one of the
-    Variable objects contained in \p to_be_removed.
+    Variable objects contained in \p vars.
   */
-  void unconstrain(const Variables_Set& to_be_unconstrained);
+  void unconstrain(const Variables_Set& vars);
+
+  /*! \brief
+    Possibly tightens \p *this by dropping some points with non-integer
+    coordinates.
+
+    \param complexity
+    The maximal complexity of any algorithms used.
+
+    \note
+    Currently there is no optimality guarantee, not even if
+    \p complexity is <CODE>ANY_COMPLEXITY</CODE>.
+  */
+   void drop_some_non_integer_points(Complexity_Class complexity
+                                    = ANY_COMPLEXITY);
+
+  /*! \brief
+    Possibly tightens \p *this by dropping some points with non-integer
+    coordinates for the space dimensions corresponding to \p vars.
+
+    \param vars
+    Points with non-integer coordinates for these variables/space-dimensions
+    can be discarded.
+
+    \param complexity
+    The maximal complexity of any algorithms used.
+
+    \note
+    Currently there is no optimality guarantee, not even if
+    \p complexity is <CODE>ANY_COMPLEXITY</CODE>.
+  */
+  void drop_some_non_integer_points(const Variables_Set& vars,
+                                    Complexity_Class complexity
+                                    = ANY_COMPLEXITY);
 
   //! Assigns to \p *this its topological closure.
   void topological_closure_assign();
@@ -756,20 +724,6 @@ public:
     with each disjunct in \p y and collecting all these intersections.
   */
   void intersection_assign(const Pointset_Powerset& y);
-
-  //! Assigns to \p *this the intersection of \p *this and \p y.
-  /*!
-    The result is obtained by intersecting each disjunct in \p *this
-    with each disjunct in \p y, minimizing the result
-    and collecting all these intersections.
-
-    \return
-    <CODE>false</CODE> if and only if the result is empty.
-
-    \deprecated
-    See \ref A_Note_on_the_Implementation_of_the_Operators.
-  */
-  bool intersection_assign_and_minimize(const Pointset_Powerset& y);
 
   /*! \brief
     Assigns to \p *this an (a smallest)
@@ -1032,6 +986,60 @@ public:
   void time_elapse_assign(const Pointset_Powerset& y);
 
   /*! \brief
+    \ref Wrapping_Operator "Wraps" the specified dimensions of the
+    vector space.
+
+    \param vars
+    The set of Variable objects corresponding to the space dimensions
+    to be wrapped.
+
+    \param w
+    The width of the bounded integer type corresponding to
+    all the dimensions to be wrapped.
+
+    \param r
+    The representation of the bounded integer type corresponding to
+    all the dimensions to be wrapped.
+
+    \param o
+    The overflow behavior of the bounded integer type corresponding to
+    all the dimensions to be wrapped.
+
+    \param pcs
+    Possibly null pointer to a constraint system whose variables
+    are contained in \p vars.  If <CODE>*pcs</CODE> depends on
+    variables not in \p vars, the behavior is undefined.
+    When non-null, the pointed-to constraint system is assumed to
+    represent the conditional or looping construct guard with respect
+    to which wrapping is performed.  Since wrapping requires the
+    computation of upper bounds and due to non-distributivity of
+    constraint refinement over upper bounds, passing a constraint
+    system in this way can be more precise than refining the result of
+    the wrapping operation with the constraints in <CODE>*pcs</CODE>.
+
+    \param complexity_threshold
+    A precision parameter of the \ref Wrapping_Operator "wrapping operator":
+    higher values result in possibly improved precision.
+
+    \param wrap_individually
+    <CODE>true</CODE> if the dimensions should be wrapped individually
+    (something that results in much greater efficiency to the detriment of
+    precision).
+
+    \exception std::invalid_argument
+    Thrown if <CODE>*pcs</CODE> is dimension-incompatible with
+    \p vars, or if \p *this is dimension-incompatible \p vars or with
+    <CODE>*pcs</CODE>.
+  */
+  void wrap_assign(const Variables_Set& vars,
+                   Bounded_Integer_Type_Width w,
+                   Bounded_Integer_Type_Representation r,
+                   Bounded_Integer_Type_Overflow o,
+                   const Constraint_System* pcs = 0,
+                   unsigned complexity_threshold = 16,
+                   bool wrap_individually = true);
+
+  /*! \brief
     Assign to \p *this the result of (recursively) merging together
     the pairs of disjuncts whose upper-bound is the same as their
     set-theoretical union.
@@ -1117,7 +1125,7 @@ public:
 
   /*! \brief
     Conversion assignment: the type <CODE>QH</CODE> of the disjuncts
-    in the source powerset is different from <CODE>PS</CODE>
+    in the source powerset is different from <CODE>PSET</CODE>
     (\p *this and \p y can be dimension-incompatible).
   */
   template <typename QH>
@@ -1148,15 +1156,15 @@ public:
 
   //! Removes all the specified space dimensions.
   /*!
-    \param to_be_removed
+    \param vars
     The set of Variable objects corresponding to the space dimensions
     to be removed.
 
     \exception std::invalid_argument
     Thrown if \p *this is dimension-incompatible with one of the
-    Variable objects contained in \p to_be_removed.
+    Variable objects contained in \p vars.
   */
-  void remove_space_dimensions(const Variables_Set& to_be_removed);
+  void remove_space_dimensions(const Variables_Set& vars);
 
   /*! \brief
     Removes the higher space dimensions so that the resulting space
@@ -1202,31 +1210,31 @@ public:
   */
   void expand_space_dimension(Variable var, dimension_type m);
 
-  //! Folds the space dimensions in \p to_be_folded into \p var.
+  //! Folds the space dimensions in \p vars into \p dest.
   /*!
-    \param to_be_folded
+    \param vars
     The set of Variable objects corresponding to the space dimensions
     to be folded;
 
-    \param var
+    \param dest
     The variable corresponding to the space dimension that is the
     destination of the folding operation.
 
     \exception std::invalid_argument
-    Thrown if \p *this is dimension-incompatible with \p var or with
-    one of the Variable objects contained in \p to_be_folded.  Also
-    thrown if \p var is contained in \p to_be_folded.
+    Thrown if \p *this is dimension-incompatible with \p dest or with
+    one of the Variable objects contained in \p vars.  Also
+    thrown if \p dest is contained in \p vars.
 
     If \p *this has space dimension \f$n\f$, with \f$n > 0\f$,
-    <CODE>var</CODE> has space dimension \f$k \leq n\f$,
-    \p to_be_folded is a set of variables whose maximum space dimension
-    is also less than or equal to \f$n\f$, and \p var is not a member
-    of \p to_be_folded, then the space dimensions corresponding to
-    variables in \p to_be_folded are
+    <CODE>dest</CODE> has space dimension \f$k \leq n\f$,
+    \p vars is a set of variables whose maximum space dimension
+    is also less than or equal to \f$n\f$, and \p dest is not a member
+    of \p vars, then the space dimensions corresponding to
+    variables in \p vars are
     \ref Folding_Multiple_Dimensions_of_the_Vector_Space_into_One_Dimension
     "folded" into the \f$k\f$-th space dimension.
   */
-  void fold_space_dimensions(const Variables_Set& to_be_folded, Variable var);
+  void fold_space_dimensions(const Variables_Set& vars, Variable dest);
 
   //@} // Member Functions that May Modify the Dimension of the Vector Space
 
@@ -1256,16 +1264,15 @@ private:
   dimension_type space_dim;
 
   /*! \brief
-    Assigns to \p to_be_enlarged a
-    \ref Powerset_Meet_Preserving_Simplification
-    "powerset meet-preserving enlargement" of itself with respect to \p *this.
-    If \c false is returned, then the intersection is empty.
+    Assigns to \p dest a \ref Powerset_Meet_Preserving_Simplification
+    "powerset meet-preserving enlargement" of itself with respect to
+    \p *this.  If \c false is returned, then the intersection is empty.
 
     \note
-    It is assumed that \p *this and \p to_be_enlarged are
-    topology-compatible and dimension-compatible.
+    It is assumed that \p *this and \p dest are topology-compatible
+    and dimension-compatible.
   */
-  bool intersection_preserving_enlarge_element(PS& to_be_enlarged) const;
+  bool intersection_preserving_enlarge_element(PSET& dest) const;
 
   /*! \brief
     Assigns to \p *this the result of applying the BGP99 heuristics
@@ -1301,7 +1308,7 @@ namespace Parma_Polyhedra_Library {
 /*! \relates Pointset_Powerset
   Let \p p and \p q be two polyhedra.
   The function returns an object <CODE>r</CODE> of type
-  <CODE>std::pair\<PS, Pointset_Powerset\<NNC_Polyhedron\> \></CODE>
+  <CODE>std::pair\<PSET, Pointset_Powerset\<NNC_Polyhedron\> \></CODE>
   such that
   - <CODE>r.first</CODE> is the intersection of \p p and \p q;
   - <CODE>r.second</CODE> has the property that all its elements are
@@ -1317,9 +1324,9 @@ namespace Parma_Polyhedra_Library {
   this paper</A> for more information about the implementation.
   \endif
 */
-template <typename PS>
-std::pair<PS, Pointset_Powerset<NNC_Polyhedron> >
-linear_partition(const PS& p, const PS& q);
+template <typename PSET>
+std::pair<PSET, Pointset_Powerset<NNC_Polyhedron> >
+linear_partition(const PSET& p, const PSET& q);
 
 /*! \brief
   Returns <CODE>true</CODE> if and only if the union of
@@ -1339,7 +1346,7 @@ check_containment(const NNC_Polyhedron& ph,
   \relates Parma_Polyhedra_Library::Pointset_Powerset
   Let \p p and \p q be two grids.
   The function returns an object <CODE>r</CODE> of type
-  <CODE>std::pair\<PS, Pointset_Powerset\<Grid\> \></CODE>
+  <CODE>std::pair\<PSET, Pointset_Powerset\<Grid\> \></CODE>
   such that
   - <CODE>r.first</CODE> is the intersection of \p p and \p q;
   - If there is a finite partition of \p q wrt \p p
@@ -1372,13 +1379,13 @@ check_containment(const Grid& ph,
 
   \relates Pointset_Powerset
   \note
-  It is assumed that the template parameter PS can be converted
+  It is assumed that the template parameter PSET can be converted
   without precision loss into an NNC_Polyhedron; otherwise,
   an incorrect result might be obtained.
 */
-template <typename PS>
+template <typename PSET>
 bool
-check_containment(const PS& ph, const Pointset_Powerset<PS>& ps);
+check_containment(const PSET& ph, const Pointset_Powerset<PSET>& ps);
 
 // CHECKME: according to the Intel compiler, the declaration of the
 // following specialization (of the class template parameter) should come
@@ -1437,9 +1444,9 @@ namespace std {
 
 //! Specializes <CODE>std::swap</CODE>.
 /*! \relates Parma_Polyhedra_Library::Pointset_Powerset */
-template <typename PS>
-void swap(Parma_Polyhedra_Library::Pointset_Powerset<PS>& x,
-	  Parma_Polyhedra_Library::Pointset_Powerset<PS>& y);
+template <typename PSET>
+void swap(Parma_Polyhedra_Library::Pointset_Powerset<PSET>& x,
+	  Parma_Polyhedra_Library::Pointset_Powerset<PSET>& y);
 
 } // namespace std
 

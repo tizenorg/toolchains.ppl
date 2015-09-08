@@ -1,5 +1,6 @@
 /* Test BD_Shape::congruences().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -168,7 +169,8 @@ test07() {
 
   Congruence_System cgs = bds1.congruences();
   TBD_Shape bds2(cgs.space_dimension(), EMPTY);
-  bool b = bds2.add_congruences_and_minimize(cgs);
+  bds2.add_congruences(cgs);
+  bool b = !bds2.is_empty();
 
   bool ok = !b && check_result(bds2, known_result);
 

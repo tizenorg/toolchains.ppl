@@ -1,5 +1,6 @@
 /* Checked_Number class implementation: inline functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -29,13 +30,15 @@ site: http://www.cs.unipr.it/ppl/ . */
 
 namespace Parma_Polyhedra_Library {
 
+#ifndef NDEBUG
+#define DEBUG_ROUND_NOT_NEEDED
+#endif
+
 inline Rounding_Dir
 rounding_dir(Rounding_Dir dir) {
   if (dir == ROUND_NOT_NEEDED) {
 #ifdef DEBUG_ROUND_NOT_NEEDED
-    return ROUND_DIRECT & ROUND_FPU_CHECK_INEXACT;
-#else
-    return ROUND_IGNORE;
+    return ROUND_CHECK;
 #endif
   }
   return dir;
@@ -43,18 +46,11 @@ rounding_dir(Rounding_Dir dir) {
 
 inline Result
 check_result(Result r, Rounding_Dir dir) {
-  if (dir == ROUND_NOT_NEEDED && !is_special(r)) {
+  if (dir == ROUND_NOT_NEEDED) {
 #ifdef DEBUG_ROUND_NOT_NEEDED
-    // FIXME: this is wrong. If an overflow happens the Result may be
-    // V_LT or V_GT. What's the better way to cope with that?
-
-    // To solve this we need to clarify if ROUND_NOT_NEEDED is
-    // specified to grant library that the result will be exact _and_
-    // not overflowing or the result will be exact _or_ overflowling.
-    assert(r == V_EQ);
-#else
-    return V_EQ;
+    PPL_ASSERT(result_relation(r) == VR_EQ);
 #endif
+    return r;
   }
   return r;
 }
@@ -66,20 +62,8 @@ Checked_Number_Transparent_Policy<T>::handle_result(Result) {
 }
 
 inline void
-Checked_Number_Default_Policy::handle_result(Result r) {
-  if (is_special(r))
-    throw_result_exception(r);
-}
-
-inline void
 Extended_Number_Policy::handle_result(Result r) {
-  if (is_special(r))
-    throw_result_exception(r);
-}
-
-inline void
-WRD_Extended_Number_Policy::handle_result(Result r) {
-  if (is_special(r))
+  if (result_class(r) == VC_NAN)
     throw_result_exception(r);
 }
 
@@ -126,7 +110,7 @@ Checked_Number<T, Policy>
 }
 
 // TODO: avoid default construction of value member.
-#define DEF_CTOR(type) \
+#define PPL_DEFINE_CTOR(type) \
 template <typename T, typename Policy> \
 inline \
 Checked_Number<T, Policy>::Checked_Number(const type x, Rounding_Dir dir) { \
@@ -150,23 +134,24 @@ Checked_Number<T, Policy>::Checked_Number(const type x) {		\
 #define PPL_COND_(if, ...) PPL_COND_##if(__VA_ARGS__)
 #define PPL_COND(if, ...) PPL_COND_(if, __VA_ARGS__)
 
-DEF_CTOR(signed char)
-DEF_CTOR(signed short)
-DEF_CTOR(signed int)
-DEF_CTOR(signed long)
-DEF_CTOR(signed long long)
-DEF_CTOR(unsigned char)
-DEF_CTOR(unsigned short)
-DEF_CTOR(unsigned int)
-DEF_CTOR(unsigned long)
-DEF_CTOR(unsigned long long)
-PPL_COND(PPL_SUPPORTED_FLOAT, DEF_CTOR(float))
-PPL_COND(PPL_SUPPORTED_DOUBLE, DEF_CTOR(double))
-PPL_COND(PPL_SUPPORTED_LONG_DOUBLE, DEF_CTOR(long double))
-DEF_CTOR(mpq_class&)
-DEF_CTOR(mpz_class&)
+PPL_DEFINE_CTOR(char)
+PPL_DEFINE_CTOR(signed char)
+PPL_DEFINE_CTOR(signed short)
+PPL_DEFINE_CTOR(signed int)
+PPL_DEFINE_CTOR(signed long)
+PPL_DEFINE_CTOR(signed long long)
+PPL_DEFINE_CTOR(unsigned char)
+PPL_DEFINE_CTOR(unsigned short)
+PPL_DEFINE_CTOR(unsigned int)
+PPL_DEFINE_CTOR(unsigned long)
+PPL_DEFINE_CTOR(unsigned long long)
+PPL_COND(PPL_SUPPORTED_FLOAT, PPL_DEFINE_CTOR(float))
+PPL_COND(PPL_SUPPORTED_DOUBLE, PPL_DEFINE_CTOR(double))
+PPL_COND(PPL_SUPPORTED_LONG_DOUBLE, PPL_DEFINE_CTOR(long double))
+PPL_DEFINE_CTOR(mpq_class&)
+PPL_DEFINE_CTOR(mpz_class&)
 
-#undef DEF_CTOR
+#undef PPL_DEFINE_CTOR
 
 #undef PPL_COND
 #undef PPL_COND_
@@ -199,7 +184,7 @@ template <typename From>
 inline
 Checked_Number<T, Policy>::Checked_Number(const From&, Rounding_Dir dir, typename Enable_If<Is_Special<From>::value, bool>::type) {
   Policy::handle_result(check_result(Checked::assign_special<Policy>(v,
-							    From::code,
+							    From::vclass,
 							    rounding_dir(dir)),
 				     dir));
 }
@@ -210,7 +195,7 @@ inline
 Checked_Number<T, Policy>::Checked_Number(const From&, typename Enable_If<Is_Special<From>::value, bool>::type) {
   Rounding_Dir dir = Policy::ROUND_DEFAULT_CONSTRUCTOR;
   Policy::handle_result(check_result(Checked::assign_special<Policy>(v,
-							    From::code,
+							    From::vclass,
 							    rounding_dir(dir)),
 				     dir));
 }
@@ -220,7 +205,7 @@ inline typename Enable_If<Is_Native_Or_Checked<To>::value && Is_Special<From>::v
 assign_r(To& to, const From&, Rounding_Dir dir) {
   return check_result(Checked::assign_special<typename Native_Checked_To_Wrapper<To>
 		      ::Policy>(Native_Checked_To_Wrapper<To>::raw_value(to),
-				From::code,
+				From::vclass,
 				rounding_dir(dir)),
 		      dir);
 }
@@ -230,7 +215,7 @@ inline typename Enable_If<Is_Native_Or_Checked<To>::value && Is_Special<From>::v
 construct(To& to, const From&, Rounding_Dir dir) {
   return check_result(Checked::construct_special<typename Native_Checked_To_Wrapper<To>
 		      ::Policy>(Native_Checked_To_Wrapper<To>::raw_value(to),
-				From::code,
+				From::vclass,
 				rounding_dir(dir)),
 		      dir);
 }
@@ -359,7 +344,7 @@ assign_r(To& to, const char* x, Rounding_Dir dir) {
 		      dir);
 }
 
-#define FUNC1(name, func) \
+#define PPL_DEFINE_FUNC1_A(name, func) \
 template <typename To, typename From>					\
 inline typename Enable_If<Is_Native_Or_Checked<To>::value               \
                           && Is_Native_Or_Checked<From>::value,         \
@@ -374,18 +359,18 @@ name(To& to, const From& x, Rounding_Dir dir) {				\
 			   rounding_dir(dir)), dir);			\
 }
 
-FUNC1(construct, construct_ext)
-FUNC1(assign_r, assign_ext)
-FUNC1(floor_assign_r, floor_ext)
-FUNC1(ceil_assign_r, ceil_ext)
-FUNC1(trunc_assign_r, trunc_ext)
-FUNC1(neg_assign_r, neg_ext)
-FUNC1(abs_assign_r, abs_ext)
-FUNC1(sqrt_assign_r, sqrt_ext)
+PPL_DEFINE_FUNC1_A(construct, construct_ext)
+PPL_DEFINE_FUNC1_A(assign_r, assign_ext)
+PPL_DEFINE_FUNC1_A(floor_assign_r, floor_ext)
+PPL_DEFINE_FUNC1_A(ceil_assign_r, ceil_ext)
+PPL_DEFINE_FUNC1_A(trunc_assign_r, trunc_ext)
+PPL_DEFINE_FUNC1_A(neg_assign_r, neg_ext)
+PPL_DEFINE_FUNC1_A(abs_assign_r, abs_ext)
+PPL_DEFINE_FUNC1_A(sqrt_assign_r, sqrt_ext)
 
-#undef FUNC1
+#undef PPL_DEFINE_FUNC1_A
 
-#define FUNC1(name, func) \
+#define PPL_DEFINE_FUNC1_B(name, func) \
 template <typename To, typename From>					\
 inline typename Enable_If<Is_Native_Or_Checked<To>::value		\
                           && Is_Native_Or_Checked<From>::value,         \
@@ -402,12 +387,16 @@ name(To& to, const From& x, int exp, Rounding_Dir dir) {		\
 		 dir);							\
 }
 
-FUNC1(mul2exp_assign_r, mul2exp_ext)
-FUNC1(div2exp_assign_r, div2exp_ext)
+PPL_DEFINE_FUNC1_B(add_2exp_assign_r, add_2exp_ext)
+PPL_DEFINE_FUNC1_B(sub_2exp_assign_r, sub_2exp_ext)
+PPL_DEFINE_FUNC1_B(mul_2exp_assign_r, mul_2exp_ext)
+PPL_DEFINE_FUNC1_B(div_2exp_assign_r, div_2exp_ext)
+PPL_DEFINE_FUNC1_B(smod_2exp_assign_r, smod_2exp_ext)
+PPL_DEFINE_FUNC1_B(umod_2exp_assign_r, umod_2exp_ext)
 
-#undef FUNC1
+#undef PPL_DEFINE_FUNC1_B
 
-#define FUNC2(name, func) \
+#define PPL_DEFINE_FUNC2(name, func) \
 template <typename To, typename From1, typename From2>			\
 inline typename Enable_If<Is_Native_Or_Checked<To>::value		\
                           && Is_Native_Or_Checked<From1>::value         \
@@ -427,20 +416,20 @@ name(To& to, const From1& x, const From2& y, Rounding_Dir dir) {	\
 		 dir);							\
 }
 
-FUNC2(add_assign_r, add_ext)
-FUNC2(sub_assign_r, sub_ext)
-FUNC2(mul_assign_r, mul_ext)
-FUNC2(div_assign_r, div_ext)
-FUNC2(idiv_assign_r, idiv_ext)
-FUNC2(rem_assign_r, rem_ext)
-FUNC2(gcd_assign_r, gcd_ext)
-FUNC2(lcm_assign_r, lcm_ext)
-FUNC2(add_mul_assign_r, add_mul_ext)
-FUNC2(sub_mul_assign_r, sub_mul_ext)
+PPL_DEFINE_FUNC2(add_assign_r, add_ext)
+PPL_DEFINE_FUNC2(sub_assign_r, sub_ext)
+PPL_DEFINE_FUNC2(mul_assign_r, mul_ext)
+PPL_DEFINE_FUNC2(div_assign_r, div_ext)
+PPL_DEFINE_FUNC2(idiv_assign_r, idiv_ext)
+PPL_DEFINE_FUNC2(rem_assign_r, rem_ext)
+PPL_DEFINE_FUNC2(gcd_assign_r, gcd_ext)
+PPL_DEFINE_FUNC2(lcm_assign_r, lcm_ext)
+PPL_DEFINE_FUNC2(add_mul_assign_r, add_mul_ext)
+PPL_DEFINE_FUNC2(sub_mul_assign_r, sub_mul_ext)
 
-#undef FUNC2
+#undef PPL_DEFINE_FUNC2
 
-#define FUNC4(name, func)						\
+#define PPL_DEFINE_FUNC4(name, func)                                    \
 template <typename To1,							\
           typename To2,							\
 	  typename To3,							\
@@ -470,11 +459,11 @@ name(To1& to, To2& s, To3& t, const From1& x, const From2& y,		\
      dir);								\
 }
 
-FUNC4(gcdext_assign_r, gcdext_ext)
+PPL_DEFINE_FUNC4(gcdext_assign_r, gcdext_ext)
 
-#undef FUNC4
+#undef PPL_DEFINE_PPL_DEFINE_FUNC4
 
-#define DEF_INCREMENT(f, fun) \
+#define PPL_DEFINE_INCREMENT(f, fun) \
 template <typename T, typename Policy> \
 inline Checked_Number<T, Policy>& \
 Checked_Number<T, Policy>::f() { \
@@ -491,10 +480,10 @@ Checked_Number<T, Policy>::f(int) {\
   return r;\
 }
 
-DEF_INCREMENT(operator ++, add_assign_r)
-DEF_INCREMENT(operator --, sub_assign_r)
+PPL_DEFINE_INCREMENT(operator ++, add_assign_r)
+PPL_DEFINE_INCREMENT(operator --, sub_assign_r)
 
-#undef DEF_INCREMENT
+#undef PPL_DEFINE_INCREMENT
 
 template <typename T, typename Policy>
 inline Checked_Number<T, Policy>&
@@ -510,7 +499,7 @@ Checked_Number<T, Policy>::operator=(const From& y) {
   return *this;
 }
 
-#define DEF_BINARY_OP_ASSIGN(f, fun) \
+#define PPL_DEFINE_BINARY_OP_ASSIGN(f, fun) \
 template <typename T, typename Policy> \
 template <typename From_Policy> \
 inline Checked_Number<T, Policy>& \
@@ -537,15 +526,15 @@ Checked_Number<T, Policy>::f(const From& y) { \
   return *this; \
 }
 
-DEF_BINARY_OP_ASSIGN(operator +=, add_assign_r)
-DEF_BINARY_OP_ASSIGN(operator -=, sub_assign_r)
-DEF_BINARY_OP_ASSIGN(operator *=, mul_assign_r)
-DEF_BINARY_OP_ASSIGN(operator /=, div_assign_r)
-DEF_BINARY_OP_ASSIGN(operator %=, rem_assign_r)
+PPL_DEFINE_BINARY_OP_ASSIGN(operator +=, add_assign_r)
+PPL_DEFINE_BINARY_OP_ASSIGN(operator -=, sub_assign_r)
+PPL_DEFINE_BINARY_OP_ASSIGN(operator *=, mul_assign_r)
+PPL_DEFINE_BINARY_OP_ASSIGN(operator /=, div_assign_r)
+PPL_DEFINE_BINARY_OP_ASSIGN(operator %=, rem_assign_r)
 
-#undef DEF_BINARY_OP_ASSIGN
+#undef PPL_DEFINE_BINARY_OP_ASSIGN
 
-#define DEF_BINARY_OP(f, fun) \
+#define PPL_DEFINE_BINARY_OP(f, fun) \
 template <typename T, typename Policy> \
 inline Checked_Number<T, Policy> \
 f(const Checked_Number<T, Policy>& x, const Checked_Number<T, Policy>& y) { \
@@ -570,15 +559,15 @@ f(const Checked_Number<T, Policy>& x, const Type& y) { \
   return r; \
 }
 
-DEF_BINARY_OP(operator +, add_assign_r)
-DEF_BINARY_OP(operator -, sub_assign_r)
-DEF_BINARY_OP(operator *, mul_assign_r)
-DEF_BINARY_OP(operator /, div_assign_r)
-DEF_BINARY_OP(operator %, rem_assign_r)
+PPL_DEFINE_BINARY_OP(operator +, add_assign_r)
+PPL_DEFINE_BINARY_OP(operator -, sub_assign_r)
+PPL_DEFINE_BINARY_OP(operator *, mul_assign_r)
+PPL_DEFINE_BINARY_OP(operator /, div_assign_r)
+PPL_DEFINE_BINARY_OP(operator %, rem_assign_r)
 
-#undef DEF_BINARY_OP
+#undef PPL_DEFINE_BINARY_OP
 
-#define DEF_COMPARE(f, fun)						\
+#define PPL_DEFINE_COMPARE_OP(f, fun)                                   \
 template <typename T1, typename T2>					\
 inline									\
 typename Enable_If<Is_Native_Or_Checked<T1>::value                      \
@@ -592,16 +581,16 @@ f(const T1& x, const T2& y) {						\
      Native_Checked_From_Wrapper<T2>::raw_value(y));			\
 }
 
-DEF_COMPARE(operator ==, eq_ext)
-DEF_COMPARE(operator !=, ne_ext)
-DEF_COMPARE(operator >=, ge_ext)
-DEF_COMPARE(operator >, gt_ext)
-DEF_COMPARE(operator <=, le_ext)
-DEF_COMPARE(operator <, lt_ext)
+PPL_DEFINE_COMPARE_OP(operator ==, eq_ext)
+PPL_DEFINE_COMPARE_OP(operator !=, ne_ext)
+PPL_DEFINE_COMPARE_OP(operator >=, ge_ext)
+PPL_DEFINE_COMPARE_OP(operator >, gt_ext)
+PPL_DEFINE_COMPARE_OP(operator <=, le_ext)
+PPL_DEFINE_COMPARE_OP(operator <, lt_ext)
 
-#undef DEF_COMPARE
+#undef PPL_DEFINE_COMPARE_OP
 
-#define DEF_COMPARE(f, fun)						\
+#define PPL_DEFINE_COMPARE(f, fun)                                      \
 template <typename T1, typename T2>					\
 inline typename Enable_If<Is_Native_Or_Checked<T1>::value		\
 			  && Is_Native_Or_Checked<T2>::value,		\
@@ -613,14 +602,14 @@ f(const T1& x, const T2& y) {						\
      Native_Checked_From_Wrapper<T2>::raw_value(y));			\
 }
 
-DEF_COMPARE(equal, eq_ext)
-DEF_COMPARE(not_equal, ne_ext)
-DEF_COMPARE(greater_or_equal, ge_ext)
-DEF_COMPARE(greater_than, gt_ext)
-DEF_COMPARE(less_or_equal, le_ext)
-DEF_COMPARE(less_than, lt_ext)
+PPL_DEFINE_COMPARE(equal, eq_ext)
+PPL_DEFINE_COMPARE(not_equal, ne_ext)
+PPL_DEFINE_COMPARE(greater_or_equal, ge_ext)
+PPL_DEFINE_COMPARE(greater_than, gt_ext)
+PPL_DEFINE_COMPARE(less_or_equal, le_ext)
+PPL_DEFINE_COMPARE(less_than, lt_ext)
 
-#undef DEF_COMPARE
+#undef PPL_DEFINE_COMPARE
 
 /*! \relates Checked_Number */
 template <typename T, typename Policy>
@@ -638,21 +627,21 @@ operator-(const Checked_Number<T, Policy>& x) {
   return r;
 }
 
-#define PPL_DEF_ASSIGN_FUN2_1(f, fun) \
+#define PPL_DEFINE_ASSIGN_FUN2_1(f, fun) \
 template <typename T, typename Policy> \
 inline void \
 f(Checked_Number<T, Policy>& x) { \
   Policy::handle_result(fun(x, x, Policy::ROUND_DEFAULT_FUNCTION));	\
 }
 
-#define PPL_DEF_ASSIGN_FUN2_2(f, fun) \
+#define PPL_DEFINE_ASSIGN_FUN2_2(f, fun) \
 template <typename T, typename Policy> \
 inline void \
 f(Checked_Number<T, Policy>& x, const Checked_Number<T, Policy>& y) { \
   Policy::handle_result(fun(x, y, Policy::ROUND_DEFAULT_FUNCTION)); \
 }
 
-#define PPL_DEF_ASSIGN_FUN3_3(f, fun) \
+#define PPL_DEFINE_ASSIGN_FUN3_3(f, fun) \
 template <typename T, typename Policy> \
 inline void \
 f(Checked_Number<T, Policy>& x, const Checked_Number<T, Policy>& y, \
@@ -660,7 +649,7 @@ f(Checked_Number<T, Policy>& x, const Checked_Number<T, Policy>& y, \
   Policy::handle_result(fun(x, y, z, Policy::ROUND_DEFAULT_FUNCTION)); \
 }
 
-#define PPL_DEF_ASSIGN_FUN5_5(f, fun)					\
+#define PPL_DEFINE_ASSIGN_FUN5_5(f, fun)					\
 template <typename T, typename Policy>					\
 inline void								\
 f(Checked_Number<T, Policy>& x,						\
@@ -670,40 +659,51 @@ f(Checked_Number<T, Policy>& x,						\
   Policy::handle_result(fun(x, s, t, y, z, Policy::ROUND_DEFAULT_FUNCTION)); \
 }
 
-PPL_DEF_ASSIGN_FUN2_2(sqrt_assign, sqrt_assign_r)
+PPL_DEFINE_ASSIGN_FUN2_2(sqrt_assign, sqrt_assign_r)
 
-PPL_DEF_ASSIGN_FUN2_1(floor_assign, floor_assign_r)
-PPL_DEF_ASSIGN_FUN2_2(floor_assign, floor_assign_r)
+PPL_DEFINE_ASSIGN_FUN2_1(floor_assign, floor_assign_r)
+PPL_DEFINE_ASSIGN_FUN2_2(floor_assign, floor_assign_r)
 
-PPL_DEF_ASSIGN_FUN2_1(ceil_assign, ceil_assign_r)
-PPL_DEF_ASSIGN_FUN2_2(ceil_assign, ceil_assign_r)
+PPL_DEFINE_ASSIGN_FUN2_1(ceil_assign, ceil_assign_r)
+PPL_DEFINE_ASSIGN_FUN2_2(ceil_assign, ceil_assign_r)
 
-PPL_DEF_ASSIGN_FUN2_1(trunc_assign, trunc_assign_r)
-PPL_DEF_ASSIGN_FUN2_2(trunc_assign, trunc_assign_r)
+PPL_DEFINE_ASSIGN_FUN2_1(trunc_assign, trunc_assign_r)
+PPL_DEFINE_ASSIGN_FUN2_2(trunc_assign, trunc_assign_r)
 
-PPL_DEF_ASSIGN_FUN2_1(neg_assign, neg_assign_r)
-PPL_DEF_ASSIGN_FUN2_2(neg_assign, neg_assign_r)
+PPL_DEFINE_ASSIGN_FUN2_1(neg_assign, neg_assign_r)
+PPL_DEFINE_ASSIGN_FUN2_2(neg_assign, neg_assign_r)
 
-PPL_DEF_ASSIGN_FUN2_1(abs_assign, abs_assign_r)
-PPL_DEF_ASSIGN_FUN2_2(abs_assign, abs_assign_r)
+PPL_DEFINE_ASSIGN_FUN2_1(abs_assign, abs_assign_r)
+PPL_DEFINE_ASSIGN_FUN2_2(abs_assign, abs_assign_r)
 
-PPL_DEF_ASSIGN_FUN3_3(add_mul_assign, add_mul_assign_r)
+PPL_DEFINE_ASSIGN_FUN3_3(add_mul_assign, add_mul_assign_r)
 
-PPL_DEF_ASSIGN_FUN3_3(sub_mul_assign, sub_mul_assign_r)
+PPL_DEFINE_ASSIGN_FUN3_3(sub_mul_assign, sub_mul_assign_r)
 
-PPL_DEF_ASSIGN_FUN3_3(rem_assign, rem_assign_r)
+PPL_DEFINE_ASSIGN_FUN3_3(rem_assign, rem_assign_r)
 
-PPL_DEF_ASSIGN_FUN3_3(gcd_assign, gcd_assign_r)
+PPL_DEFINE_ASSIGN_FUN3_3(gcd_assign, gcd_assign_r)
 
-PPL_DEF_ASSIGN_FUN5_5(gcdext_assign, gcdext_assign_r)
+PPL_DEFINE_ASSIGN_FUN5_5(gcdext_assign, gcdext_assign_r)
 
-PPL_DEF_ASSIGN_FUN3_3(lcm_assign, lcm_assign_r)
+PPL_DEFINE_ASSIGN_FUN3_3(lcm_assign, lcm_assign_r)
 
-#undef PPL_DEF_ASSIGN_FUN2_1
-#undef PPL_DEF_ASSIGN_FUN2_2
-#undef PPL_DEF_ASSIGN_FUN3_2
-#undef PPL_DEF_ASSIGN_FUN3_3
-#undef PPL_DEF_ASSIGN_FUN5_5
+#undef PPL_DEFINE_ASSIGN_FUN2_1
+#undef PPL_DEFINE_ASSIGN_FUN2_2
+#undef PPL_DEFINE_ASSIGN_FUN3_2
+#undef PPL_DEFINE_ASSIGN_FUN3_3
+#undef PPL_DEFINE_ASSIGN_FUN5_5
+
+#define PPL_DEFINE_ASSIGN_2EXP(f, fun)					\
+template <typename T, typename Policy>                                  \
+inline void								\
+f(Checked_Number<T, Policy>& to,					\
+  const Checked_Number<T, Policy>& x, unsigned int exp) {               \
+  Policy::handle_result(fun(to, x, exp, Policy::ROUND_DEFAULT_FUNCTION)); \
+}
+
+PPL_DEFINE_ASSIGN_2EXP(mul_2exp_assign, mul_2exp_assign_r)
+PPL_DEFINE_ASSIGN_2EXP(div_2exp_assign, div_2exp_assign_r)
 
 template <typename T, typename Policy>
 inline void
@@ -717,13 +717,13 @@ exact_div_assign(Checked_Number<T, Policy>& x,
 template <typename From>
 inline typename Enable_If<Is_Native_Or_Checked<From>::value, int>::type
 sgn(const From& x) {
-  Result r = Checked::sgn_ext<typename Native_Checked_From_Wrapper<From>::Policy>(Native_Checked_From_Wrapper<From>::raw_value(x));
+  Result_Relation r = Checked::sgn_ext<typename Native_Checked_From_Wrapper<From>::Policy>(Native_Checked_From_Wrapper<From>::raw_value(x));
   switch (r) {
-  case V_LT:
+  case VR_LT:
     return -1;
-  case V_EQ:
+  case VR_EQ:
     return 0;
-  case V_GT:
+  case VR_GT:
     return 1;
   default:
     throw(0);
@@ -736,17 +736,17 @@ inline typename Enable_If<Is_Native_Or_Checked<From1>::value
                           && Is_Native_Or_Checked<From2>::value,
                           int>::type
 cmp(const From1& x, const From2& y) {
-  Result r
+  Result_Relation r
     = Checked::cmp_ext<typename Native_Checked_From_Wrapper<From1>::Policy,
                        typename Native_Checked_From_Wrapper<From2>::Policy>
                  (Native_Checked_From_Wrapper<From1>::raw_value(x),
 		  Native_Checked_From_Wrapper<From2>::raw_value(y));
   switch (r) {
-  case V_LT:
+  case VR_LT:
     return -1;
-  case V_EQ:
+  case VR_EQ:
     return 0;
-  case V_GT:
+  case VR_GT:
     return 1;
   default:
     throw(0);

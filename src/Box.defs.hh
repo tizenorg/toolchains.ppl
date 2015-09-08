@@ -1,5 +1,6 @@
 /* Box class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -43,10 +44,13 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "Polyhedron.types.hh"
 #include "Grid.types.hh"
 #include "Partially_Reduced_Product.types.hh"
+#include "intervals.defs.hh"
 #include <vector>
 #include <iosfwd>
 
 namespace Parma_Polyhedra_Library {
+
+struct Interval_Base;
 
 //! Returns <CODE>true</CODE> if and only if \p x and \p y are the same box.
 /*! \relates Box
@@ -317,7 +321,7 @@ public:
   explicit Box(dimension_type num_dimensions = 0,
 	       Degenerate_Element kind = UNIVERSE);
 
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   /*!
     The complexity argument is ignored.
   */
@@ -678,12 +682,44 @@ public:
 		Generator& g) const;
 
   /*! \brief
+    Returns <CODE>true</CODE> if and only if there exist a
+    unique value \p val such that \p *this
+    saturates the equality <CODE>expr = val</CODE>.
+
+    \param expr
+    The linear expression for which the frequency is needed;
+
+    \param freq_n
+    If <CODE>true</CODE> is returned, the value is set to \f$0\f$;
+    Present for interface compatibility with class Grid, where
+    the \ref Grid_Frequency "frequency" can have a non-zero value;
+
+    \param freq_d
+    If <CODE>true</CODE> is returned, the value is set to \f$1\f$;
+
+    \param val_n
+    The numerator of \p val;
+
+    \param val_d
+    The denominator of \p val;
+
+    \exception std::invalid_argument
+    Thrown if \p expr and \p *this are dimension-incompatible.
+
+    If <CODE>false</CODE> is returned, then \p freq_n, \p freq_d,
+    \p val_n and \p val_d are left untouched.
+  */
+  bool frequency(const Linear_Expression& expr,
+                 Coefficient& freq_n, Coefficient& freq_d,
+                 Coefficient& val_n, Coefficient& val_d) const;
+
+  /*! \brief
     Returns <CODE>true</CODE> if and only if \p *this contains \p y.
 
     \exception std::invalid_argument
     Thrown if \p x and \p y are dimension-incompatible.
   */
-  bool contains(const Box&) const;
+  bool contains(const Box& y) const;
 
   /*! \brief
     Returns <CODE>true</CODE> if and only if \p *this strictly contains \p y.
@@ -691,7 +727,7 @@ public:
     \exception std::invalid_argument
     Thrown if \p x and \p y are dimension-incompatible.
   */
-  bool strictly_contains(const Box&) const;
+  bool strictly_contains(const Box& y) const;
 
   /*! \brief
     Returns <CODE>true</CODE> if and only if \p *this and \p y are disjoint.
@@ -815,10 +851,20 @@ public:
     Use the constraints in \p cs to refine \p *this.
 
     \param  cs
-     The constraints to be used for refinement.
+    The constraints to be used for refinement.
+    To avoid termination problems, each constraint in \p cs
+    will be used for a single refinement step.
 
-     \exception std::invalid_argument
-     Thrown if \p *this and \p cs are dimension-incompatible.
+    \exception std::invalid_argument
+    Thrown if \p *this and \p cs are dimension-incompatible.
+
+    \note
+    The user is warned that the accuracy of this refinement operator
+    depends on the order of evaluation of the constraints in \p cs,
+    which is in general unpredictable. If a fine control on such an
+    order is needed, the user should consider calling the method
+    <code>refine_with_constraint(const Constraint& c)</code> inside
+    an appropriate looping construct.
   */
   void refine_with_constraints(const Constraint_System& cs);
 
@@ -858,13 +904,22 @@ public:
   /*! \brief
     Use the constraints in \p cs for constraint propagagion on \p *this.
 
-    \param  cs
-     The constraints to be used for constraint propagation.
+    \param cs
+    The constraints to be used for constraint propagation.
 
-     \exception std::invalid_argument
-     Thrown if \p *this and \p cs are dimension-incompatible.
+    \param max_iterations
+    The maximum number of propagation steps for each constraint in \p cs.
+    If zero (the default), the number of propagations will be unbounded,
+    possibly resulting in an infinite loop.
+
+    \exception std::invalid_argument
+    Thrown if \p *this and \p cs are dimension-incompatible.
+
+    \warning
+    This method may lead to non-termination if \p max_iterations is 0.
   */
-  void propagate_constraints(const Constraint_System& cs);
+  void propagate_constraints(const Constraint_System& cs,
+                             dimension_type max_iterations = 0);
 
   /*! \brief
     Computes the \ref Cylindrification "cylindrification" of \p *this with
@@ -880,17 +935,17 @@ public:
 
   /*! \brief
     Computes the \ref Cylindrification "cylindrification" of \p *this with
-    respect to the set of space dimensions \p to_be_unconstrained,
+    respect to the set of space dimensions \p vars,
     assigning the result to \p *this.
 
-    \param to_be_unconstrained
+    \param vars
     The set of space dimension that will be unconstrained.
 
     \exception std::invalid_argument
     Thrown if \p *this is dimension-incompatible with one of the
-    Variable objects contained in \p to_be_removed.
+    Variable objects contained in \p vars.
   */
-  void unconstrain(const Variables_Set& to_be_unconstrained);
+  void unconstrain(const Variables_Set& vars);
 
   //! Assigns to \p *this the intersection of \p *this and \p y.
   /*!
@@ -1167,6 +1222,87 @@ public:
   void topological_closure_assign();
 
   /*! \brief
+    \ref Wrapping_Operator "Wraps" the specified dimensions of the
+    vector space.
+
+    \param vars
+    The set of Variable objects corresponding to the space dimensions
+    to be wrapped.
+
+    \param w
+    The width of the bounded integer type corresponding to
+    all the dimensions to be wrapped.
+
+    \param r
+    The representation of the bounded integer type corresponding to
+    all the dimensions to be wrapped.
+
+    \param o
+    The overflow behavior of the bounded integer type corresponding to
+    all the dimensions to be wrapped.
+
+    \param pcs
+    Possibly null pointer to a constraint system.  When non-null,
+    the pointed-to constraint system is assumed to represent the
+    conditional or looping construct guard with respect to which
+    wrapping is performed.  Since wrapping requires the computation
+    of upper bounds and due to non-distributivity of constraint
+    refinement over upper bounds, passing a constraint system in this
+    way can be more precise than refining the result of the wrapping
+    operation with the constraints in <CODE>*pcs</CODE>.
+
+    \param complexity_threshold
+    A precision parameter which is ignored for the Box domain.
+
+    \param wrap_individually
+    A precision parameter which is ignored for the Box domain.
+
+    \exception std::invalid_argument
+    Thrown if \p *this is dimension-incompatible with one of the
+    Variable objects contained in \p vars or with <CODE>*pcs</CODE>.
+  */
+  void wrap_assign(const Variables_Set& vars,
+                   Bounded_Integer_Type_Width w,
+                   Bounded_Integer_Type_Representation r,
+                   Bounded_Integer_Type_Overflow o,
+                   const Constraint_System* pcs = 0,
+                   unsigned complexity_threshold = 16,
+                   bool wrap_individually = true);
+
+  /*! \brief
+    Possibly tightens \p *this by dropping some points with non-integer
+    coordinates.
+
+    \param complexity
+    The maximal complexity of any algorithms used.
+
+    \note
+    Currently there is no optimality guarantee, not even if
+    \p complexity is <CODE>ANY_COMPLEXITY</CODE>.
+  */
+   void drop_some_non_integer_points(Complexity_Class complexity
+                                    = ANY_COMPLEXITY);
+
+  /*! \brief
+    Possibly tightens \p *this by dropping some points with non-integer
+    coordinates for the space dimensions corresponding to \p vars.
+
+    \param vars
+    Points with non-integer coordinates for these variables/space-dimensions
+    can be discarded.
+
+    \param complexity
+    The maximal complexity of any algorithms used.
+
+    \note
+    Currently there is no optimality guarantee, not even if
+    \p complexity is <CODE>ANY_COMPLEXITY</CODE>.
+  */
+  void drop_some_non_integer_points(const Variables_Set& vars,
+                                    Complexity_Class complexity
+                                    = ANY_COMPLEXITY);
+
+  /*! \brief
     Assigns to \p *this the result of computing the
     \ref CC76_extrapolation "CC76-widening" between \p *this and \p y.
 
@@ -1181,7 +1317,11 @@ public:
     \exception std::invalid_argument
     Thrown if \p *this and \p y are dimension-incompatible.
   */
-  void CC76_widening_assign(const Box& y, unsigned* tp = 0);
+  template <typename T>
+  typename Enable_If<Is_Same<T, Box>::value
+                     && Is_Same_Or_Derived<Interval_Base, ITV>::value,
+                     void>::type
+  CC76_widening_assign(const T& y, unsigned* tp = 0);
 
   /*! \brief
     Assigns to \p *this the result of computing the
@@ -1199,9 +1339,12 @@ public:
     \exception std::invalid_argument
     Thrown if \p *this and \p y are dimension-incompatible.
   */
-  template <typename Iterator>
-  void CC76_widening_assign(const Box& y,
-			    Iterator first, Iterator last);
+  template <typename T, typename Iterator>
+  typename Enable_If<Is_Same<T, Box>::value
+                     && Is_Same_Or_Derived<Interval_Base, ITV>::value,
+                     void>::type
+  CC76_widening_assign(const T& y,
+		       Iterator first, Iterator last);
 
   //! Same as CC76_widening_assign(y, tp).
   void widening_assign(const Box& y, unsigned* tp = 0);
@@ -1249,7 +1392,11 @@ public:
     <CODE>x.CC76_narrowing_assign(y)</CODE> will assign to \p x
     the result of the computation \f$\mathtt{y} \Delta \mathtt{x}\f$.
   */
-  void CC76_narrowing_assign(const Box& y);
+  template <typename T>
+  typename Enable_If<Is_Same<T, Box>::value
+                     && Is_Same_Or_Derived<Interval_Base, ITV>::value,
+                     void>::type
+  CC76_narrowing_assign(const T& y);
 
   //@} Space-Dimension Preserving Member Functions that May Modify [...]
 
@@ -1326,14 +1473,14 @@ public:
 
   //! Removes all the specified dimensions.
   /*!
-    \param to_be_removed
+    \param vars
     The set of Variable objects corresponding to the dimensions to be removed.
 
     \exception std::invalid_argument
     Thrown if \p *this is dimension-incompatible with one of the Variable
-    objects contained in \p to_be_removed.
+    objects contained in \p vars.
   */
-  void remove_space_dimensions(const Variables_Set& to_be_removed);
+  void remove_space_dimensions(const Variables_Set& vars);
 
   /*! \brief
     Removes the higher dimensions so that the resulting space
@@ -1352,8 +1499,8 @@ public:
     \param pfunc
     The partial function specifying the destiny of each dimension.
 
-    The template class Partial_Function must provide the following
-    methods.
+    The template type parameter Partial_Function must provide
+    the following methods.
     \code
       bool has_empty_codomain() const
     \endcode
@@ -1408,30 +1555,30 @@ public:
   */
   void expand_space_dimension(Variable var, dimension_type m);
 
-  //! Folds the space dimensions in \p to_be_folded into \p var.
+  //! Folds the space dimensions in \p vars into \p dest.
   /*!
-    \param to_be_folded
+    \param vars
     The set of Variable objects corresponding to the space dimensions
     to be folded;
 
-    \param var
+    \param dest
     The variable corresponding to the space dimension that is the
     destination of the folding operation.
 
     \exception std::invalid_argument
-    Thrown if \p *this is dimension-incompatible with \p var or with
-    one of the Variable objects contained in \p to_be_folded.
-    Also thrown if \p var is contained in \p to_be_folded.
+    Thrown if \p *this is dimension-incompatible with \p dest or with
+    one of the Variable objects contained in \p vars.
+    Also thrown if \p dest is contained in \p vars.
 
     If \p *this has space dimension \f$n\f$, with \f$n > 0\f$,
-    <CODE>var</CODE> has space dimension \f$k \leq n\f$,
-    \p to_be_folded is a set of variables whose maximum space dimension
-    is also less than or equal to \f$n\f$, and \p var is not a member
-    of \p to_be_folded, then the space dimensions corresponding to
-    variables in \p to_be_folded are \ref fold_space_dimensions "folded"
+    <CODE>dest</CODE> has space dimension \f$k \leq n\f$,
+    \p vars is a set of variables whose maximum space dimension
+    is also less than or equal to \f$n\f$, and \p dest is not a member
+    of \p vars, then the space dimensions corresponding to
+    variables in \p vars are \ref fold_space_dimensions "folded"
     into the \f$k\f$-th space dimension.
   */
-  void fold_space_dimensions(const Variables_Set& to_be_folded, Variable var);
+  void fold_space_dimensions(const Variables_Set& vars, Variable dest);
 
   //@} // Member Functions that May Modify the Dimension of the Vector Space
 
@@ -1598,6 +1745,15 @@ private:
   /*! \brief
     WRITE ME.
   */
+  static I_Result
+  refine_interval_no_check(ITV& itv,
+                           Constraint::Type type,
+                           Coefficient_traits::const_reference num,
+                           Coefficient_traits::const_reference den);
+
+  /*! \brief
+    WRITE ME.
+  */
   void
   add_interval_constraint_no_check(dimension_type var_id,
                                    Constraint::Type type,
@@ -1628,8 +1784,7 @@ private:
     Uses the constraint \p c to refine \p *this.
 
     \param c
-    The constraint to be added.
-    Non-interval constraints are ignored.
+    The constraint to be used for the refinement.
 
     \warning
     If \p c and \p *this are dimension-incompatible,
@@ -1641,8 +1796,9 @@ private:
     Uses the constraints in \p cs to refine \p *this.
 
     \param cs
-    The constraints to be added.
-    Non-interval constraints are ignored.
+    The constraints to be used for the refinement.
+    To avoid termination problems, each constraint in \p cs
+    will be used for a single refinement step.
 
     \warning
     If \p cs and \p *this are dimension-incompatible,
@@ -1844,14 +2000,20 @@ private:
     \param  cs
     The constraints to be propagated.
 
+    \param max_iterations
+    The maximum number of propagation steps for each constraint in \p cs.
+    If zero, the number of propagations will be unbounded, possibly
+    resulting in an infinite loop.
+
     \warning
     If \p cs and \p *this are dimension-incompatible,
     the behavior is undefined.
 
     \warning
-    This method may lead to non-termination.
+    This method may lead to non-termination if \p max_iterations is 0.
   */
-  void propagate_constraints_no_check(const Constraint_System& cs);
+  void propagate_constraints_no_check(const Constraint_System& cs,
+                                      dimension_type max_iterations);
 
   //! Checks if and how \p expr is bounded in \p *this.
   /*!

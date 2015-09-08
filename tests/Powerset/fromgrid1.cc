@@ -1,6 +1,7 @@
 /* Test Pointset_Powerset<PH>::Pointset_Powerset(Grid),
         Pointset_Powerset<PH>::Pointset_Powerset(Pointset_Powerset(Grid)).
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -44,7 +45,7 @@ test01() {
   bool ok = (pps == known_pps);
 
   Pointset_Powerset<C_Polyhedron>::const_iterator i = pps.begin();
-  C_Polyhedron phi = i->element();
+  C_Polyhedron phi = i->pointset();
   print_constraints(phi, "*** phi ***");
 
   return ok;
@@ -88,7 +89,7 @@ test03() {
   bool ok = (pps == known_pps);
 
   Pointset_Powerset<C_Polyhedron>::const_iterator i = pps.begin();
-  C_Polyhedron phi = i->element();
+  C_Polyhedron phi = i->pointset();
   print_constraints(phi, "*** phi ***");
 
   return ok;
@@ -112,7 +113,7 @@ test04() {
   bool ok = (pps == known_pps);
 
   Pointset_Powerset<TBD_Shape>::const_iterator i = pps.begin();
-  TBD_Shape bdsi = i->element();
+  TBD_Shape bdsi = i->pointset();
   print_constraints(bdsi, "*** bdsi ***");
 
   return ok;
@@ -156,7 +157,7 @@ test06() {
   bool ok = (pps == known_pps);
 
   Pointset_Powerset<TBD_Shape>::const_iterator i = pps.begin();
-  TBD_Shape bdsi = i->element();
+  TBD_Shape bdsi = i->pointset();
   print_constraints(bdsi, "*** bdsi ***");
 
   return ok;
@@ -180,7 +181,7 @@ test07() {
   bool ok = (pps == known_pps);
 
   Pointset_Powerset<TOctagonal_Shape>::const_iterator i = pps.begin();
-  TOctagonal_Shape osi = i->element();
+  TOctagonal_Shape osi = i->pointset();
   print_constraints(osi, "*** osi ***");
 
   return ok;
@@ -224,7 +225,7 @@ test09() {
   bool ok = (pps == known_pps);
 
   Pointset_Powerset<TOctagonal_Shape>::const_iterator i = pps.begin();
-  TOctagonal_Shape osi = i->element();
+  TOctagonal_Shape osi = i->pointset();
   print_constraints(osi, "*** osi ***");
 
   return ok;
@@ -248,7 +249,7 @@ test10() {
   bool ok = (pps == known_pps);
 
   Pointset_Powerset<TBox>::const_iterator i = pps.begin();
-  TBox phi = i->element();
+  TBox phi = i->pointset();
   print_constraints(phi, "*** phi ***");
 
   return ok;
@@ -292,7 +293,7 @@ test12() {
   bool ok = (pps == known_pps);
 
   Pointset_Powerset<TBox>::const_iterator i = pps.begin();
-  TBox boxi = i->element();
+  TBox boxi = i->pointset();
   print_constraints(boxi, "*** boxi ***");
 
   return ok;
@@ -318,10 +319,10 @@ test13() {
 
   print_congruences(gr, "*** gr ***");
   Pointset_Powerset<Grid>::const_iterator i = pps1.begin();
-  Grid gri = i->element();
+  Grid gri = i->pointset();
   print_congruences(gri, "*** gri ***");
   Pointset_Powerset<Grid>::const_iterator i2 = pps2.begin();
-  Grid gri2 = i2->element();
+  Grid gri2 = i2->pointset();
   print_congruences(gri2, "*** gri2 ***");
 
   return ok && pps1.OK();
@@ -366,7 +367,7 @@ test15() {
   bool ok = (pps == known_pps);
 
   Pointset_Powerset<Grid>::const_iterator i = pps.begin();
-  Grid gri = i->element();
+  Grid gri = i->pointset();
   print_congruences(gri, "*** gri ***");
 
   return ok;
@@ -394,7 +395,7 @@ test16() {
   // be set to false.
   // So we add this test to set the omega reduction pps_gr.reduced
   // flag to true.
-  bool top_closed = pps_gr.is_topologically_closed();
+  pps_gr.is_topologically_closed();
 
   Pointset_Powerset<NNC_Polyhedron> pps(pps_gr);
 
@@ -406,7 +407,7 @@ test16() {
   ok = ok && (pps == known_pps) && pps.OK();
 
   Pointset_Powerset<NNC_Polyhedron>::const_iterator i = pps.begin();
-  NNC_Polyhedron phi = i->element();
+  NNC_Polyhedron phi = i->pointset();
   print_constraints(phi, "*** phi ***");
 
   return ok;

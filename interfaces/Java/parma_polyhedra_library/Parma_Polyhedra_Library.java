@@ -1,5 +1,6 @@
 /* Parma_Polyhedra_Library Java class declaration and implementation.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -37,13 +38,41 @@ site: http://www.cs.unipr.it/ppl/ . */
   their representation in the PPL and the operations provided
   by the PPL is given in the main \extref{preamble, PPL user manual}.
   Here we just describe those aspects that are specific to the Java interface.
-  In the sequel, \c prefix is the path prefix under which
-  the library has been installed (typically \c /usr or \c /usr/local).
+  In the sequel, <CODE>prefix</CODE> is the path prefix under which
+  the library has been installed (typically <CODE>/usr</CODE> or
+  <CODE>/usr/local</CODE>).
 
   <H2>Overview</H2>
 
   Here is a list of notes with general information and advice
   on the use of the Java interface.
+
+  - When the Parma Polyhedra Library is configured, it will automatically
+    test for the existence of the Java system (unless configuration options
+    are passed to disable the build of the Java interface;
+    see configuration option <CODE>--enable-interfaces</CODE>).
+    If Java is correctly installed in a standard location, things will be
+    arranged so that the Java interface is built and installed
+    (see configuration option <CODE>--with-java</CODE> if you need to
+    specify a non-standard location for the Java system).
+
+  - The Java interface files are all installed in the directory
+    <CODE>prefix/lib/ppl</CODE>.  Since this includes shared and
+    dynamically loaded libraries, you must make your dynamic
+    linker/loader aware of this fact.  If you use a GNU/Linux system,
+    try the commands <CODE>man ld.so</CODE> and <CODE>man ldconfig</CODE>
+    for more information.
+
+  - Any application using the PPL should:
+      - Load the PPL interface library by calling <CODE>System.load</CODE>
+        and passing the full path of the dynamic shared object;
+      - Make sure that only the intended version(s) of the library has
+        been loaded, e.g., by calling static method <CODE>version()</CODE>
+        in class <CODE>parma_polyhedra_library.Parma_Polyhedra_Library</CODE>;
+      - Starting from version 0.11, initialize the interface by calling
+        static method <CODE>initialize_library()</CODE>;
+        when all library work is done, finalize the interface by calling
+        <CODE>finalize_library()</CODE>.
 
   - The numerical abstract domains available to the Java user as
     Java classes consist of the <EM>simple</EM> domains,
@@ -51,7 +80,7 @@ site: http://www.cs.unipr.it/ppl/ . */
     of simple domains. Note that the default configuration will
     only enable a subset of these domains (if you need a different
     set of domains, see configuration option
-    <code>--enable-instantiations</code>).
+    <CODE>--enable-instantiations</CODE>).
     - The simple domains are:
       - convex polyhedra, which consist of C_Polyhedron and
         NNC_Polyhedron;<BR>
@@ -77,14 +106,10 @@ site: http://www.cs.unipr.it/ppl/ . */
   - In the following, any of the above numerical
     abstract domains  is called a PPL <EM>domain</EM>
     and any element of a PPL domain is called a <EM>PPL object</EM>.
-  - The Java interface files are all installed in the directory
-    \c prefix/lib/ppl.  Since this includes shared and
-    dynamically loaded libraries, you must make your dynamic
-    linker/loader aware of this fact.  If you use a GNU/Linux system,
-    try the commands <CODE>man ld.so</CODE> and <CODE>man ldconfig</CODE>
-    for more information.
+
   - A Java program can create a new object for a PPL domain by
     using the constructors for the class corresponding to the domain.
+
   - For a PPL object with space dimension \p k,
     the identifiers used for the PPL variables
     must lie between 0 and \f$k-1\f$ and correspond to the indices of the
@@ -96,22 +121,13 @@ site: http://www.cs.unipr.it/ppl/ . */
     should follow all the (space) dimension-compatibility rules stated in
     Section \extref{representation, Representations of Convex Polyhedra}
     of the main PPL user manual.
+
   - As explained above, a polyhedron has a fixed topology C or NNC,
     that is determined at the time of its initialization.
     All subsequent operations on the polyhedron must respect all the
     topological compatibility rules stated in Section
     \extref{representation, Representations of Convex Polyhedra}
     of the main PPL user manual.
-  - Any application using the PPL should make sure that only the
-    intended version(s) of the library are ever used.
-  - When the Parma Polyhedra Library is configured, it will automatically
-    test for the existence of the Java system (unless configuration options
-    are passed to disable the build of the Java interface;
-    see configuration option <code>--enable-interfaces</code>).
-    If Java is correctly installed in a standard location, things will be
-    arranged so that the Java interface is built and installed
-    (see configuration option <code>--with-java</code> if you need to
-    specify a non-standard location for the Java system).
 
 */ /* \mainpage */
 
@@ -126,6 +142,29 @@ package parma_polyhedra_library;
 //! A class collecting library-level functions.
 /*! \ingroup PPL_Java_interface */
 public class Parma_Polyhedra_Library {
+
+    //! \name Library initialization and finalization
+    //@{
+
+    /*! \brief
+      Initializes the Parma Polyhedra Library.
+
+      This method must be called after loading the library and
+      before calling any other method from any other PPL package class.
+    */
+    public static native void initialize_library();
+
+    /*! \brief
+      Finalizes the Parma Polyhedra Library.
+
+      This method must be called when work with the library is done.
+      After finalization, no other library method can be called
+      (except those in class Parma_Polyhedra_Library), unless the library
+      is re-initialized by calling <CODE>initialize_library()</CODE>.
+    */
+    public static native void finalize_library();
+
+    //@} // Library initialization and finalization
 
     //! \name Version Checking
     //@{
@@ -156,7 +195,7 @@ public class Parma_Polyhedra_Library {
 
     //@} // Version Checking
 
-    //! \name (Re-) Setting floating-point rounding mode.
+    //! \name Floating-point rounding and precision settings.
     //@{
 
     /*! \brief
@@ -179,6 +218,83 @@ public class Parma_Polyhedra_Library {
     */
     public static native void restore_pre_PPL_rounding();
 
-    //@} // (Re-) Setting floating-point rounding mode.
+    //! Returns the precision parameter for irrational calculations.
+    public static native int irrational_precision();
 
+    //! Sets the precision parameter used for irrational calculations.
+    /*!
+      If \p p is less than or equal to <CODE>INT_MAX</CODE>, sets the
+      precision parameter used for irrational calculations to \p p.
+      Then, in the irrational calculations returning an unbounded rational,
+      (e.g., when computing a square root), the lesser between numerator
+      and denominator will be limited to 2**\p p.
+    */
+    public static native void set_irrational_precision(int p);
+
+    //@} // Floating-point rounding and precision settings.
+
+    //! \name Timeout handling
+    //@{
+
+    /*! \brief
+      Sets the timeout for computations whose completion could require
+      an exponential amount of time.
+
+      \param hsecs
+      The number of hundreths of seconds.
+      It must be strictly greater than zero.
+
+      Computations taking exponential time will be interrupted some time
+      after \p hsecs hundreths of seconds have elapsed since the call to
+      the timeout setting function, by throwing a
+      <CODE>Timeout_Exception</CODE> object.
+      Otherwise, if the computation completes without being interrupted,
+      then the timeout should be reset by calling
+      <CODE>reset_timeout()</CODE>.
+    */
+    public static native void set_timeout(int hsecs);
+
+    /*! \brief
+      Resets the timeout time so that the computation is not interrupted.
+    */
+    public static native void reset_timeout();
+
+    /*! \brief
+      Sets a threshold for computations whose completion could require
+      an exponential amount of time.
+
+      \param weight
+      The maximum computational weight allowed.
+      It must be strictly greater than zero.
+
+      Computations taking exponential time will be interrupted some time
+      after reaching the \p weight complexity threshold, by throwing a
+      <CODE>Timeout_Exception</CODE> object.
+      Otherwise, if the computation completes without being interrupted,
+      then the deterministic timeout should be reset by calling
+      <CODE>reset_deterministic_timeout()</CODE>.
+
+      \note
+      This "timeout" checking functionality is said to be \e deterministic
+      because it is not based on actual elapsed time. Its behavior will
+      only depend on (some of the) computations performed in the PPL library
+      and it will be otherwise independent from the computation environment
+      (CPU, operating system, compiler, etc.).
+
+      \warning
+      The weight mechanism is under alpha testing. In particular,
+      there is still no clear relation between the weight threshold and
+      the actual computational complexity. As a consequence, client
+      applications should be ready to reconsider the tuning of these
+      weight thresholds when upgrading to newer version of the PPL.
+    */
+    public static native void set_deterministic_timeout(int weight);
+
+    /*! \brief
+      Resets the deterministic timeout so that the computation is not
+      interrupted.
+    */
+    public static native void reset_deterministic_timeout();
+
+    //@} // Timeout handling.
 }

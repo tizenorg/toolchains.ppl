@@ -1,5 +1,6 @@
 /* Ptr_Iterator class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -82,7 +83,7 @@ public:
   explicit Ptr_Iterator(const P& q);
 
   /*! \brief
-    Copy-constructor allowing the construction of a const_iterator
+    Copy constructor allowing the construction of a const_iterator
     from a non-const iterator.
   */
   template<typename Q>

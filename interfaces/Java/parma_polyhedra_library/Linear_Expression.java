@@ -1,5 +1,6 @@
 /* Linear_Expression Java declaration and implementation.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -62,4 +63,17 @@ public abstract class Linear_Expression implements Cloneable {
 
     //! Returns a string representation of \p this.
     public native String toString();
+
+    //! Returns <CODE>true</CODE> if and only if \p *this is \f$0\f$.
+    public native boolean is_zero();
+
+    /*! \brief Returns <CODE>true</CODE> if and only if all the homogeneous
+        terms of \p *this are \f$0\f$.
+    */
+    public native boolean all_homogeneous_terms_are_zero();
+
+    private static native void initIDs();
+    static {
+        initIDs();
+    }
 }

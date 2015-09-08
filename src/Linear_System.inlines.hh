@@ -1,5 +1,6 @@
 /* Linear_System class implementation: inline functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -43,7 +44,7 @@ Linear_System::is_sorted() const {
   // of a system (if `sorted' evaluates to `false' nothing is known).
   // This assertion is used to ensure that the system
   // is actually sorted when `sorted' value is 'true'.
-  assert(!sorted || check_sorted());
+  PPL_ASSERT(!sorted || check_sorted());
   return sorted;
 }
 
@@ -76,7 +77,7 @@ Linear_System::first_pending_row() const {
 
 inline dimension_type
 Linear_System::num_pending_rows() const {
-  assert(num_rows() >= first_pending_row());
+  PPL_ASSERT(num_rows() >= first_pending_row());
   return num_rows() - first_pending_row();
 }
 
@@ -97,7 +98,7 @@ Linear_System::Linear_System(const Linear_System& y)
   unset_pending_rows();
   // Previously pending rows may violate sortedness.
   sorted = (y.num_pending_rows() > 0) ? false : y.sorted;
-  assert(num_pending_rows() == 0);
+  PPL_ASSERT(num_pending_rows() == 0);
 }
 
 inline
@@ -115,7 +116,7 @@ Linear_System::operator=(const Linear_System& y) {
   unset_pending_rows();
   // Previously pending rows may violate sortedness.
   sorted = (y.num_pending_rows() > 0) ? false : y.sorted;
-  assert(num_pending_rows() == 0);
+  PPL_ASSERT(num_pending_rows() == 0);
   return *this;
 }
 
@@ -242,150 +243,6 @@ inline void
 swap(Parma_Polyhedra_Library::Linear_System& x,
      Parma_Polyhedra_Library::Linear_System& y) {
   x.swap(y);
-}
-
-} // namespace std
-
-
-namespace Parma_Polyhedra_Library {
-
-inline
-Linear_System::With_Bit_Matrix_iterator::
-With_Bit_Matrix_iterator(Iter1 iter1, Iter2 iter2)
-  : i1(iter1), i2(iter2) {
-}
-
-inline
-Linear_System::With_Bit_Matrix_iterator::
-With_Bit_Matrix_iterator(const With_Bit_Matrix_iterator& y)
-  : i1(y.i1), i2(y.i2) {
-}
-
-inline
-Linear_System::With_Bit_Matrix_iterator::
-~With_Bit_Matrix_iterator() {
-}
-
-inline Linear_System::With_Bit_Matrix_iterator&
-Linear_System::With_Bit_Matrix_iterator::
-operator=(const With_Bit_Matrix_iterator& y) {
-  i1 = y.i1;
-  i2 = y.i2;
-  return *this;
-}
-
-inline Linear_System::With_Bit_Matrix_iterator&
-Linear_System::With_Bit_Matrix_iterator::operator++() {
-  ++i1;
-  ++i2;
-  return *this;
-}
-
-inline Linear_System::With_Bit_Matrix_iterator
-Linear_System::With_Bit_Matrix_iterator::operator++(int) {
-  With_Bit_Matrix_iterator tmp = *this;
-  operator++();
-  return tmp;
-}
-
-inline Linear_System::With_Bit_Matrix_iterator&
-Linear_System::With_Bit_Matrix_iterator::operator--() {
-  --i1;
-  --i2;
-  return *this;
-}
-
-inline Linear_System::With_Bit_Matrix_iterator
-Linear_System::With_Bit_Matrix_iterator::operator--(int) {
-  With_Bit_Matrix_iterator tmp = *this;
-  operator--();
-  return tmp;
-}
-
-inline Linear_System::With_Bit_Matrix_iterator&
-Linear_System::With_Bit_Matrix_iterator::operator+=(difference_type d) {
-  i1 += d;
-  i2 += d;
-  return *this;
-}
-
-inline Linear_System::With_Bit_Matrix_iterator
-Linear_System::With_Bit_Matrix_iterator::
-operator+(difference_type d) const {
-  With_Bit_Matrix_iterator tmp = *this;
-  tmp += d;
-  return tmp;
-}
-
-inline Linear_System::With_Bit_Matrix_iterator&
-Linear_System::With_Bit_Matrix_iterator::operator-=(difference_type d) {
-  i1 -= d;
-  i2 -= d;
-  return *this;
-}
-
-inline Linear_System::With_Bit_Matrix_iterator
-Linear_System::With_Bit_Matrix_iterator::
-operator-(difference_type d) const {
-  With_Bit_Matrix_iterator tmp = *this;
-  tmp -= d;
-  return tmp;
-}
-
-inline Linear_System::With_Bit_Matrix_iterator::difference_type
-Linear_System::With_Bit_Matrix_iterator::
-operator-(const With_Bit_Matrix_iterator& y) const {
-  return i1 - y.i1;
-}
-
-inline bool
-Linear_System::With_Bit_Matrix_iterator::
-operator==(const With_Bit_Matrix_iterator& y) const {
-  return i1 == y.i1;
-}
-
-inline bool
-Linear_System::With_Bit_Matrix_iterator::
-operator!=(const With_Bit_Matrix_iterator& y) const {
-  return i1 != y.i1;
-}
-
-inline bool
-Linear_System::With_Bit_Matrix_iterator::
-operator<(const With_Bit_Matrix_iterator& y) const {
-  return i1 < y.i1;
-}
-
-inline Linear_System::With_Bit_Matrix_iterator::reference
-Linear_System::With_Bit_Matrix_iterator::operator*() const {
-  return *i1;
-}
-
-inline Linear_System::With_Bit_Matrix_iterator::pointer
-Linear_System::With_Bit_Matrix_iterator::operator->() const {
-  return &*i1;
-}
-
-inline void
-Linear_System::With_Bit_Matrix_iterator::
-iter_swap(const With_Bit_Matrix_iterator& y) const {
-  std::iter_swap(i1, y.i1);
-  std::iter_swap(i2, y.i2);
-}
-
-} // namespace Parma_Polyhedra_Library
-
-namespace std {
-
-#ifdef PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS
-/*! \relates Parma_Polyhedra_Library::Linear_System::With_Bit_Matrix_iterator */
-#endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
-inline void
-iter_swap(Parma_Polyhedra_Library
-	  ::Linear_System::With_Bit_Matrix_iterator x,
-	  Parma_Polyhedra_Library
-	  ::Linear_System::With_Bit_Matrix_iterator y) {
-  x.iter_swap(y);
 }
 
 } // namespace std

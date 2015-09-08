@@ -1,5 +1,6 @@
 /* A sort of clone of the cddlib test program `lcdd'.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -92,6 +93,7 @@ typedef Polyhedron* POLYHEDRON_TYPE;
 #include <vector>
 #include <set>
 #include <limits>
+#include <climits>
 #include <cassert>
 #include <cstdarg>
 #include <csignal>
@@ -332,7 +334,7 @@ set_alarm_on_cpu_time(const unsigned seconds, sig_handler_type handler) {
 #if PPL_HAVE_DECL_RLIMIT_AS
 
 void
-limit_virtual_memory(const unsigned bytes) {
+limit_virtual_memory(const unsigned long bytes) {
   struct rlimit t;
 
   if (getrlimit(RLIMIT_AS, &t) != 0)
@@ -348,7 +350,7 @@ limit_virtual_memory(const unsigned bytes) {
 #else
 
 void
-limit_virtual_memory(unsigned) {
+limit_virtual_memory(unsigned long) {
 }
 
 #endif // !PPL_HAVE_DECL_RLIMIT_AS
@@ -415,6 +417,8 @@ process_options(int argc, char* argv[]) {
       l = strtol(optarg, &endptr, 10);
       if (*endptr || l < 0)
 	fatal("a non-negative integer must follow `-R'");
+      else if (((unsigned long) l) > ULONG_MAX/(1024*1024))
+        max_bytes_of_virtual_memory = ULONG_MAX;
       else
 	max_bytes_of_virtual_memory = l*1024*1024;
       break;

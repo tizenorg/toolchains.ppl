@@ -1,5 +1,6 @@
 /* Interval_Info class declaration and implementation.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -102,7 +103,6 @@ class Interval_Info_Null {
 public:
   const_bool_nodef(may_be_empty, Policy::may_be_empty);
   const_bool_nodef(may_contain_infinity, Policy::may_contain_infinity);
-  const_bool_nodef(check_empty_result, Policy::check_empty_result);
   const_bool_nodef(check_inexact, Policy::check_inexact);
   const_bool_nodef(store_special, false);
   const_bool_nodef(store_open, false);
@@ -165,7 +165,6 @@ class Interval_Info_Bitset {
 public:
   const_bool_nodef(may_be_empty, Policy::may_be_empty);
   const_bool_nodef(may_contain_infinity, Policy::may_contain_infinity);
-  const_bool_nodef(check_empty_result, Policy::check_empty_result);
   const_bool_nodef(check_inexact, Policy::check_inexact);
   const_bool_nodef(store_special, Policy::store_special);
   const_bool_nodef(store_open, Policy::store_open);
@@ -277,7 +276,8 @@ public:
     case Interval_NS::Property::CARDINALITY_1_:
       return cache_singleton && get_bit(bitset, cardinality_1_bit);
     case Interval_NS::Property::CARDINALITY_IS_:
-      return (cache_empty || cache_singleton) && get_bit(bitset, cardinality_is_bit);
+      return (cache_empty || cache_singleton)
+        && get_bit(bitset, cardinality_is_bit);
     default:
       return false;
     }

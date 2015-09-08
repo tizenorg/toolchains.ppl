@@ -1,5 +1,6 @@
 /* Test Pointset_Powerset::simplify_using_context_assign().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -143,7 +144,7 @@ test03() {
 
   for (Pointset_Powerset<C_Polyhedron>::const_iterator it = ps1.begin(),
          ps1_end = ps1.end(); it != ps1_end; ++it)
-    print_constraints(it->element());
+    print_constraints(it->pointset());
 
   return ok;
 }
@@ -197,7 +198,7 @@ test04() {
 
   for (Pointset_Powerset<C_Polyhedron>::const_iterator it = ps1.begin(),
          ps1_end = ps1.end(); it != ps1_end; ++it)
-    print_constraints(it->element());
+    print_constraints(it->pointset());
 
   return ok;
 }
@@ -259,7 +260,7 @@ test05() {
 
   for (Pointset_Powerset<C_Polyhedron>::const_iterator it = ps1.begin(),
          ps1_end = ps1.end(); it != ps1_end; ++it)
-    print_constraints(it->element());
+    print_constraints(it->pointset());
 
   return ok;
 }
@@ -301,7 +302,7 @@ test06() {
 
   for (Pointset_Powerset<C_Polyhedron>::const_iterator it = ps1.begin(),
          ps1_end = ps1.end(); it != ps1_end; ++it)
-    print_constraints(it->element());
+    print_constraints(it->pointset());
 
   return ok;
 }
@@ -333,7 +334,7 @@ test07() {
 
   for (Pointset_Powerset<C_Polyhedron>::const_iterator it = ps1.begin(),
          ps1_end = ps1.end(); it != ps1_end; ++it)
-    print_constraints(it->element());
+    print_constraints(it->pointset());
 
   return ok;
 }
@@ -373,7 +374,7 @@ test08() {
 
   for (Pointset_Powerset<C_Polyhedron>::const_iterator i = ps1.begin(),
          iend = ps1.end(); i != iend; ++i)
-    print_constraints(i->element());
+    print_constraints(i->pointset());
 
   return ok;
 }
@@ -399,7 +400,7 @@ test09() {
   nout << "Pointset_Powerset to be simplified:\n";
   for (Pointset_Powerset<C_Polyhedron>::const_iterator i = ps1.begin(),
          iend = ps1.end(); i != iend; ++i) {
-    print_constraints(i->element());
+    print_constraints(i->pointset());
     nout << "\n";
   }
 
@@ -424,7 +425,7 @@ test09() {
   nout << "\nPointset_Powerset to be used as context:\n";
   for (Pointset_Powerset<C_Polyhedron>::const_iterator i = ps2.begin(),
          iend = ps2.end(); i != iend; ++i) {
-    print_constraints(i->element());
+    print_constraints(i->pointset());
     nout << "\n";
   }
 
@@ -436,7 +437,7 @@ test09() {
 
   for (Pointset_Powerset<C_Polyhedron>::const_iterator i = ps1.begin(),
          iend = ps1.end(); i != iend; ++i) {
-    print_constraints(i->element());
+    print_constraints(i->pointset());
     nout << "\n";
   }
 

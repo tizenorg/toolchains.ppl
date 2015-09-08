@@ -6,7 +6,8 @@ dnl and files ppl_prolog_DOMAIN.hh, for each interface domain DOMAIN
 dnl in ppl_interface instantiations.m4 using the code in
 dnl ppl_interface_generator_prolog_hh_code.m4.
 
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -32,7 +33,8 @@ m4_include(ppl_interface_generator_prolog_hh_code.m4)
 m4_include(ppl_interface_generator_prolog_procedure_generators.m4)
 
 m4_divert`'dnl
-%<--%<--%<-- ppl_prolog_domains.hh
+___END_OF_FILE___
+___BEGIN_OF_FILE___ ppl_prolog_domains.hh << ___END_OF_FILE___
 /* Prolog interface code: inclusion of all domain declarations.
 m4_include(`ppl_interface_generator_copyright')dnl
 */
@@ -45,9 +47,11 @@ dnl m4_pre_extra_class_code(Class_Counter)
 dnl Prefix extra code for each class.
 m4_define(`m4_pre_extra_class_code', `dnl
 m4_define(`m4_current_interface', m4_interface_class`'$1)
-%<--%<--%<-- ppl_prolog_domains.hh
+___END_OF_FILE___
+___BEGIN_OF_FILE___ ppl_prolog_domains.hh << ___END_OF_FILE___
 `#'include "ppl_prolog_`'m4_current_interface.hh"
-%<--%<--%<-- ppl_prolog_`'m4_current_interface.hh
+___END_OF_FILE___
+___BEGIN_OF_FILE___ ppl_prolog_`'m4_current_interface.hh << ___END_OF_FILE___
 /* Prolog m4_current_interface interface code: declarations.
 m4_include(`ppl_interface_generator_copyright')`'dnl
 */
@@ -61,6 +65,7 @@ m4_divert`'dnl
 dnl
 dnl Generate the non-fixed part of the file.
 m4_all_code`'dnl
+___END_OF_FILE___
 dnl
 dnl End of file generation.
 

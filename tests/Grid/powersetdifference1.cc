@@ -1,5 +1,6 @@
 /* Test Pointset_Powerset<Grid>.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -97,7 +98,7 @@ test02() {
   known_gr.add_congruence((x %= 0) / 1);
 
   Pointset_Powerset<Grid>::iterator i = ps.begin();
-  return (i->element() == known_gr);
+  return i->pointset() == known_gr;
 }
 
 bool
@@ -123,7 +124,7 @@ test03() {
   ps.difference_assign(qs);
   print_congruences(ps, "*** ps.difference(qs) ***");
 
-  return (ps.begin() == ps.end());
+  return ps.begin() == ps.end();
 }
 
 bool
@@ -153,7 +154,7 @@ test04() {
   known_gr.add_congruence((x %= 0) / 1);
 
   Pointset_Powerset<Grid>::iterator i = ps.begin();
-  return (i->element() == known_gr);
+  return i->pointset() == known_gr;
 }
 
 bool
@@ -175,7 +176,7 @@ test05() {
   ps.difference_assign(qs);
   print_congruences(ps, "*** ps.difference(qs) ***");
 
-  return (ps.begin() == ps.end());
+  return ps.begin() == ps.end();
 }
 
 bool
@@ -200,7 +201,7 @@ test06() {
   Grid known_gr(p);
 
   Pointset_Powerset<Grid>::iterator i = ps.begin();
-  return (i->element() == known_gr);
+  return i->pointset() == known_gr;
 }
 
 bool
@@ -225,7 +226,7 @@ test07() {
   Grid known_gr(p);
 
   Pointset_Powerset<Grid>::iterator i = ps.begin();
-  return (i->element() == known_gr);
+  return i->pointset() == known_gr;
 }
 
 bool
@@ -298,7 +299,7 @@ test09() {
   ps.difference_assign(qs);
   print_congruences(ps, "*** ps.difference(qs) ***");
 
-  return (ps.is_empty());
+  return ps.is_empty();
 }
 
 BEGIN_MAIN

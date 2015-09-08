@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -36,13 +37,26 @@ $(interface_generator_files)
 EXTRA_DIST = \
 $(interface_generator_files)
 
+if BUILD_WATCHDOG_LIBRARY
+
+WATCHDOG_LIBRARY = $(top_builddir)/Watchdog/src/libpwl.la
+WATCHDOG_INCLUDE_OPTIONS = -I$(top_builddir)/Watchdog/src
+
+endif BUILD_WATCHDOG_LIBRARY
+
+if HOST_OS_MINGW
+
+JNI_DEFINE_OPTIONS = -D_JNI_IMPLEMENTATION_
+
+endif HOST_OS_MINGW
 
 AM_CPPFLAGS = \
 -I$(top_srcdir)/interfaces \
 -I$(top_builddir)/src \
 -I../parma_polyhedra_library \
 -I$(top_srcdir)/src \
-@extra_includes@ @JNIFLAGS@
+$(WATCHDOG_INCLUDE_OPTIONS) \
+@extra_includes@ @JNIFLAGS@ $(JNI_DEFINE_OPTIONS)
 
 BUILT_SOURCES = \
 ppl_java_implementation_domains.cc.stamp
@@ -67,10 +81,22 @@ $(NO_UNDEFINED_FLAG) \
 
 else !HOST_OS_DARWIN
 
+if HOST_OS_MINGW
+
+libppl_java_la_LDFLAGS = \
+$(NO_UNDEFINED_FLAG) \
+-module \
+-avoid-version \
+-Wl,--kill-at
+
+else !HOST_OS_MINGW
+
 libppl_java_la_LDFLAGS = \
 $(NO_UNDEFINED_FLAG) \
 -module \
 -avoid-version
+
+endif !HOST_OS_MINGW
 
 endif !HOST_OS_DARWIN
 
@@ -81,6 +107,7 @@ ppl_java_common.cc \
 ppl_java_globals.cc
 
 nodist_EXTRA_libppl_java_la_SOURCES = \
+ppl_java_Termination.cc \
 ppl_java_Int8_Box.cc \
 ppl_java_Int16_Box.cc \
 ppl_java_Int32_Box.cc \
@@ -154,11 +181,14 @@ ppl_java_Constraints_Product_Grid_C_Polyhedron.cc \
 ppl_java_Constraints_Product_Grid_NNC_Polyhedron.cc
 
 libppl_java_la_LIBADD = \
+ppl_java_Termination.lo \
 @required_instantiations_java_cxx_objects@ \
 $(top_builddir)/src/libppl.la \
+$(WATCHDOG_LIBRARY) \
 @extra_libraries@
 
 libppl_java_la_DEPENDENCIES = \
+ppl_java_Termination.lo \
 @required_instantiations_java_cxx_objects@
 
 ppl_java_implementation_domains.cc.stamp: $(interface_generator_dependencies)
@@ -166,12 +196,13 @@ ppl_java_implementation_domains.cc.stamp: $(interface_generator_dependencies)
 		-I$(srcdir) -I$(srcdir)/.. -I$(srcdir)/../.. \
 		$(srcdir)/ppl_interface_generator_java_classes_cc_files.m4 \
                 > ppl_java_cc_blob
-	$(top_srcdir)/utils/cm_cleaner.sh < ppl_java_cc_blob
-	$(top_srcdir)/utils/cm_splitter.sh < ppl_java_cc_blob
+	$(top_srcdir)/utils/cm_cleaner.sh ./ppl_java_cc_blob
+	$(top_srcdir)/utils/cm_splitter.sh ./ppl_java_cc_blob
 	rm -f ppl_java_cc_blob
 	echo timestamp >$@
 
 CLEANFILES = \
+ppl_java_Termination.cc \
 @required_instantiations_java_cxx_sources@ \
 ppl_java_implementation_domains.cc.stamp
 

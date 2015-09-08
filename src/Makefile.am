@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -54,10 +55,13 @@
 #	    0.10		    7:0:0
 #	    0.10.1		    8:0:1
 #	    0.10.2		    8:0:1
+#	    0.11		    9:0:0
+#	    0.11.1		    9:0:0
+#	    0.11.2		    9:0:0
 
-LIBPPL_LT_CURRENT =  8
+LIBPPL_LT_CURRENT =  9
 LIBPPL_LT_REVISION = 0
-LIBPPL_LT_AGE =      1
+LIBPPL_LT_AGE =      0
 
 AM_CPPFLAGS = \
 -I$(top_builddir) \
@@ -86,7 +90,7 @@ COEFFICIENT_TYPES_INCLUDE_FILES =
 
 COEFFICIENT_DEFS_INCLUDE_FILES =
 
-endif
+endif USE_NATIVE_INTEGERS
 
 if USE_CHECKED_INTEGERS
 
@@ -94,7 +98,7 @@ COEFFICIENT_TYPES_INCLUDE_FILES =
 
 COEFFICIENT_DEFS_INCLUDE_FILES =
 
-endif
+endif USE_CHECKED_INTEGERS
 
 if USE_GMP_INTEGERS
 
@@ -105,12 +109,13 @@ COEFFICIENT_DEFS_INCLUDE_FILES = \
   GMP_Integer.defs.hh \
   GMP_Integer.inlines.hh
 
-endif
+endif USE_GMP_INTEGERS
 
 # The ordering of the following list *matters*!
 INCLUDE_FILES = \
 namespaces.hh \
 compiler.hh \
+assert.hh \
 meta_programming.hh \
 Slow_Copy.hh \
 Has_Assign_Or_Swap.hh \
@@ -151,12 +156,14 @@ Generator_System.types.hh \
 Grid_Generator_System.types.hh \
 Congruence_System.types.hh \
 Scalar_Products.types.hh \
-MIP_Problem.types.hh \
+PIP_Tree.types.hh \
+PIP_Problem.types.hh \
 Poly_Con_Relation.types.hh \
 Poly_Gen_Relation.types.hh \
 BHRZ03_Certificate.types.hh \
 H79_Certificate.types.hh \
 Grid_Certificate.types.hh \
+Partial_Function.types.hh \
 Polyhedron.types.hh \
 C_Polyhedron.types.hh \
 NNC_Polyhedron.types.hh \
@@ -191,6 +198,8 @@ checked_ext.inlines.hh \
 Checked_Number.defs.hh \
 Checked_Number.inlines.hh \
 Checked_Number.templates.hh \
+WRD_coefficient_types.defs.hh \
+WRD_coefficient_types.inlines.hh \
 checked_numeric_limits.hh \
 $(COEFFICIENT_DEFS_INCLUDE_FILES) \
 Coefficient.defs.hh \
@@ -208,6 +217,7 @@ iterator_to_const.inlines.hh \
 distances.defs.hh \
 distances.inlines.hh \
 Boundary.defs.hh \
+intervals.defs.hh \
 Interval_Info.defs.hh \
 Interval_Info.inlines.hh \
 Interval_Restriction.defs.hh \
@@ -260,9 +270,17 @@ Grid_Generator_System.inlines.hh \
 Congruence_System.inlines.hh \
 Scalar_Products.defs.hh \
 Scalar_Products.inlines.hh \
+MIP_Problem.types.hh \
 MIP_Problem.defs.hh \
 MIP_Problem.inlines.hh \
 MIP_Problem.templates.hh \
+PIP_Tree.types.hh \
+PIP_Tree.defs.hh \
+PIP_Tree.inlines.hh \
+PIP_Problem.types.hh \
+PIP_Problem.defs.hh \
+PIP_Problem.inlines.hh \
+PIP_Problem.templates.hh \
 Poly_Con_Relation.defs.hh \
 Poly_Con_Relation.inlines.hh \
 Poly_Gen_Relation.defs.hh \
@@ -273,6 +291,8 @@ H79_Certificate.defs.hh \
 H79_Certificate.inlines.hh \
 Grid_Certificate.defs.hh \
 Grid_Certificate.inlines.hh \
+Partial_Function.defs.hh \
+Partial_Function.inlines.hh \
 Polyhedron.defs.hh \
 Ph_Status.inlines.hh \
 Polyhedron.inlines.hh \
@@ -322,9 +342,13 @@ Partially_Reduced_Product.types.hh \
 Partially_Reduced_Product.defs.hh \
 Partially_Reduced_Product.inlines.hh \
 Partially_Reduced_Product.templates.hh \
+Weight_Profiler.defs.hh \
 max_space_dimension.hh \
 algorithms.hh \
-wrap.hh
+termination.defs.hh \
+termination.templates.hh \
+wrap_assign.hh \
+wrap_string.hh
 #Any_Pointset.types.hh \
 #Any_Pointset.defs.hh \
 #Any_Pointset.inlines.hh \
@@ -365,11 +389,14 @@ Linear_System.cc \
 Matrix.cc \
 Scalar_Products.cc \
 MIP_Problem.cc \
+PIP_Tree.cc \
+PIP_Problem.cc \
 Poly_Con_Relation.cc \
 Poly_Gen_Relation.cc \
 BHRZ03_Certificate.cc \
 H79_Certificate.cc \
 Grid_Certificate.cc \
+Partial_Function.cc \
 Polyhedron_nonpublic.cc \
 Polyhedron_public.cc \
 Polyhedron_chdims.cc \
@@ -400,11 +427,13 @@ stdiobuf.cc \
 c_streambuf.cc \
 globals.cc \
 mp_std_bits.cc \
+Weight_Profiler.cc \
 version.cc \
 $(INCLUDE_FILES) \
 $(NESTED_INCLUDE_FILES) \
 swapping_sort.icc \
-wrap.cc
+termination.cc \
+wrap_string.cc
 #Pointset_Ask_Tell.cc
 
 if NO_UNDEFINED
@@ -459,8 +488,20 @@ CREDITS.cc: $(top_builddir)/utils/text2cxxarray $(top_srcdir)/CREDITS
 
 else !HAVE_PERL
 
-ppl.hh:	ppl.hh.dist
-	cp -f $< $@
+ppl.hh.sed: Makefile
+	@echo "/^\/\* BEGIN ppl-config.h \*\/$$/ {"    >$@
+	@echo "  r $(top_builddir)/ppl-config.h"      >>$@
+	@echo "  : loop"                              >>$@
+	@echo "  /\n\/\* END ppl-config.h \*\/$$/ !{" >>$@
+	@echo "    N"                                 >>$@
+	@echo "    b loop"                            >>$@
+	@echo "  }"                                   >>$@
+	@echo "  d"                                   >>$@
+	@echo "}"                                     >>$@
+
+ppl.hh:	ppl.hh.dist ppl.hh.sed
+	$(SED) -f ppl.hh.sed $< >$@
+	rm -f ppl.hh.sed
 
 BUGS.cc:	BUGS.cc.dist
 	cp -f $< $@
@@ -478,15 +519,16 @@ ppl.hh.gch: ppl.hh
 
 PRECOMPILED = ppl.hh.gch
 
-else
+else !USE_PRECOMPILED_HEADERS
 
 PRECOMPILED =
 
-endif
+endif !USE_PRECOMPILED_HEADERS
 
 BUILT_SOURCES = \
 $(include_HEADERS) \
 $(nodist_noinst_HEADERS) \
+$(noinst_HEADERS) \
 $(PRECOMPILED) \
 BUGS.cc \
 COPYING.cc \

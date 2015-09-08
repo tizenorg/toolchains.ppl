@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -143,7 +144,11 @@ nodist_EXTRA_libppl_ciao_la_SOURCES = \
 ../ppl_prolog_Constraints_Product_C_Polyhedron_Grid.cc \
 ../ppl_prolog_Constraints_Product_NNC_Polyhedron_Grid.cc \
 ../ppl_prolog_Constraints_Product_Grid_C_Polyhedron.cc \
-../ppl_prolog_Constraints_Product_Grid_NNC_Polyhedron.cc
+../ppl_prolog_Constraints_Product_Grid_NNC_Polyhedron.cc \
+../ppl_prolog_Shape_Preserving_Product_C_Polyhedron_Grid.cc \
+../ppl_prolog_Shape_Preserving_Product_NNC_Polyhedron_Grid.cc \
+../ppl_prolog_Shape_Preserving_Product_Grid_C_Polyhedron.cc \
+../ppl_prolog_Shape_Preserving_Product_Grid_NNC_Polyhedron.cc
 
 if NO_UNDEFINED
 
@@ -220,14 +225,10 @@ ciao_clpq2: .libs/libppl_ciao.so ppl_ciao.po ciao_clpq.pl ../tests/clpq2.pl | ci
 
 
 ciao_prolog_generated_test: .libs/libppl_ciao.so ppl_ciao.po ciao_prolog_generated_test.pl ../tests/ppl_prolog_generated_test_main.pl | ciao_pl_check
-	if [ $(srcdir) != `pwd` ]; then \
-          cp -f $(srcdir)/../tests/ppl_prolog_generated_test_common.pl .; \
-	fi
+	cp -f $(srcdir)/../tests/ppl_prolog_generated_test_common.pl .
 	cp -f ../tests/ppl_prolog_generated_test_main.pl .
 	ciaoc -o $@ ciao_prolog_generated_test.pl
-	if [ $(srcdir) != `pwd` ]; then \
-          rm -f ppl_prolog_generated_test_common.pl; \
-	fi
+	rm -f ppl_prolog_generated_test_common.pl
 	rm -f ppl_prolog_generated_test_main.pl
 
 CLPQ_TESTS_NONSTRICT = \

@@ -1,5 +1,6 @@
 /* Rational_Interval class declaration and implementation.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -37,7 +38,6 @@ struct Rational_Interval_Info_Policy {
   const_int_nodef(next_bit, 0);
   const_bool_nodef(may_be_empty, true);
   const_bool_nodef(may_contain_infinity, false);
-  const_bool_nodef(check_empty_result, false);
   const_bool_nodef(check_inexact, false);
 };
 

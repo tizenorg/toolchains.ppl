@@ -1,5 +1,6 @@
 /* Test minimization of NNC polyhedra.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -50,7 +51,7 @@ test01() {
   cs.insert(x - y < 6);
   cs.insert(x - y > -6);
 
-  ph.add_constraints_and_minimize(cs);
+  ph.add_constraints(cs);
 
   nout << "After vertices removal:" << endl;
   print_constraints(ph.constraints(), "*** ph constraints ***");
@@ -107,7 +108,7 @@ test02() {
   cs.insert(x - y < 1);
   cs.insert(x - y > -1);
 
-  ph.add_constraints_and_minimize(cs);
+  ph.add_constraints(cs);
 
   nout << "After vertices removal:" << endl;
   print_constraints(ph.constraints(), "*** ph constraints ***");
@@ -168,7 +169,7 @@ test03() {
   cs.insert(x - y < 1);
   cs.insert(x - y > -1);
 
-  ph.add_constraints_and_minimize(cs);
+  ph.add_constraints(cs);
 
   nout << "After vertices removal:" << endl;
   print_constraints(ph.constraints(), "*** ph constraints ***");

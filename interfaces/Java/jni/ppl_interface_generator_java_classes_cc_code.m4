@@ -3,7 +3,8 @@ m4_define(`dnl', `m4_dnl')
 m4_divert(-1)
 This m4 file contains the code for generating ppl_java_<CLASS_NAME>.cc
 
-Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -81,8 +82,11 @@ Java_parma_1polyhedra_1library_@1TOPOLOGY@@1CLASS@_@BEGINEND@_1iterator
       = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_this));
     jclass j_it_class
       = env->FindClass("parma_polyhedra_library/@TOPOLOGY@@CLASS@_Iterator");
+    CHECK_RESULT_ASSERT(env, j_it_class);
     jmethodID j_it_ctr_id = env->GetMethodID(j_it_class, "<init>", "()V");
+    CHECK_RESULT_ASSERT(env, j_it_ctr_id);
     jobject j_it = env->NewObject(j_it_class, j_it_ctr_id);
+    CHECK_RESULT_RETURN(env, j_it, 0);
     @TOPOLOGY@@CPP_CLASS@::iterator* ppl_it
       = new @TOPOLOGY@@CPP_CLASS@::iterator(this_ptr->@BEGINEND@());
     set_ptr(env, j_it, ppl_it);
@@ -148,9 +152,12 @@ Java_parma_1polyhedra_1library_@1TOPOLOGY@@1CLASS@_1Iterator_get_1disjunct
     @TOPOLOGY@@CPP_CLASS@::iterator* this_ptr
       = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@::iterator*>(get_ptr(env, j_this));
     jclass j_class = env->FindClass("parma_polyhedra_library/@DISJUNCT_TOPOLOGY@@DISJUNCT@");
+    CHECK_RESULT_ASSERT(env, j_class);
     jmethodID j_ctr_id = env->GetMethodID(j_class, "<init>", "()V");
+    CHECK_RESULT_ASSERT(env, j_ctr_id);
     jobject j_obj = env->NewObject(j_class, j_ctr_id);
-    set_ptr(env, j_obj,  &((*this_ptr)->element()), true);
+    CHECK_RESULT_RETURN(env, j_obj, 0);
+    set_ptr(env, j_obj,  &((*this_ptr)->pointset()), true);
     return j_obj;
   }
   CATCH_ALL;
@@ -213,12 +220,10 @@ JNIEXPORT void JNICALL
 Java_parma_1polyhedra_1library_@1TOPOLOGY@@1CLASS@_build_1cpp_1object__JLparma_1polyhedra_1library_Degenerate_1Element_2
 (JNIEnv* env, jobject j_this, jlong j_dim, jobject j_degenerate_element) try {
   dimension_type ppl_dim = jtype_to_unsigned<dimension_type>(j_dim);
-  jclass degenerate_element_class
-    = env->FindClass("parma_polyhedra_library/Degenerate_Element");
-  jmethodID degenerate_element_ordinal_id
-    = env->GetMethodID(degenerate_element_class, "ordinal", "()I");
   jint j_degenerate_element_int
-    = env->CallIntMethod(j_degenerate_element, degenerate_element_ordinal_id);
+    = env->CallIntMethod(j_degenerate_element,
+                         cached_FMIDs.Degenerate_Element_ordinal_ID);
+  CHECK_EXCEPTION_ASSERT(env);
   @TOPOLOGY@@CPP_CLASS@* this_ptr;
   switch (j_degenerate_element_int) {
   case 0:
@@ -228,7 +233,8 @@ Java_parma_1polyhedra_1library_@1TOPOLOGY@@1CLASS@_build_1cpp_1object__JLparma_1
     this_ptr = new @TOPOLOGY@@CPP_CLASS@(ppl_dim, EMPTY);
     break;
   default:
-    throw std::runtime_error("PPL Java interface internal error");
+    assert(false);
+    break;
   }
   set_ptr(env, j_this, this_ptr);
 }
@@ -257,12 +263,10 @@ Java_parma_1polyhedra_1library_@1TOPOLOGY@@1CLASS@_build_1cpp_1object__Lparma_1p
 (JNIEnv* env, jobject j_this, jobject j_y, jobject j_complexity) try {
   @B_FRIEND@* y_ptr
     = reinterpret_cast<@B_FRIEND@*>(get_ptr(env, j_y));
-  jclass complexity_class
-    = env->FindClass("parma_polyhedra_library/Complexity_Class");
-  jmethodID complexity_ordinal_id
-    = env->GetMethodID(complexity_class, "ordinal", "()I");
   jint j_complexity_int
-    = env->CallIntMethod(j_complexity, complexity_ordinal_id);
+    = env->CallIntMethod(j_complexity,
+                         cached_FMIDs.Complexity_Class_ordinal_ID);
+  CHECK_EXCEPTION_ASSERT(env);
   @TOPOLOGY@@CPP_CLASS@* this_ptr;
   switch (j_complexity_int) {
   case 0:
@@ -275,7 +279,8 @@ Java_parma_1polyhedra_1library_@1TOPOLOGY@@1CLASS@_build_1cpp_1object__Lparma_1p
     this_ptr = new @TOPOLOGY@@CPP_CLASS@(*y_ptr, ANY_COMPLEXITY);
     break;
   default:
-    throw std::runtime_error("PPL Java interface internal error");
+    assert(false);
+    break;
   }
   set_ptr(env, j_this, this_ptr);
 }
@@ -522,11 +527,9 @@ Java_parma_1polyhedra_1library_@1CLASS@_@1MAXMIN@__Lparma_1polyhedra_1library_Li
     Linear_Expression le = build_cxx_linear_expression(env, j_le);
     bool b_value;
     if (this_ptr->@MAXMIN@(le, num, den, b_value)) {
-      jobject j_num_result = build_java_coeff(env, num);
-      jobject j_den_result = build_java_coeff(env, den);
-      set_coefficient(env, j_num, j_num_result);
-      set_coefficient(env, j_den, j_den_result);
-      jobject j_boolean = bool_to_j_boolean(env, b_value);
+      set_coefficient(env, j_num, build_java_coeff(env, num));
+      set_coefficient(env, j_den, build_java_coeff(env, den));
+      jobject j_boolean = bool_to_j_boolean_class(env, b_value);
       set_by_reference(env, j_ref_boolean, j_boolean);
       return true;
     }
@@ -555,14 +558,45 @@ Java_parma_1polyhedra_1library_@1CLASS@_@1MAXMIN@__Lparma_1polyhedra_1library_Li
     bool b_value;
     Generator g = point();
     if (this_ptr->@MAXMIN@(le, num, den, b_value, g)) {
-      jobject j_num_result = build_java_coeff(env, num);
-      jobject j_den_result = build_java_coeff(env, den);
-      jobject j_g_result = build_java_generator(env, g);
-      set_coefficient(env, j_num, j_num_result);
-      set_coefficient(env, j_den, j_den_result);
-      jobject j_boolean = bool_to_j_boolean(env, b_value);
+      set_coefficient(env, j_num, build_java_coeff(env, num));
+      set_coefficient(env, j_den, build_java_coeff(env, den));
+      jobject j_boolean = bool_to_j_boolean_class(env, b_value);
       set_by_reference(env, j_ref_boolean, j_boolean);
+      jobject j_g_result = build_java_generator(env, g);
       set_generator(env, j_g, j_g_result);
+      return true;
+    }
+    return false;
+  }
+  CATCH_ALL;
+  return false;
+}
+
+')
+
+m4_define(`ppl_@CLASS@_frequency_code',
+`dnl
+JNIEXPORT jboolean JNICALL
+Java_parma_1polyhedra_1library_@1CLASS@_1frequency__Lparma_1polyhedra_1library_Linear_1Expression_2Lparma_1polyhedra_1library_Coefficient_2Lparma_1polyhedra_1library_Coefficient_2Lparma_1polyhedra_1library_Coefficient_2Lparma_1polyhedra_1library_Coefficient_2
+(JNIEnv* env, jobject j_this, jobject j_le,
+ jobject j_freqn, jobject j_freqd, jobject j_valn, jobject j_vald) {
+  try {
+    @CPP_CLASS@* this_ptr
+      = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_this));
+    PPL_DIRTY_TEMP_COEFFICIENT(freqn);
+    PPL_DIRTY_TEMP_COEFFICIENT(freqd);
+    PPL_DIRTY_TEMP_COEFFICIENT(valn);
+    PPL_DIRTY_TEMP_COEFFICIENT(vald);
+    freqn = build_cxx_coeff(env, j_freqn);
+    freqd = build_cxx_coeff(env, j_freqd);
+    valn = build_cxx_coeff(env, j_valn);
+    vald = build_cxx_coeff(env, j_vald);
+    Linear_Expression le = build_cxx_linear_expression(env, j_le);
+    if (this_ptr->frequency(le, freqn, freqd, valn, vald)) {
+      set_coefficient(env, j_freqn, build_java_coeff(env, freqn));
+      set_coefficient(env, j_freqd, build_java_coeff(env, freqd));
+      set_coefficient(env, j_valn, build_java_coeff(env, valn));
+      set_coefficient(env, j_vald, build_java_coeff(env, vald));
       return true;
     }
     return false;
@@ -845,6 +879,27 @@ CATCH_ALL
 
 ')
 
+m4_define(`ppl_@CLASS@_wrap_assign_code',
+`dnl
+JNIEXPORT void JNICALL
+Java_parma_1polyhedra_1library_@1CLASS@_wrap_1assign
+(JNIEnv* env, jobject j_this, jobject j_vars,
+ jobject j_w, jobject j_r, jobject j_o, jobject j_cs,
+ jlong j_cx, jboolean j_wrap_individually) try {
+  @CPP_CLASS@* this_ptr
+    = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_this));
+  Variables_Set vars = build_cxx_variables_set(env, j_vars);
+  Bounded_Integer_Type_Width w = build_cxx_bounded_width(env, j_w);
+  Bounded_Integer_Type_Representation r = build_cxx_bounded_rep(env, j_r);
+  Bounded_Integer_Type_Overflow o = build_cxx_bounded_overflow(env, j_o);
+  Constraint_System cs = build_cxx_constraint_system(env, j_cs);
+  unsigned cx = jtype_to_unsigned<unsigned int>(j_cx);
+  this_ptr->wrap_assign(vars, w, r, o, &cs, cx, j_wrap_individually);
+}
+CATCH_ALL
+
+')
+
 m4_define(`ppl_@CLASS@_@WIDEN@_widening_assign_code',
 `dnl
 JNIEXPORT void JNICALL
@@ -854,7 +909,7 @@ Java_parma_1polyhedra_1library_@1CLASS@_@1WIDEN@_1widening_1assign
     = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_this));
   @CPP_CLASS@* y_ptr
     = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_y));
-  if (is_null(env, j_by_ref_int))
+  if (j_by_ref_int == NULL)
     this_ptr->@WIDEN@_widening_assign(*y_ptr);
   else {
     jobject j_integer = get_by_reference(env, j_by_ref_int);
@@ -878,7 +933,7 @@ Java_parma_1polyhedra_1library_@1CLASS@_widening_1assign
     = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_this));
   @CPP_CLASS@* y_ptr
     = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_y));
-  if (is_null(env, j_by_ref_int))
+  if (j_by_ref_int == NULL)
     this_ptr->widening_assign(*y_ptr);
   else {
     jobject j_integer = get_by_reference(env, j_by_ref_int);
@@ -902,7 +957,7 @@ Java_parma_1polyhedra_1library_@1CLASS@_@1EXTRAPOLATION@_1extrapolation_1assign
     = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_this));
   @CPP_CLASS@* y_ptr
     = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_y));
-  if (is_null(env, j_by_ref_int))
+  if (j_by_ref_int == NULL)
     this_ptr->@EXTRAPOLATION@_extrapolation_assign(*y_ptr);
   else {
     jobject j_integer = get_by_reference(env, j_by_ref_int);
@@ -943,7 +998,7 @@ Java_parma_1polyhedra_1library_@1CLASS@_@1LIMITEDBOUNDED@_1@1WIDENEXPN@_1extrapo
   @CPP_CLASS@* y_ptr
     = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_y));
   @!CONSTRAINER@_System cs = build_cxx_@CONSTRAINER@_system(env, j_cs);
-  if (is_null(env, j_by_ref_int))
+  if (j_by_ref_int == NULL)
     this_ptr->@LIMITEDBOUNDED@_@WIDENEXPN@_extrapolation_assign(*y_ptr, cs);
   else {
     jobject j_integer = get_by_reference(env, j_by_ref_int);
@@ -1076,8 +1131,68 @@ Java_parma_1polyhedra_1library_@1CLASS@_map_1space_1dimensions
 (JNIEnv* env, jobject j_this, jobject j_p_func) try {
   @CPP_CLASS@* this_ptr
     = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_this));
-  Partial_Function ppl_pfunc(j_p_func, env);
-  this_ptr->map_space_dimensions(ppl_pfunc);
+  Partial_Function* p_func_ptr
+    = reinterpret_cast<Partial_Function*>(get_ptr(env, j_p_func));
+  this_ptr->map_space_dimensions(*p_func_ptr);
+}
+CATCH_ALL
+
+')
+
+m4_define(`ppl_@CLASS@_drop_some_non_integer_points_code',
+`dnl
+JNIEXPORT void JNICALL Java_parma_1polyhedra_1library_@1CLASS@_drop_1some_1non_1integer_1points
+(JNIEnv* env, jobject j_this, jobject j_complexity) try {
+  @CPP_CLASS@* this_ptr
+    = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_this));
+  jint j_complexity_int
+    = env->CallIntMethod(j_complexity,
+                         cached_FMIDs.Complexity_Class_ordinal_ID);
+  CHECK_EXCEPTION_ASSERT(env);
+  switch (j_complexity_int) {
+  case 0:
+    this_ptr->drop_some_non_integer_points(POLYNOMIAL_COMPLEXITY);
+    break;
+  case 1:
+    this_ptr->drop_some_non_integer_points(SIMPLEX_COMPLEXITY);
+    break;
+  case 2:
+    this_ptr->drop_some_non_integer_points(ANY_COMPLEXITY);
+    break;
+  default:
+    assert(false);
+    break;
+  }
+}
+CATCH_ALL
+
+')
+
+m4_define(`ppl_@CLASS@_drop_some_non_integer_points_2_code',
+`dnl
+JNIEXPORT void JNICALL Java_parma_1polyhedra_1library_@1CLASS@_drop_1some_1non_1integer_1points_12
+(JNIEnv* env, jobject j_this, jobject j_v_set, jobject j_complexity) try {
+  @CPP_CLASS@* this_ptr
+    = reinterpret_cast<@CPP_CLASS@*>(get_ptr(env, j_this));
+  Variables_Set v_set = build_cxx_variables_set(env, j_v_set);
+  jint j_complexity_int
+    = env->CallIntMethod(j_complexity,
+                         cached_FMIDs.Complexity_Class_ordinal_ID);
+  CHECK_EXCEPTION_ASSERT(env);
+  switch (j_complexity_int) {
+  case 0:
+    this_ptr->drop_some_non_integer_points(v_set, POLYNOMIAL_COMPLEXITY);
+    break;
+  case 1:
+    this_ptr->drop_some_non_integer_points(v_set, SIMPLEX_COMPLEXITY);
+    break;
+  case 2:
+    this_ptr->drop_some_non_integer_points(v_set, ANY_COMPLEXITY);
+    break;
+  default:
+    assert(false);
+    break;
+  }
 }
 CATCH_ALL
 
@@ -1178,17 +1293,26 @@ Java_parma_1polyhedra_1library_@1TOPOLOGY@@1CLASS@_linear_1@PARTITION@
     r2->swap(r.second);
 
     jclass j_pair_class = env->FindClass("parma_polyhedra_library/Pair");
+    CHECK_RESULT_ASSERT(env, j_pair_class);
     jmethodID j_ctr_id_pair = env->GetMethodID(j_pair_class, "<init>", "()V");
+    CHECK_RESULT_ASSERT(env, j_ctr_id_pair);
     jobject j_pair_obj = env->NewObject(j_pair_class, j_ctr_id_pair);
+    CHECK_RESULT_RETURN(env, j_pair_obj, 0);
 
     jclass j_class_r1 = env->FindClass("parma_polyhedra_library/@TOPOLOGY@@CLASS@");
+    CHECK_RESULT_ASSERT(env, j_class_r1);
     jmethodID j_ctr_id_r1 = env->GetMethodID(j_class_r1, "<init>", "()V");
+    CHECK_RESULT_ASSERT(env, j_ctr_id_r1);
     jobject j_obj_r1 = env->NewObject(j_class_r1, j_ctr_id_r1);
+    CHECK_RESULT_RETURN(env, j_obj_r1, 0);
     set_ptr(env, j_obj_r1, r1);
 
     jclass j_class_r2 = env->FindClass("parma_polyhedra_library/Pointset_Powerset_NNC_Polyhedron");
+    CHECK_RESULT_ASSERT(env, j_class_r2);
     jmethodID j_ctr_id_r2 = env->GetMethodID(j_class_r2, "<init>", "()V");
+    CHECK_RESULT_ASSERT(env, j_ctr_id_r2);
     jobject j_obj_r2 = env->NewObject(j_class_r2, j_ctr_id_r2);
+    CHECK_RESULT_RETURN(env, j_obj_r2, 0);
     set_ptr(env, j_obj_r2, r2);
     set_pair_element(env, j_pair_obj, 0, j_obj_r1);
     set_pair_element(env, j_pair_obj, 1, j_obj_r2);
@@ -1219,29 +1343,220 @@ Java_parma_1polyhedra_1library_@1CLASS@_approximate_1@PARTITION@
     r1->swap(r.first);
     r2->swap(r.second);
 
-    jclass j_pair_class
-      = env->FindClass("parma_polyhedra_library/Pair");
+    jclass j_pair_class = env->FindClass("parma_polyhedra_library/Pair");
+    CHECK_RESULT_ASSERT(env, j_pair_class);
     jmethodID j_ctr_id_pair = env->GetMethodID(j_pair_class, "<init>", "()V");
+    CHECK_RESULT_ASSERT(env, j_ctr_id_pair);
     jobject j_pair_obj = env->NewObject(j_pair_class, j_ctr_id_pair);
+    CHECK_RESULT_RETURN(env, j_pair_obj, 0);
 
     jclass j_class_r1 = env->FindClass("parma_polyhedra_library/@CLASS@");
+    CHECK_RESULT_ASSERT(env, j_class_r1);
     jmethodID j_ctr_id_r1 = env->GetMethodID(j_class_r1, "<init>", "()V");
+    CHECK_RESULT_ASSERT(env, j_ctr_id_r1);
     jobject j_obj_r1 = env->NewObject(j_class_r1, j_ctr_id_r1);
+    CHECK_RESULT_RETURN(env, j_obj_r1, 0);
     set_ptr(env, j_obj_r1, r1);
 
     jclass j_class_r2
       = env->FindClass("parma_polyhedra_library/Pointset_Powerset_Grid");
+    CHECK_RESULT_ASSERT(env, j_class_r2);
     jmethodID j_ctr_id_r2 = env->GetMethodID(j_class_r2, "<init>", "()V");
+    CHECK_RESULT_ASSERT(env, j_ctr_id_r2);
     jobject j_obj_r2 = env->NewObject(j_class_r2, j_ctr_id_r2);
+    CHECK_RESULT_RETURN(env, j_obj_r2, 0);
     set_ptr(env, j_obj_r2, r2);
     set_pair_element(env, j_pair_obj, 0, j_obj_r1);
     set_pair_element(env, j_pair_obj, 1, j_obj_r2);
-    jobject j_finite_bool = bool_to_j_boolean(env, b_finite_val);
+    jobject j_finite_bool = bool_to_j_boolean_class(env, b_finite_val);
     set_by_reference(env, j_ref_finite_bool, j_finite_bool);
     return j_pair_obj;
   }
   CATCH_ALL;
   return 0;
+}
+
+')
+
+m4_define(`ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+`dnl
+___END_OF_FILE___
+___BEGIN_OF_FILE___ ppl_java_Termination.cc << ___END_OF_FILE___
+
+JNIEXPORT jboolean JNICALL
+Java_parma_1polyhedra_1library_Termination_termination_1test_1@TERMINATION_ID@_1@TOPOLOGY@1@CLASS@
+(JNIEnv* env, jclass, jobject j_p) {
+  try {
+    @TOPOLOGY@@CPP_CLASS@* p_ptr
+      = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@*>(get_ptr(env, j_p));
+    return termination_test_@TERMINATION_ID@(*p_ptr);
+  }
+  CATCH_ALL;
+  return 0;
+}
+
+')
+
+m4_define(`ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+`dnl
+___END_OF_FILE___
+___BEGIN_OF_FILE___ ppl_java_Termination.cc << ___END_OF_FILE___
+
+JNIEXPORT jboolean JNICALL
+Java_parma_1polyhedra_1library_Termination_termination_1test_1@TERMINATION_ID@_1@TOPOLOGY@1@CLASS@_12
+(JNIEnv* env, jclass, jobject j_p_before, jobject j_p_after) {
+  try {
+    @TOPOLOGY@@CPP_CLASS@* p_ptr_before
+      = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@*>(get_ptr(env, j_p_before));
+    @TOPOLOGY@@CPP_CLASS@* p_ptr_after
+      = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@*>(get_ptr(env, j_p_after));
+    return termination_test_@TERMINATION_ID@_2(*p_ptr_before, *p_ptr_after);
+  }
+  CATCH_ALL;
+  return 0;
+}
+
+')
+
+m4_define(`ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+`dnl
+___END_OF_FILE___
+___BEGIN_OF_FILE___ ppl_java_Termination.cc << ___END_OF_FILE___
+
+JNIEXPORT jboolean JNICALL
+Java_parma_1polyhedra_1library_Termination_one_1affine_1ranking_1function_1@TERMINATION_ID@_1@TOPOLOGY@1@CLASS@
+(JNIEnv* env, jclass, jobject j_p, jobject j_g) {
+  try {
+    @TOPOLOGY@@CPP_CLASS@* p_ptr
+      = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@*>(get_ptr(env, j_p));
+    Generator g(point());
+    if (one_affine_ranking_function_@TERMINATION_ID@(*p_ptr, g)) {
+      jobject j_g_result = build_java_generator(env, g);;
+      set_generator(env, j_g, j_g_result);
+      return true;
+    }
+    return false;
+  }
+  CATCH_ALL;
+  return 0;
+}
+
+')
+
+m4_define(`ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+`dnl
+___END_OF_FILE___
+___BEGIN_OF_FILE___ ppl_java_Termination.cc << ___END_OF_FILE___
+
+JNIEXPORT jboolean JNICALL
+Java_parma_1polyhedra_1library_Termination_one_1affine_1ranking_1function_1@TERMINATION_ID@_1@TOPOLOGY@1@CLASS@_12
+(JNIEnv* env, jclass, jobject j_p_before, jobject j_p_after, jobject j_g) {
+  try {
+    @TOPOLOGY@@CPP_CLASS@* p_ptr_before
+      = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@*>(get_ptr(env, j_p_before));
+    @TOPOLOGY@@CPP_CLASS@* p_ptr_after
+      = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@*>(get_ptr(env, j_p_after));
+    Generator g(point());
+    if (one_affine_ranking_function_@TERMINATION_ID@_2(*p_ptr_before, *p_ptr_after, g)) {
+      jobject j_g_result = build_java_generator(env, g);;
+      set_generator(env, j_g, j_g_result);
+      return true;
+    }
+    return false;
+  }
+  CATCH_ALL;
+  return 0;
+}
+
+')
+
+m4_define(`ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+`dnl
+___END_OF_FILE___
+___BEGIN_OF_FILE___ ppl_java_Termination.cc << ___END_OF_FILE___
+
+JNIEXPORT void JNICALL
+Java_parma_1polyhedra_1library_Termination_all_1affine_1ranking_1functions_1@TERMINATION_ID@_1@TOPOLOGY@1@CLASS@
+(JNIEnv* env, jclass, jobject j_p, jobject j_ph) {
+  try {
+    @TOPOLOGY@@CPP_CLASS@* p_ptr
+      = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@*>(get_ptr(env, j_p));
+    @A_TERMINATION_ID@Polyhedron* ph = new @A_TERMINATION_ID@Polyhedron();
+    all_affine_ranking_functions_@TERMINATION_ID@(*p_ptr, *ph);
+    set_ptr(env, j_ph, ph);
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+`dnl
+___END_OF_FILE___
+___BEGIN_OF_FILE___ ppl_java_Termination.cc << ___END_OF_FILE___
+
+JNIEXPORT void JNICALL
+Java_parma_1polyhedra_1library_Termination_all_1affine_1ranking_1functions_1@TERMINATION_ID@_1@TOPOLOGY@1@CLASS@_12
+(JNIEnv* env, jclass, jobject j_p_before, jobject j_p_after, jobject j_ph) {
+  try {
+    @TOPOLOGY@@CPP_CLASS@* p_ptr_before
+      = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@*>(get_ptr(env, j_p_before));
+    @TOPOLOGY@@CPP_CLASS@* p_ptr_after
+      = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@*>(get_ptr(env, j_p_after));
+    @A_TERMINATION_ID@Polyhedron* ph = new @A_TERMINATION_ID@Polyhedron();
+    all_affine_ranking_functions_@TERMINATION_ID@_2(*p_ptr_before, *p_ptr_after, *ph);
+    set_ptr(env, j_ph, ph);
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_code',
+`dnl
+___END_OF_FILE___
+___BEGIN_OF_FILE___ ppl_java_Termination.cc << ___END_OF_FILE___
+
+JNIEXPORT void JNICALL
+Java_parma_1polyhedra_1library_Termination_all_1affine_1quasi_1ranking_1functions_1MS_1@TOPOLOGY@1@CLASS@
+(JNIEnv* env, jclass, jobject j_p,
+ jobject j_ph_decreasing, jobject j_ph_bounded) {
+  try {
+    @TOPOLOGY@@CPP_CLASS@* p_ptr
+      = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@*>(get_ptr(env, j_p));
+    C_Polyhedron* ph_decreasing = new C_Polyhedron();
+    C_Polyhedron* ph_bounded = new C_Polyhedron();
+    all_affine_quasi_ranking_functions_MS(*p_ptr, *ph_decreasing, *ph_bounded);
+    set_ptr(env, j_ph_decreasing, ph_decreasing);
+    set_ptr(env, j_ph_bounded, ph_bounded);
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2_code',
+`dnl
+___END_OF_FILE___
+___BEGIN_OF_FILE___ ppl_java_Termination.cc << ___END_OF_FILE___
+
+JNIEXPORT void JNICALL
+Java_parma_1polyhedra_1library_Termination_all_1affine_1quasi_1ranking_1functions_1MS_1@TOPOLOGY@1@CLASS@_12
+(JNIEnv* env, jclass, jobject j_p_before, jobject j_p_after,
+ jobject j_ph_decreasing, jobject j_ph_bounded) {
+  try {
+    @TOPOLOGY@@CPP_CLASS@* p_ptr_before
+      = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@*>(get_ptr(env, j_p_before));
+    @TOPOLOGY@@CPP_CLASS@* p_ptr_after
+      = reinterpret_cast<@TOPOLOGY@@CPP_CLASS@*>(get_ptr(env, j_p_after));
+    C_Polyhedron* ph_decreasing = new C_Polyhedron();
+    C_Polyhedron* ph_bounded = new C_Polyhedron();
+    all_affine_quasi_ranking_functions_MS_2(*p_ptr_before, *p_ptr_after,
+                                            *ph_decreasing, *ph_bounded);
+    set_ptr(env, j_ph_decreasing, ph_decreasing);
+    set_ptr(env, j_ph_bounded, ph_bounded);
+  }
+  CATCH_ALL;
 }
 
 ')

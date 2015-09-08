@@ -3,7 +3,8 @@ m4_divert(-1)
 dnl This m4 file defines the list of the procedures generated
 dnl that are independent of the interface being generated.
 
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -64,6 +65,7 @@ ppl_@CLASS@_@SIMPLIFY@/1 *nofail +all,
 ppl_@CLASS@_bounds_from_@ABOVEBELOW@/2 +all,
 ppl_@CLASS@_@MAXMIN@/5 +all,
 ppl_@CLASS@_@MAXMIN@_with_point/6 +all,
+ppl_@CLASS@_frequency/6 +simple,
 ppl_@CLASS@_@COMPARISON@_@CLASS@/2 +all,
 ppl_@CLASS@_equals_@CLASS@/2 +all,
 ppl_@CLASS@_OK/1 +all,
@@ -89,6 +91,8 @@ ppl_@CLASS@_remove_higher_space_dimensions/2 *nofail +all,
 ppl_@CLASS@_expand_space_dimension/3 *nofail +all,
 ppl_@CLASS@_fold_space_dimensions/3  +all,
 ppl_@CLASS@_map_space_dimensions/2 +all,
+ppl_@CLASS@_drop_some_non_integer_points/2 +all,
+ppl_@CLASS@_drop_some_non_integer_points_2/3 +all,
 ppl_@CLASS@_ascii_dump/1 +all,
 ppl_@CLASS@_@MEMBYTES@/2 +all,
 dnl
@@ -128,5 +132,7 @@ ppl_@CLASS@_BGP99_@DISJUNCT_WIDEN@_extrapolation_assign/3 +pointset_powerset \bo
 dnl
 dnl CHECKME: This is not implemented.
 dnl
-ppl_@CLASS@_BGP99_@DISJUNCT_EXTRAPOLATION@_extrapolation_assign/3 -pointset_powerset
+ppl_@CLASS@_BGP99_@DISJUNCT_EXTRAPOLATION@_extrapolation_assign/3 -pointset_powerset,
+ppl_@CLASS@_wrap_assign/8 +simple,
+
 ')

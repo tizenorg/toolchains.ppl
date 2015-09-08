@@ -1,6 +1,7 @@
 /* Test Pointset_Powerset<PH>::add_constraint().
         Pointset_Powerset<PH>::add_constraints().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -34,7 +35,8 @@ test01() {
   ps.add_disjunct(C_Polyhedron(1));
   ps.add_constraint(c);
   Constraint c1 = (x >= 1);
-  bool ok = ps.add_constraint_and_minimize(c1);
+  ps.add_constraint(c1);
+  bool ok = !ps.is_empty();
 
   return ok && ps.OK();
 }
@@ -50,9 +52,11 @@ test02() {
   ps.add_disjunct(C_Polyhedron(1));
   ps.add_constraints(cs);
   cs.insert(x <= 3);
-  bool ok = ps.add_constraints_and_minimize(cs);
+  ps.add_constraints(cs);
+  bool ok = !ps.is_empty();
   cs.insert(x <= 2);
-  ok &= !ps.add_constraints_and_minimize(cs);
+  ps.add_constraints(cs);
+  ok &= ps.is_empty();
 
   return ok && ps.OK();
 }

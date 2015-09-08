@@ -1,5 +1,6 @@
 /* Test the *::max_space_dimension() methods.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -127,7 +128,7 @@ test01() {
 
   // 9458 is the value of max_space_dimension()
   // computed on a 32bit architecture.
-  return (max_space_dimension() >= 9458);
+  return max_space_dimension() >= 9458;
 }
 
 BEGIN_MAIN

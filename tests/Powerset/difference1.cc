@@ -1,5 +1,6 @@
 /* Test Pointset_Powerset<PH>::difference_assign().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -120,8 +121,8 @@ test03() {
   for (Pointset_Powerset<C_Polyhedron>::const_iterator
 	 i = intersection.begin(), in_end = intersection.end();
        i != in_end; ++i)
-    if (i->element().affine_dimension() > 1) {
-      nout << "intersection contains " << i->element() << "," << endl
+    if (i->pointset().affine_dimension() > 1) {
+      nout << "intersection contains " << i->pointset() << "," << endl
 	   << "which is of affine dimension greater than 1" << endl;
       ok1 = false;
     }

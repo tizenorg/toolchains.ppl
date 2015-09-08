@@ -1,5 +1,6 @@
 /* Test Octagonal_Shape::CC76_extrapolation_assign().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -508,10 +509,7 @@ BEGIN_MAIN
   DO_TEST(test07);
   DO_TEST(test08);
   DO_TEST(test09);
-#ifndef __alpha__
-  // Exception handling is broken in GCC on the Alpha.
   DO_TEST(test10);
-#endif
   DO_TEST(test11);
   DO_TEST(test12);
   DO_TEST(test13);

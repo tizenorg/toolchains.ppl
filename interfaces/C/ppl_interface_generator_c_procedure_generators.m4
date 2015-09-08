@@ -4,7 +4,8 @@ dnl This m4 file defines the list of procedures
 dnl for the C interface; this includes:
 dnl - the list in the imported file and any C specific procedures.
 
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -43,8 +44,11 @@ m4_define(`m4_procedure_list',
 ppl_new_@TOPOLOGY@@CLASS@_recycle_@BUILD_REPRESENT@s +simple,
 ppl_assign_@TOPOLOGY@@CLASS@_from_@TOPOLOGY@@CLASS@ +simple,
 ppl_@CLASS@_add_recycled_@CLASS_REPRESENT@s +simple,
-ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize/2 +polyhedron,
-ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize/2 +polyhedron,
-ppl_@CLASS@_@BINMINOP@/2 +polyhedron,
+ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@ +simple,
+ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@ +simple,
+ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@ +simple,
+ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2 +simple,
+ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2 +simple,
+ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2 +simple,
 )
 ')

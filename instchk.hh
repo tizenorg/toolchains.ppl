@@ -1,6 +1,7 @@
 /* Fake declarations to test the validity of the arguments of the
    --enabled-instantiations option defined in configure.ac.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -247,11 +248,11 @@ public:
   }
 };
 
-template <typename PS>
+template <typename PSET>
 class Pointset_Powerset {
 public:
   static bool valid_instantiation() {
-    return PS::valid_Pointset_Powerset_argument();
+    return PSET::valid_Pointset_Powerset_argument();
   }
 };
 
@@ -371,6 +372,14 @@ public:
 
 template <typename D1, typename D2>
 class Constraints_Product {
+public:
+  static bool valid_instantiation() {
+    return D1::valid_Product_argument() && D2::valid_Product_argument();
+  }
+};
+
+template <typename D1, typename D2>
+class Shape_Preserving_Product {
 public:
   static bool valid_instantiation() {
     return D1::valid_Product_argument() && D2::valid_Product_argument();

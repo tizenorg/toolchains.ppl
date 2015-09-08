@@ -1,5 +1,6 @@
 /* This is the header file of the Parma Watchdog Library.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Watchdog Library (PWL).
 
@@ -24,7 +25,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #define PWL_pwl_hh 1
 
 #ifdef NDEBUG
-# define PWL_SAVE_NDEBUG 1
+# define PWL_SAVE_NDEBUG NDEBUG
 # undef NDEBUG
 #endif
 
@@ -34,7 +35,15 @@ site: http://www.cs.unipr.it/ppl/ . */
 
 /* Define to 1 if you have the declaration of `getenv', and to 0 if you don't.
    */
-#define PWL_HAVE_DECL_GETENV 0
+#define PWL_HAVE_DECL_GETENV 1
+
+/* Define to 1 if you have the declaration of `setitimer', and to 0 if you
+   don't. */
+#define PWL_HAVE_DECL_SETITIMER 1
+
+/* Define to 1 if you have the declaration of `sigaction', and to 0 if you
+   don't. */
+#define PWL_HAVE_DECL_SIGACTION 1
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define PWL_HAVE_DLFCN_H 1
@@ -48,11 +57,8 @@ site: http://www.cs.unipr.it/ppl/ . */
 /* Define to 1 if you have the <memory.h> header file. */
 #define PWL_HAVE_MEMORY_H 1
 
-/* Define to 1 if you have the `setitimer' function. */
-#define HAVE_SETITIMER 1
-
 /* Define to 1 if the system has the type `siginfo_t'. */
-#define HAVE_SIGINFO_T 1
+#define PWL_HAVE_SIGINFO_T 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define PWL_HAVE_STDINT_H 1
@@ -82,9 +88,6 @@ site: http://www.cs.unipr.it/ppl/ . */
    */
 #define LT_OBJDIR ".libs/"
 
-/* Assertions are disabled when this is defined */
-#define NDEBUG 1
-
 /* Define to the address where bug reports for this package should be sent. */
 #define PWL_PACKAGE_BUGREPORT "bagnara@cs.unipr.it"
 
@@ -92,13 +95,19 @@ site: http://www.cs.unipr.it/ppl/ . */
 #define PWL_PACKAGE_NAME "the Parma Watchdog Library"
 
 /* Define to the full name and version of this package. */
-#define PWL_PACKAGE_STRING "the Parma Watchdog Library 0.7"
+#define PWL_PACKAGE_STRING "the Parma Watchdog Library 0.8"
 
 /* Define to the one symbol short name of this package. */
 #define PWL_PACKAGE_TARNAME "pwl"
 
+/* Define to the home page for this package. */
+#define PACKAGE_URL ""
+
 /* Define to the version of this package. */
-#define PWL_PACKAGE_VERSION "0.7"
+#define PWL_PACKAGE_VERSION "0.8"
+
+/* Assertions are disabled when this is defined */
+#define PWL_NDEBUG 1
 
 /* Define to 1 if you have the ANSI C header files. */
 #define PWL_STDC_HEADERS 1
@@ -110,8 +119,8 @@ site: http://www.cs.unipr.it/ppl/ . */
 /* #undef const */
 
 
-#ifdef PWL_NDEBUG
-# define NDEBUG 1
+#if defined(PWL_NDEBUG) && !defined(NDEBUG)
+# define NDEBUG PWL_NDEBUG
 #endif
 
 // Automatically generated from PPL source file ../src/Doubly_Linked_Object.types.hh line 1
@@ -176,6 +185,7 @@ class Handler_Function;
 
 namespace Parma_Watchdog_Library {
 
+template <class Threshold>
 class Pending_Element;
 
 } // namespace Parma_Watchdog_Library
@@ -188,6 +198,7 @@ class Pending_Element;
 
 namespace Parma_Watchdog_Library {
 
+template <typename Traits>
 class Pending_List;
 
 } // namespace Parma_Watchdog_Library
@@ -217,6 +228,19 @@ namespace Parma_Watchdog_Library {
 }
 
 #endif // !defined(PWL_Watchdog_types_hh)
+// Automatically generated from PPL source file ../src/Threshold_Watcher.types.hh line 1
+
+#ifndef PWL_Threshold_Watcher_types_hh
+#define PWL_Threshold_Watcher_types_hh 1
+
+namespace Parma_Watchdog_Library {
+
+template <typename Traits>
+class Threshold_Watcher;
+
+} // namespace Parma_Watchdog_Library
+
+#endif // !defined(PWL_Threshold_Watcher_types_hh)
 // Automatically generated from PPL source file ../src/Handler.defs.hh line 1
 /* Handler and derived classes' declaration.
 */
@@ -224,7 +248,7 @@ namespace Parma_Watchdog_Library {
 #ifndef PWL_Handler_defs_hh
 #define PWL_Handler_defs_hh 1
 
-// Automatically generated from PPL source file ../src/Handler.defs.hh line 27
+// Automatically generated from PPL source file ../src/Handler.defs.hh line 28
 
 //! Abstract base class for handlers of the watchdog events.
 class Parma_Watchdog_Library::Handler {
@@ -325,7 +349,7 @@ Handler_Function::act() const {
 } // namespace Parma_Watchdog_Library
 
 #endif // !defined(PWL_Handler_inlines_hh)
-// Automatically generated from PPL source file ../src/Handler.defs.hh line 89
+// Automatically generated from PPL source file ../src/Handler.defs.hh line 90
 
 #endif // !defined(PWL_Handler_defs_hh)
 // Automatically generated from PPL source file ../src/Time.defs.hh line 1
@@ -335,7 +359,7 @@ Handler_Function::act() const {
 #ifndef PWL_Time_defs_hh
 #define PWL_Time_defs_hh 1
 
-// Automatically generated from PPL source file ../src/Time.defs.hh line 27
+// Automatically generated from PPL source file ../src/Time.defs.hh line 28
 
 namespace Parma_Watchdog_Library {
 
@@ -544,7 +568,7 @@ operator>=(const Time& x, const Time& y) {
 } // namespace Parma_Watchdog_Library
 
 #endif // !defined(PWL_Time_inlines_hh)
-// Automatically generated from PPL source file ../src/Time.defs.hh line 110
+// Automatically generated from PPL source file ../src/Time.defs.hh line 111
 
 #endif // !defined(PWL_Time_defs_hh)
 // Automatically generated from PPL source file ../src/Doubly_Linked_Object.defs.hh line 1
@@ -554,7 +578,7 @@ operator>=(const Time& x, const Time& y) {
 #ifndef PWL_Doubly_Linked_Object_defs_hh
 #define PWL_Doubly_Linked_Object_defs_hh 1
 
-// Automatically generated from PPL source file ../src/Doubly_Linked_Object.defs.hh line 29
+// Automatically generated from PPL source file ../src/Doubly_Linked_Object.defs.hh line 30
 
 //! A (base) class for doubly linked objects.
 class Parma_Watchdog_Library::Doubly_Linked_Object {
@@ -639,7 +663,7 @@ Doubly_Linked_Object::~Doubly_Linked_Object() {
 } // namespace Parma_Watchdog_Library
 
 #endif // !defined(PWL_Doubly_Linked_Object_inlines_hh)
-// Automatically generated from PPL source file ../src/Doubly_Linked_Object.defs.hh line 63
+// Automatically generated from PPL source file ../src/Doubly_Linked_Object.defs.hh line 64
 
 #endif // !defined(PWL_Doubly_Linked_Object_defs_hh)
 // Automatically generated from PPL source file ../src/EList_Iterator.defs.hh line 1
@@ -649,7 +673,7 @@ Doubly_Linked_Object::~Doubly_Linked_Object() {
 #ifndef PWL_EList_Iterator_defs_hh
 #define PWL_EList_Iterator_defs_hh 1
 
-// Automatically generated from PPL source file ../src/EList_Iterator.defs.hh line 28
+// Automatically generated from PPL source file ../src/EList_Iterator.defs.hh line 29
 
 namespace Parma_Watchdog_Library {
 
@@ -710,7 +734,7 @@ private:
 #ifndef PWL_EList_Iterator_inlines_hh
 #define PWL_EList_Iterator_inlines_hh 1
 
-// Automatically generated from PPL source file ../src/EList_Iterator.inlines.hh line 27
+// Automatically generated from PPL source file ../src/EList_Iterator.inlines.hh line 28
 
 namespace Parma_Watchdog_Library {
 
@@ -789,7 +813,7 @@ operator!=(const EList_Iterator<T>& x, const EList_Iterator<T>& y) {
 } // namespace Parma_Watchdog_Library
 
 #endif // !defined(PWL_EList_Iterator_inlines_hh)
-// Automatically generated from PPL source file ../src/EList_Iterator.defs.hh line 82
+// Automatically generated from PPL source file ../src/EList_Iterator.defs.hh line 83
 
 #endif // !defined(PWL_EList_Iterator_defs_hh)
 // Automatically generated from PPL source file ../src/EList.defs.hh line 1
@@ -799,14 +823,15 @@ operator!=(const EList_Iterator<T>& x, const EList_Iterator<T>& y) {
 #ifndef PWL_EList_defs_hh
 #define PWL_EList_defs_hh 1
 
-// Automatically generated from PPL source file ../src/EList.defs.hh line 28
+// Automatically generated from PPL source file ../src/EList.defs.hh line 30
 
 /*! \brief
   A simple kind of embedded list (i.e., a doubly linked objects
   where the links are embedded in the objects themselves).
 */
 template <typename T>
-class Parma_Watchdog_Library::EList : private Doubly_Linked_Object {
+class Parma_Watchdog_Library::EList
+  : private Parma_Watchdog_Library::Doubly_Linked_Object {
 public:
   //! A const iterator to traverse the list.
   typedef EList_Iterator<const T> Const_Iterator;
@@ -863,6 +888,8 @@ public:
 
 #ifndef PWL_EList_inlines_hh
 #define PWL_EList_inlines_hh 1
+
+#include <cassert>
 
 namespace Parma_Watchdog_Library {
 
@@ -951,7 +978,7 @@ EList<T>::OK() const {
 } // namespace Parma_Watchdog_Library
 
 #endif // !defined(PWL_EList_inlines_hh)
-// Automatically generated from PPL source file ../src/EList.defs.hh line 86
+// Automatically generated from PPL source file ../src/EList.defs.hh line 89
 
 #endif // !defined(PWL_EList_defs_hh)
 // Automatically generated from PPL source file ../src/Pending_Element.defs.hh line 1
@@ -970,20 +997,21 @@ EList<T>::OK() const {
   expiration, and a Boolean flag that indicates whether the event has already
   expired or not.
 */
+template <typename Threshold>
 class Parma_Watchdog_Library::Pending_Element : public Doubly_Linked_Object {
 public:
   //! Constructs an element with the given attributes.
-  Pending_Element(const Time& deadline,
+  Pending_Element(const Threshold& deadline,
 		  const Handler& handler,
 		  bool& expired_flag);
 
   //! Modifies \p *this so that it has the given attributes.
-  void assign(const Time& deadline,
+  void assign(const Threshold& deadline,
 	      const Handler& handler,
 	      bool& expired_flag);
 
   //! Returns the deadline of the event.
-  const Time& deadline() const;
+  const Threshold& deadline() const;
 
   //! Returns the handler associated to the event.
   const Handler& handler() const;
@@ -996,7 +1024,7 @@ public:
 
 private:
   //! The deadline of the event.
-  Time d;
+  Threshold d;
 
   //! A pointer to the handler associated to the event.
   const Handler* p_h;
@@ -1012,45 +1040,58 @@ private:
 #ifndef PWL_Pending_Element_inlines_hh
 #define PWL_Pending_Element_inlines_hh 1
 
+#include <cassert>
+
 namespace Parma_Watchdog_Library {
 
+template <typename Threshold>
+inline bool
+Pending_Element<Threshold>::OK() const {
+  return true;
+}
+
+template <typename Threshold>
 inline
-Pending_Element::Pending_Element(const Time& deadline,
-				 const Handler& handler,
-				 bool& expired_flag)
+Pending_Element<Threshold>::Pending_Element(const Threshold& deadline,
+					    const Handler& handler,
+					    bool& expired_flag)
   : d(deadline), p_h(&handler), p_f(&expired_flag) {
   assert(OK());
 }
 
+template <typename Threshold>
 inline void
-Pending_Element::assign(const Time& deadline,
-			const Handler& handler,
-			bool& expired_flag) {
+Pending_Element<Threshold>::assign(const Threshold& deadline,
+				   const Handler& handler,
+				   bool& expired_flag) {
   d = deadline;
   p_h = &handler;
   p_f = &expired_flag;
   assert(OK());
 }
 
-inline const Time&
-Pending_Element::deadline() const {
+template <typename Threshold>
+inline const Threshold&
+Pending_Element<Threshold>::deadline() const {
   return d;
 }
 
+template <typename Threshold>
 inline const Handler&
-Pending_Element::handler() const {
+Pending_Element<Threshold>::handler() const {
   return *p_h;
 }
 
+template <typename Threshold>
 inline bool&
-Pending_Element::expired_flag() const {
+Pending_Element<Threshold>::expired_flag() const {
   return *p_f;
 }
 
 } // namespace Parma_Watchdog_Library
 
 #endif // !defined(PWL_Pending_Element_inlines_hh)
-// Automatically generated from PPL source file ../src/Pending_Element.defs.hh line 74
+// Automatically generated from PPL source file ../src/Pending_Element.defs.hh line 75
 
 #endif // !defined(PWL_Pending_Element_defs_hh)
 // Automatically generated from PPL source file ../src/Pending_List.defs.hh line 1
@@ -1063,10 +1104,14 @@ Pending_Element::expired_flag() const {
 // Automatically generated from PPL source file ../src/Pending_List.defs.hh line 31
 
 //! An ordered list for recording pending watchdog events.
+template <typename Traits>
 class Parma_Watchdog_Library::Pending_List {
 public:
   //! A non-const iterator to traverse the list.
-  typedef EList<Pending_Element>::Iterator Iterator;
+  typedef typename EList<Pending_Element<typename Traits::Threshold> >::Iterator Iterator;
+
+  //! A const iterator to traverse the list.
+  typedef typename EList<Pending_Element<typename Traits::Threshold> >::Const_Iterator Const_Iterator;
 
   //! Constructs an empty list.
   Pending_List();
@@ -1075,7 +1120,7 @@ public:
   ~Pending_List();
 
   //! Inserts a new Pending_Element object with the given attributes.
-  Iterator insert(const Time& deadline,
+  Iterator insert(const typename Traits::Threshold& deadline,
 		  const Handler& handler,
 		  bool& expired_flag);
 
@@ -1098,8 +1143,8 @@ public:
   bool OK() const;
 
 private:
-  EList<Pending_Element> active_list;
-  EList<Pending_Element> free_list;
+  EList<Pending_Element<typename Traits::Threshold> > active_list;
+  EList<Pending_Element<typename Traits::Threshold> > free_list;
 };
 
 // Automatically generated from PPL source file ../src/Pending_List.inlines.hh line 1
@@ -1109,36 +1154,44 @@ private:
 #ifndef PWL_Pending_List_inlines_hh
 #define PWL_Pending_List_inlines_hh 1
 
+#include <cassert>
+
 namespace Parma_Watchdog_Library {
 
+template <typename Traits>
 inline
-Pending_List::Pending_List()
+Pending_List<Traits>::Pending_List()
   : active_list(),
     free_list() {
   assert(OK());
 }
 
+template <typename Traits>
 inline
-Pending_List::~Pending_List() {
+Pending_List<Traits>::~Pending_List() {
 }
 
-inline Pending_List::Iterator
-Pending_List::begin() {
+template <typename Traits>
+inline typename Pending_List<Traits>::Iterator
+Pending_List<Traits>::begin() {
   return active_list.begin();
 }
 
-inline Pending_List::Iterator
-Pending_List::end() {
+template <typename Traits>
+inline typename Pending_List<Traits>::Iterator
+Pending_List<Traits>::end() {
   return active_list.end();
 }
 
+template <typename Traits>
 inline bool
-Pending_List::empty() const {
+Pending_List<Traits>::empty() const {
   return active_list.empty();
 }
 
-inline Pending_List::Iterator
-Pending_List::erase(Iterator position) {
+template <typename Traits>
+inline typename Pending_List<Traits>::Iterator
+Pending_List<Traits>::erase(Iterator position) {
   assert(!empty());
   Iterator next = active_list.erase(position);
   free_list.push_back(*position);
@@ -1149,7 +1202,72 @@ Pending_List::erase(Iterator position) {
 } // namespace Parma_Watchdog_Library
 
 #endif // !defined(PWL_Pending_List_inlines_hh)
-// Automatically generated from PPL source file ../src/Pending_List.defs.hh line 73
+// Automatically generated from PPL source file ../src/Pending_List.templates.hh line 1
+/* Pending_List class implementation.
+*/
+
+#ifndef PWL_Pending_List_templates_hh
+#define PWL_Pending_List_templates_hh 1
+
+#include <iostream>
+
+namespace Parma_Watchdog_Library {
+
+template <typename Traits>
+typename Pending_List<Traits>::Iterator
+Pending_List<Traits>::insert(const typename Traits::Threshold& deadline,
+			     const Handler& handler,
+			     bool& expired_flag) {
+  Iterator position = active_list.begin();
+  for (Iterator active_list_end = active_list.end();
+       position != active_list_end && Traits::less_than(position->deadline(), deadline);
+       ++position)
+    ;
+  Iterator ppe;
+  // Only allocate a new element if the free list is empty.
+  if (free_list.empty())
+    ppe = new Pending_Element<typename Traits::Threshold>(deadline, handler, expired_flag);
+  else {
+    ppe = free_list.begin();
+    free_list.erase(ppe);
+    ppe->assign(deadline, handler, expired_flag);
+  }
+  Iterator r = active_list.insert(position, *ppe);
+  assert(OK());
+  return r;
+}
+
+template <typename Traits>
+bool
+Pending_List<Traits>::OK() const {
+  if (!active_list.OK())
+    return false;
+
+  if (!free_list.OK())
+    return false;
+
+  const typename Traits::Threshold* old;
+  Const_Iterator i = active_list.begin();
+  old = &i->deadline();
+  ++i;
+  for (Const_Iterator active_list_end = active_list.end(); i != active_list_end; ++i) {
+    const typename Traits::Threshold& t = i->deadline();
+    if (Traits::less_than(t, *old)) {
+#ifndef NDEBUG
+      std::cerr << "The active list is not sorted!"
+		<< std::endl;
+#endif
+      return false;
+    }
+    old = &t;
+  }
+  return true;
+}
+
+} // namespace Parma_Watchdog_Library
+
+#endif // !defined(PWL_Pending_List_templates_hh)
+// Automatically generated from PPL source file ../src/Pending_List.defs.hh line 78
 
 #endif // !defined(PWL_Pending_List_defs_hh)
 // Automatically generated from PPL source file ../src/Watchdog.defs.hh line 1
@@ -1159,8 +1277,9 @@ Pending_List::erase(Iterator position) {
 #ifndef PWL_Watchdog_defs_hh
 #define PWL_Watchdog_defs_hh 1
 
-// Automatically generated from PPL source file ../src/Watchdog.defs.hh line 30
+// Automatically generated from PPL source file ../src/Watchdog.defs.hh line 31
 #include <cassert>
+#include <functional>
 
 #ifdef PWL_HAVE_SYS_TIME_H
 # include <sys/time.h>
@@ -1171,34 +1290,54 @@ namespace Parma_Watchdog_Library {
 // Set linkage now to declare it friend later.
 extern "C" void PWL_handle_timeout(int signum);
 
+struct Watchdog_Traits {
+  typedef Time Threshold;
+  static bool less_than(const Threshold& a, const Threshold& b) {
+    return a < b;
+  }
+};
+
 //! A watchdog timer.
 class Watchdog {
 public:
   template <typename Flag_Base, typename Flag>
-  Watchdog(int units, const Flag_Base* volatile& holder, Flag& flag);
+  Watchdog(unsigned int units, const Flag_Base* volatile& holder, Flag& flag);
 
-  Watchdog(int units, void (*function)());
+  /*! \brief
+    Constructor: if not reset, the watchdog will trigger after \p units
+    hundreths of seconds, invoking handler \p function.
+  */
+  Watchdog(unsigned int units, void (*function)());
+
+  //! Destructor.
   ~Watchdog();
 
+#if PWL_HAVE_DECL_SETITIMER && PWL_HAVE_DECL_SIGACTION
 
 private:
+  typedef Pending_List<Watchdog_Traits> WD_Pending_List;
   friend class Init;
+
+  //! Static class initialization.
   static void initialize();
+  //! Static class finalization.
   static void finalize();
 
+  //! Whether or not this watchdog has expired.
   bool expired;
-  const Handler& handler;
-  Pending_List::Iterator pending_position;
 
-private:
-  // Just to prevent their use.
+  const Handler& handler;
+  WD_Pending_List::Iterator pending_position;
+
+  // Private and not implemented: copy construction is not allowed.
   Watchdog(const Watchdog&);
+  // Private and not implemented: copy assignment is not allowed.
   Watchdog& operator=(const Watchdog&);
 
   // Pass this to getitimer().
   static itimerval current_timer_status;
 
-  // Get the timer value.
+  //! Reads the timer value into \p time.
   static void get_timer(Time& time);
 
   // Pass this to setitimer().
@@ -1207,13 +1346,13 @@ private:
   // Last time value we set the timer to.
   static Time last_time_requested;
 
-  // Set the timer value.
+  //! Sets the timer value to \p time.
   static void set_timer(const Time& time);
 
-  // Stops the timer.
+  //! Stops the timer.
   static void stop_timer();
 
-  // Quick reschedule to avoid race conditions.
+  //! Quick reschedule to avoid race conditions.
   static void reschedule();
 
   // Used by the above.
@@ -1223,27 +1362,32 @@ private:
   static Time time_so_far;
 
   //! The ordered queue of pending watchdog events.
-  static Pending_List pending;
+  static WD_Pending_List pending;
 
   //! The actual signal handler.
   static void handle_timeout(int);
 
-  // Handle the addition of a new watchdog event.
-  static Pending_List::Iterator new_watchdog_event(int units,
-						   const Handler& handler,
-						   bool& expired_flag);
+  //! Handles the addition of a new watchdog event.
+  static WD_Pending_List::Iterator
+  new_watchdog_event(unsigned int units,
+                     const Handler& handler,
+                     bool& expired_flag);
 
-  // Handle the removal of a watchdog event.
-  void remove_watchdog_event(Pending_List::Iterator position);
+  //! Handles the removal of the watchdog event referred by \p position.
+  void remove_watchdog_event(WD_Pending_List::Iterator position);
 
-  // Whether the alarm clock is running.
+  //! Whether the alarm clock is running.
   static volatile bool alarm_clock_running;
 
-  // Whether we are changing data that is also changed by the signal handler.
+  //! Whether we are changing data that is also changed by the signal handler.
   static volatile bool in_critical_section;
 
   friend void PWL_handle_timeout(int signum);
+
+#endif // PWL_HAVE_DECL_SETITIMER && PWL_HAVE_DECL_SIGACTION
 };
+
+#if PWL_HAVE_DECL_SETITIMER && PWL_HAVE_DECL_SIGACTION
 
 class Init {
 private:
@@ -1258,6 +1402,8 @@ public:
   ~Init();
 };
 
+#endif // PWL_HAVE_DECL_SETITIMER && PWL_HAVE_DECL_SIGACTION
+
 } // namespace Parma_Watchdog_Library
 
 // Automatically generated from PPL source file ../src/Watchdog.inlines.hh line 1
@@ -1269,20 +1415,19 @@ public:
 
 #include <stdexcept>
 
-// Automatically generated from PPL source file ../src/Watchdog.inlines.hh line 29
+// Automatically generated from PPL source file ../src/Watchdog.inlines.hh line 30
 
 namespace Parma_Watchdog_Library {
 
-inline void
-Watchdog::reschedule() {
-  set_timer(reschedule_time);
-}
+#if PWL_HAVE_DECL_SETITIMER && PWL_HAVE_DECL_SIGACTION
 
 template <typename Flag_Base, typename Flag>
-Watchdog::Watchdog(int units, const Flag_Base* volatile& holder, Flag& flag)
+Watchdog::Watchdog(unsigned int units,
+		   const Flag_Base* volatile& holder,
+                   Flag& flag)
   : expired(false),
     handler(*new Handler_Flag<Flag_Base, Flag>(holder, flag)) {
-  if (units <= 0)
+  if (units == 0)
     throw std::invalid_argument("Watchdog constructor called with a"
 				" non-positive number of time units");
   in_critical_section = true;
@@ -1291,14 +1436,29 @@ Watchdog::Watchdog(int units, const Flag_Base* volatile& holder, Flag& flag)
 }
 
 inline
-Watchdog::Watchdog(int units, void (*function)())
+Watchdog::Watchdog(unsigned int units, void (*function)())
   : expired(false), handler(*new Handler_Function(function)) {
-  if (units <= 0)
+  if (units == 0)
     throw std::invalid_argument("Watchdog constructor called with a"
 				" non-positive number of time units");
   in_critical_section = true;
   pending_position = new_watchdog_event(units, handler, expired);
   in_critical_section = false;
+}
+
+inline
+Watchdog::~Watchdog() {
+  if (!expired) {
+    in_critical_section = true;
+    remove_watchdog_event(pending_position);
+    in_critical_section = false;
+  }
+  delete &handler;
+}
+
+inline void
+Watchdog::reschedule() {
+  set_timer(reschedule_time);
 }
 
 inline
@@ -1319,10 +1479,34 @@ Init::~Init() {
   }
 }
 
+#else // !PWL_HAVE_DECL_SETITIMER !! !PWL_HAVE_DECL_SIGACTION
+
+template <typename Flag_Base, typename Flag>
+Watchdog::Watchdog(unsigned int /* units */,
+		   const Flag_Base* volatile& /* holder */,
+                   Flag& /* flag */) {
+  throw std::logic_error("PWL::Watchdog objects not supported:"
+                         " system does not provide setitimer()");
+}
+
+inline
+Watchdog::Watchdog(unsigned int /* units */, void (* /* function */)()) {
+  throw std::logic_error("PWL::Watchdog objects not supported:"
+                         " system does not provide setitimer()");
+}
+
+inline
+Watchdog::~Watchdog() {
+}
+
+#endif // !PWL_HAVE_DECL_SETITIMER !! !PWL_HAVE_DECL_SIGACTION
+
 } // namespace Parma_Watchdog_Library
 
 #endif // !defined(PWL_Watchdog_inlines_hh)
-// Automatically generated from PPL source file ../src/Watchdog.defs.hh line 131
+// Automatically generated from PPL source file ../src/Watchdog.defs.hh line 160
+
+#if PWL_HAVE_DECL_SETITIMER && PWL_HAVE_DECL_SIGACTION
 
 namespace {
 
@@ -1330,12 +1514,184 @@ Parma_Watchdog_Library::Init Parma_Watchdog_Library_initializer;
 
 } // namespace
 
+#endif // PWL_HAVE_DECL_SETITIMER && PWL_HAVE_DECL_SIGACTION
+
 #endif // !defined(PWL_Watchdog_defs_hh)
 
+// Automatically generated from PPL source file ../src/Threshold_Watcher.defs.hh line 1
+/* Threshold_Watcher and associated classes' declaration and inline functions.
+*/
+
+#ifndef PWL_Threshold_Watcher_defs_hh
+#define PWL_Threshold_Watcher_defs_hh 1
+
+// Automatically generated from PPL source file ../src/Threshold_Watcher.defs.hh line 30
+#include <cassert>
+
+/*! \brief
+  A class of watchdogs controlling the exceeding of a threshold.
+
+  \tparam Traits
+  A class to set data types and functions for the threshold handling.
+  See \c Parma_Polyhedra_Library::Weightwatch_Traits for an example.
+*/
+template <typename Traits>
+class Parma_Watchdog_Library::Threshold_Watcher {
+public:
+  template <typename Flag_Base, typename Flag>
+  Threshold_Watcher(const typename Traits::Delta& delta,
+                    const Flag_Base* volatile& holder,
+                    Flag& flag);
+
+  Threshold_Watcher(const typename Traits::Delta& delta,
+                    void (*function)());
+
+  ~Threshold_Watcher();
+
+private:
+  typedef Pending_List<Traits> TW_Pending_List;
+
+  bool expired;
+  const Handler& handler;
+  typename TW_Pending_List::Iterator pending_position;
+
+  // Just to prevent their use.
+  Threshold_Watcher(const Threshold_Watcher&);
+  Threshold_Watcher& operator=(const Threshold_Watcher&);
+
+  struct Initialize {
+    //! The ordered queue of pending thresholds.
+    TW_Pending_List pending;
+  };
+  static Initialize init;
+
+  // Handle the addition of a new threshold.
+  static typename TW_Pending_List::Iterator
+  add_threshold(typename Traits::Threshold threshold,
+		const Handler& handler,
+		bool& expired_flag);
+
+  // Handle the removal of a threshold.
+  static typename TW_Pending_List::Iterator
+  remove_threshold(typename TW_Pending_List::Iterator position);
+
+  //! Check threshold reaching.
+  static void check();
+
+}; // class Parma_Watchdog_Library::Threshold_Watcher
+
+
+// Templatic initialization of static data member.
+template <typename Traits>
+typename Parma_Watchdog_Library::Threshold_Watcher<Traits>::Initialize
+Parma_Watchdog_Library::Threshold_Watcher<Traits>::init;
+
+// Automatically generated from PPL source file ../src/Threshold_Watcher.inlines.hh line 1
+/* Threshold_Watcher and associated classes' implementation: inline functions.
+*/
+
+#ifndef PWL_Threshold_Watcher_inlines_hh
+#define PWL_Threshold_Watcher_inlines_hh 1
+
+#include <stdexcept>
+
+// Automatically generated from PPL source file ../src/Threshold_Watcher.inlines.hh line 30
+
+namespace Parma_Watchdog_Library {
+
+template <typename Traits>
+template <typename Flag_Base, typename Flag>
+Threshold_Watcher<Traits>::Threshold_Watcher(const typename Traits::Delta& delta, const Flag_Base* volatile& holder, Flag& flag)
+  : expired(false),
+    handler(*new Handler_Flag<Flag_Base, Flag>(holder, flag)) {
+  typename Traits::Threshold threshold;
+  Traits::from_delta(threshold, delta);
+  if (!Traits::less_than(Traits::get(), threshold))
+    throw std::invalid_argument("Threshold_Watcher constructor called with a"
+				" threshold already reached");
+  pending_position = add_threshold(threshold, handler, expired);
+}
+
+template <typename Traits>
+inline
+Threshold_Watcher<Traits>::Threshold_Watcher(const typename Traits::Delta& delta, void (*function)())
+  : expired(false), handler(*new Handler_Function(function)) {
+  typename Traits::Threshold threshold;
+  Traits::from_delta(threshold, delta);
+  if (!Traits::less_than(Traits::get(), threshold))
+    throw std::invalid_argument("Threshold_Watcher constructor called with a"
+				" threshold already reached");
+  pending_position = add_threshold(threshold, handler, expired);
+}
+
+} // namespace Parma_Watchdog_Library
+
+#endif // !defined(PWL_Threshold_Watcher_inlines_hh)
+// Automatically generated from PPL source file ../src/Threshold_Watcher.templates.hh line 1
+/* Threshold_Watcher and associated classes'.
+*/
+
+#ifndef PWL_Threshold_Watcher_templates_hh
+#define PWL_Threshold_Watcher_templates_hh 1
+
+namespace Parma_Watchdog_Library {
+
+template <typename Traits>
+typename Threshold_Watcher<Traits>::TW_Pending_List::Iterator
+Threshold_Watcher<Traits>::add_threshold(typename Traits::Threshold threshold,
+                                         const Handler& handler,
+                                         bool& expired_flag) {
+  Traits::check_function = Threshold_Watcher::check;
+  return init.pending.insert(threshold, handler, expired_flag);
+}
+
+template <typename Traits>
+typename Threshold_Watcher<Traits>::TW_Pending_List::Iterator
+Threshold_Watcher<Traits>
+::remove_threshold(typename TW_Pending_List::Iterator position) {
+  typename TW_Pending_List::Iterator i = init.pending.erase(position);
+  if (init.pending.empty())
+    Traits::check_function = 0;
+  return i;
+}
+
+template <typename Traits>
+Threshold_Watcher<Traits>::~Threshold_Watcher() {
+  if (!expired)
+    remove_threshold(pending_position);
+  delete &handler;
+}
+
+template <typename Traits>
+void
+Threshold_Watcher<Traits>::check() {
+  typename TW_Pending_List::Iterator i = init.pending.begin();
+  assert(i != init.pending.end());
+  const typename Traits::Threshold& current = Traits::get();
+  while (!Traits::less_than(current, i->deadline())) {
+    i->handler().act();
+    i->expired_flag() = true;
+    i = remove_threshold(i);
+    if (i == init.pending.end())
+      break;
+  }
+}
+
+} // namespace Parma_Watchdog_Library
+
+#endif // !defined(PWL_Threshold_Watcher_templates_hh)
+// Automatically generated from PPL source file ../src/Threshold_Watcher.defs.hh line 92
+
+#endif // !defined(PWL_Threshold_Watcher_defs_hh)
+
+
+//! Defined to 1 if PWL::Watchdog objects are supported, to 0 otherwise.
+#define PWL_WATCHDOG_OBJECTS_ARE_SUPPORTED \
+  (PWL_HAVE_DECL_SETITIMER && PWL_HAVE_DECL_SIGACTION)
 
 #ifdef PWL_SAVE_NDEBUG
 # ifndef NDEBUG
-#  define NDEBUG 1
+#  define NDEBUG PWL_SAVE_NDEBUG
 # endif
 # undef PWL_SAVE_NDEBUG
 #else
@@ -1343,6 +1699,8 @@ Parma_Watchdog_Library::Init Parma_Watchdog_Library_initializer;
 #  undef NDEBUG
 # endif
 #endif
+// Must include <cassert> again in order to make the latest changes to
+// NDEBUG effective.
 #include <cassert>
 
 #endif

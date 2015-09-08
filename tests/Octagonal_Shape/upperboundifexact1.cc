@@ -1,5 +1,6 @@
 /* Test Octagonal_Shape::upper_bound_assign_if_exact().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -65,28 +66,28 @@ test02() {
   Variable x(0);
   Variable y(1);
 
-  TOctagonal_Shape octs1(2, UNIVERSE);
-  octs1.add_constraint(x >= -2);
-  octs1.add_constraint(x <= -1);
-  octs1.add_constraint(y >= 0);
-  octs1.add_constraint(y <= 2);
+  TOctagonal_Shape oct1(2, UNIVERSE);
+  oct1.add_constraint(x >= -2);
+  oct1.add_constraint(x <= -1);
+  oct1.add_constraint(y >= 0);
+  oct1.add_constraint(y <= 2);
 
-  print_constraints(octs1, "*** octs1 ***");
+  print_constraints(oct1, "*** oct1 ***");
 
-  TOctagonal_Shape octs2(2, UNIVERSE);
-  octs2.add_constraint(x >= 1);
-  octs2.add_constraint(x <= 2);
-  octs2.add_constraint(y >= 0);
-  octs2.add_constraint(y <= 2);
+  TOctagonal_Shape oct2(2, UNIVERSE);
+  oct2.add_constraint(x >= 1);
+  oct2.add_constraint(x <= 2);
+  oct2.add_constraint(y >= 0);
+  oct2.add_constraint(y <= 2);
 
-  print_constraints(octs2, "*** octs2 ***");
+  print_constraints(oct2, "*** oct2 ***");
 
-  TOctagonal_Shape known_result(octs1);
+  TOctagonal_Shape known_result(oct1);
 
-  bool ok = !octs1.upper_bound_assign_if_exact(octs2);
-  ok &= (octs1 == known_result);
+  bool ok = !oct1.upper_bound_assign_if_exact(oct2);
+  ok &= (oct1 == known_result);
 
-  print_constraints(octs1, "*** octs1.upper_bound_assign_if_exact(octs2) ***");
+  print_constraints(oct1, "*** oct1.upper_bound_assign_if_exact(oct2) ***");
 
   return ok;
 }
@@ -96,21 +97,21 @@ test03() {
   Variable x(0);
   Variable y(1);
 
-  TOctagonal_Shape octs1(2, UNIVERSE);
-  octs1.add_constraint(x >= -2);
-  octs1.add_constraint(x <= 0);
-  octs1.add_constraint(y >= 0);
-  octs1.add_constraint(y <= 2);
+  TOctagonal_Shape oct1(2, UNIVERSE);
+  oct1.add_constraint(x >= -2);
+  oct1.add_constraint(x <= 0);
+  oct1.add_constraint(y >= 0);
+  oct1.add_constraint(y <= 2);
 
-  print_constraints(octs1, "*** octs1 ***");
+  print_constraints(oct1, "*** oct1 ***");
 
-  TOctagonal_Shape octs2(2, UNIVERSE);
-  octs2.add_constraint(x >= 0);
-  octs2.add_constraint(x <= 2);
-  octs2.add_constraint(y >= 0);
-  octs2.add_constraint(y <= 2);
+  TOctagonal_Shape oct2(2, UNIVERSE);
+  oct2.add_constraint(x >= 0);
+  oct2.add_constraint(x <= 2);
+  oct2.add_constraint(y >= 0);
+  oct2.add_constraint(y <= 2);
 
-  print_constraints(octs2, "*** octs2 ***");
+  print_constraints(oct2, "*** oct2 ***");
 
   TOctagonal_Shape known_result(2, UNIVERSE);
   known_result.add_constraint(x >= -2);
@@ -118,10 +119,10 @@ test03() {
   known_result.add_constraint(y >= 0);
   known_result.add_constraint(y <= 2);
 
-  bool ok = octs1.upper_bound_assign_if_exact(octs2);
-  ok &= (octs1 == known_result);
+  bool ok = oct1.upper_bound_assign_if_exact(oct2);
+  ok &= (oct1 == known_result);
 
-  print_constraints(octs1, "*** octs1.upper_bound_assign_if_exact(octs2) ***");
+  print_constraints(oct1, "*** oct1.upper_bound_assign_if_exact(oct2) ***");
 
   return ok;
 }
@@ -131,26 +132,26 @@ test04() {
   Variable x(0);
   Variable y(1);
 
-  TOctagonal_Shape octs1(2, UNIVERSE);
-  octs1.add_constraint(x == 0);
-  octs1.add_constraint(y == 0);
+  TOctagonal_Shape oct1(2, UNIVERSE);
+  oct1.add_constraint(x == 0);
+  oct1.add_constraint(y == 0);
 
-  print_constraints(octs1, "*** octs1 ***");
+  print_constraints(oct1, "*** oct1 ***");
 
-  TOctagonal_Shape octs2(2, UNIVERSE);
-  octs2.add_constraint(x >= 0);
-  octs2.add_constraint(x <= 2);
-  octs2.add_constraint(y >= -2);
-  octs2.add_constraint(y <= 2);
+  TOctagonal_Shape oct2(2, UNIVERSE);
+  oct2.add_constraint(x >= 0);
+  oct2.add_constraint(x <= 2);
+  oct2.add_constraint(y >= -2);
+  oct2.add_constraint(y <= 2);
 
-  print_constraints(octs2, "*** octs2 ***");
+  print_constraints(oct2, "*** oct2 ***");
 
-  TOctagonal_Shape known_result(octs2);
+  TOctagonal_Shape known_result(oct2);
 
-  bool ok = octs1.upper_bound_assign_if_exact(octs2);
-  ok &= (octs1 == known_result);
+  bool ok = oct1.upper_bound_assign_if_exact(oct2);
+  ok &= (oct1 == known_result);
 
-  print_constraints(octs1, "*** octs1.upper_bound_assign_if_exact(octs2) ***");
+  print_constraints(oct1, "*** oct1.upper_bound_assign_if_exact(oct2) ***");
 
   return ok;
 }
@@ -160,25 +161,25 @@ test05() {
   Variable x(0);
   Variable y(1);
 
-  TOctagonal_Shape octs1(2, UNIVERSE);
-  octs1.add_constraint(x >= 0);
-  octs1.add_constraint(y == 0);
+  TOctagonal_Shape oct1(2, UNIVERSE);
+  oct1.add_constraint(x >= 0);
+  oct1.add_constraint(y == 0);
 
-  print_constraints(octs1, "*** octs1 ***");
+  print_constraints(oct1, "*** oct1 ***");
 
-  TOctagonal_Shape octs2(2, UNIVERSE);
-  octs2.add_constraint(x >= 0);
-  octs2.add_constraint(y >= 2);
-  octs2.add_constraint(y <= 4);
+  TOctagonal_Shape oct2(2, UNIVERSE);
+  oct2.add_constraint(x >= 0);
+  oct2.add_constraint(y >= 2);
+  oct2.add_constraint(y <= 4);
 
-  print_constraints(octs2, "*** octs2 ***");
+  print_constraints(oct2, "*** oct2 ***");
 
-  TOctagonal_Shape known_result(octs1);
+  TOctagonal_Shape known_result(oct1);
 
-  bool ok = !octs1.upper_bound_assign_if_exact(octs2);
-  ok &= (octs1 == known_result);
+  bool ok = !oct1.upper_bound_assign_if_exact(oct2);
+  ok &= (oct1 == known_result);
 
-  print_constraints(octs1, "*** octs1.upper_bound_assign_if_exact(octs2) ***");
+  print_constraints(oct1, "*** oct1.upper_bound_assign_if_exact(oct2) ***");
 
   return ok;
 }
@@ -188,22 +189,22 @@ test06() {
   Variable x(0);
   Variable y(1);
 
-  TOctagonal_Shape octs1(2, UNIVERSE);
-  octs1.add_constraint(x == y);
+  TOctagonal_Shape oct1(2, UNIVERSE);
+  oct1.add_constraint(x == y);
 
-  print_constraints(octs1, "*** octs1 ***");
+  print_constraints(oct1, "*** oct1 ***");
 
-  TOctagonal_Shape octs2(2, UNIVERSE);
-  octs2.add_constraint(x == 0);
+  TOctagonal_Shape oct2(2, UNIVERSE);
+  oct2.add_constraint(x == 0);
 
-  print_constraints(octs2, "*** octs2 ***");
+  print_constraints(oct2, "*** oct2 ***");
 
-  TOctagonal_Shape known_result(octs1);
+  TOctagonal_Shape known_result(oct1);
 
-  bool ok = !octs1.upper_bound_assign_if_exact(octs2);
-  ok &= (octs1 == known_result);
+  bool ok = !oct1.upper_bound_assign_if_exact(oct2);
+  ok &= (oct1 == known_result);
 
-  print_constraints(octs1, "*** octs1.upper_bound_assign_if_exact(octs2) ***");
+  print_constraints(oct1, "*** oct1.upper_bound_assign_if_exact(oct2) ***");
 
   return ok;
 }
@@ -213,22 +214,22 @@ test07() {
   Variable x(0);
   Variable y(1);
 
-  TOctagonal_Shape octs1(2, UNIVERSE);
-  octs1.add_constraint(x >= y);
+  TOctagonal_Shape oct1(2, UNIVERSE);
+  oct1.add_constraint(x >= y);
 
-  print_constraints(octs1, "*** octs1 ***");
+  print_constraints(oct1, "*** oct1 ***");
 
-  TOctagonal_Shape octs2(2, UNIVERSE);
-  octs2.add_constraint(x >= 0);
+  TOctagonal_Shape oct2(2, UNIVERSE);
+  oct2.add_constraint(x >= 0);
 
-  print_constraints(octs2, "*** octs2 ***");
+  print_constraints(oct2, "*** oct2 ***");
 
-  TOctagonal_Shape known_result(octs1);
+  TOctagonal_Shape known_result(oct1);
 
-  bool ok = !octs1.upper_bound_assign_if_exact(octs2);
-  ok &= (octs1 == known_result);
+  bool ok = !oct1.upper_bound_assign_if_exact(oct2);
+  ok &= (oct1 == known_result);
 
-  print_constraints(octs1, "*** octs1.upper_bound_assign_if_exact(octs2) ***");
+  print_constraints(oct1, "*** oct1.upper_bound_assign_if_exact(oct2) ***");
 
   return ok;
 }
@@ -238,22 +239,22 @@ test08() {
   Variable x(0);
   Variable y(1);
 
-  TOctagonal_Shape octs1(2, UNIVERSE);
-  octs1.add_constraint(x >= y);
+  TOctagonal_Shape oct1(2, UNIVERSE);
+  oct1.add_constraint(x >= y);
 
-  print_constraints(octs1, "*** octs1 ***");
+  print_constraints(oct1, "*** oct1 ***");
 
-  TOctagonal_Shape octs2(2, UNIVERSE);
-  octs2.add_constraint(x <= y);
+  TOctagonal_Shape oct2(2, UNIVERSE);
+  oct2.add_constraint(x <= y);
 
-  print_constraints(octs2, "*** octs2 ***");
+  print_constraints(oct2, "*** oct2 ***");
 
   TOctagonal_Shape known_result(2, UNIVERSE);
 
-  bool ok = octs1.upper_bound_assign_if_exact(octs2);
-  ok &= (octs1 == known_result);
+  bool ok = oct1.upper_bound_assign_if_exact(oct2);
+  ok &= (oct1 == known_result);
 
-  print_constraints(octs1, "*** octs1.upper_bound_assign_if_exact(octs2) ***");
+  print_constraints(oct1, "*** oct1.upper_bound_assign_if_exact(oct2) ***");
 
   return ok;
 }
@@ -274,29 +275,29 @@ test09() {
   octs.add_constraint(x - y <= 2);
   octs.add_constraint(z - y <= 2);
 
-  TOctagonal_Shape octs1(octs);
-  octs1.add_constraint(z <= 3);
+  TOctagonal_Shape oct1(octs);
+  oct1.add_constraint(z <= 3);
 
-  print_constraints(octs1, "*** octs1 ***");
+  print_constraints(oct1, "*** oct1 ***");
 
-  TOctagonal_Shape octs2(octs);
-  octs2.add_constraint(x - y <= 1);
+  TOctagonal_Shape oct2(octs);
+  oct2.add_constraint(x - y <= 1);
 
   TOctagonal_Shape known_result(octs);
 
-  C_Polyhedron ph1(octs1);
-  C_Polyhedron ph2(octs2);
+  C_Polyhedron ph1(oct1);
+  C_Polyhedron ph2(oct2);
 
   bool exact = ph1.upper_bound_assign_if_exact(ph2);
   nout << "In the c polyhedra domain, upper_bound_assign_if_exact() returns: "
        << exact << std::endl;
   print_constraints(ph1, "*** ph1.upper_bound_assign_if_exact(ph2) ***");
 
-  bool ok = octs1.upper_bound_assign_if_exact(octs2);
+  bool ok = oct1.upper_bound_assign_if_exact(oct2);
 
-  ok &= (octs1 == octs);
+  ok &= (oct1 == octs);
 
-  print_constraints(octs1, "*** octs1.upper_bound_assign_if_exact(octs2) ***");
+  print_constraints(oct1, "*** oct1.upper_bound_assign_if_exact(oct2) ***");
 
   return ok;
 }
@@ -316,20 +317,20 @@ test10() {
   octs.add_constraint(z - y <= 1);
   octs.add_constraint(y + w >= -1);
 
-  TOctagonal_Shape octs1(octs);
-  octs1.add_constraint(x - y <= 2);
+  TOctagonal_Shape oct1(octs);
+  oct1.add_constraint(x - y <= 2);
 
-  print_constraints(octs1, "*** octs1 ***");
+  print_constraints(oct1, "*** oct1 ***");
 
-  TOctagonal_Shape octs2(octs);
-  octs2.add_constraint(z - w <= 2);
+  TOctagonal_Shape oct2(octs);
+  oct2.add_constraint(z - w <= 2);
 
   TOctagonal_Shape known_result(octs);
 
-  bool ok = octs1.upper_bound_assign_if_exact(octs2);
-  ok &= (octs1 == octs);
+  bool ok = oct1.upper_bound_assign_if_exact(oct2);
+  ok &= (oct1 == octs);
 
-  print_constraints(octs1, "*** octs1.upper_bound_assign_if_exact(octs2) ***");
+  print_constraints(oct1, "*** oct1.upper_bound_assign_if_exact(oct2) ***");
 
   return ok;
 }
@@ -369,6 +370,42 @@ test11() {
   return ok;
 }
 
+bool
+test12() {
+  Variable x(0);
+  Variable y(1);
+
+  Octagonal_Shape<mpz_class> oct1(2, UNIVERSE);
+  oct1.add_constraint(x >= 0);
+  oct1.add_constraint(x <= 3);
+  oct1.add_constraint(y >= 0);
+  oct1.add_constraint(y <= 2);
+  oct1.add_constraint(x - y <= 2);
+
+  Octagonal_Shape<mpz_class> oct2(2, UNIVERSE);
+  oct2.add_constraint(x >= 3);
+  oct2.add_constraint(x <= 6);
+  oct2.add_constraint(y >= 0);
+  oct2.add_constraint(y <= 2);
+
+  print_constraints(oct1, "*** oct1 ***");
+  print_constraints(oct2, "*** oct2 ***");
+
+  Octagonal_Shape<mpz_class> known_result(2, UNIVERSE);
+  known_result.add_constraint(x >= 0);
+  known_result.add_constraint(x <= 6);
+  known_result.add_constraint(y >= 0);
+  known_result.add_constraint(y <= 2);
+
+  bool ok = oct1.integer_upper_bound_assign_if_exact(oct2)
+    && (oct1 == known_result);
+
+  print_constraints(oct1,
+                    "*** oct1.integer_upper_bound_assign_if_exact(oct2) ***");
+
+  return ok;
+}
+
 } // namespace
 
 BEGIN_MAIN
@@ -383,4 +420,5 @@ BEGIN_MAIN
   DO_TEST(test09);
   DO_TEST(test10);
   DO_TEST(test11);
+  DO_TEST(test12);
 END_MAIN

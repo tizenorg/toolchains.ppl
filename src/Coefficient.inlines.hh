@@ -1,5 +1,6 @@
 /* Coefficient class implementation: inline functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -25,6 +26,16 @@ site: http://www.cs.unipr.it/ppl/ . */
 
 namespace Parma_Polyhedra_Library {
 
+#ifdef PPL_CHECKED_INTEGERS
+inline void
+Bounded_Integer_Coefficient_Policy::handle_result(Result r) {
+  // Note that the input functions can return VC_NAN.
+  if (result_overflow(r) || result_class(r) == VC_NAN)
+    throw_result_exception(r);
+}
+#endif // PPL_CHECKED_INTEGERS
+
+
 #if defined(PPL_CHECKED_INTEGERS) || defined(PPL_NATIVE_INTEGERS)
 inline Coefficient_traits::const_reference
 Coefficient_zero() {
@@ -39,7 +50,7 @@ Coefficient_one() {
   static Coefficient one(1);
   return one;
 }
-#endif
+#endif // defined(PPL_CHECKED_INTEGERS) || defined(PPL_NATIVE_INTEGERS)
 
 #ifdef PPL_GMP_INTEGERS
 inline Coefficient_traits::const_reference
@@ -51,10 +62,10 @@ Coefficient_zero() {
 inline Coefficient_traits::const_reference
 Coefficient_one() {
   extern const Coefficient* Coefficient_one_p;
-  assert(*Coefficient_one_p != 0);
+  PPL_ASSERT(*Coefficient_one_p != 0);
   return *Coefficient_one_p;
 }
-#endif
+#endif // PPL_GMP_INTEGERS
 
 } // namespace Parma_Polyhedra_Library
 

@@ -1,5 +1,6 @@
 /* Test Grid::simplify_using_context_assign().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -338,7 +339,7 @@ test12() {
   known_result.add_congruence((2*y - x %= 2) / 4);
 
   Grid gr3(gr1);
-  gr3.intersection_assign_and_minimize(gr2);
+  gr3.intersection_assign(gr2);
   print_congruences(gr3,
                     "*** gr3.intersection_assign(gr2) ***");
   Grid gr4(gr1);
@@ -349,7 +350,7 @@ test12() {
   print_congruences(gr1,
                     "*** gr1.simplify_using_context_assign(gr2) ***");
 
-  gr4.intersection_assign_and_minimize(gr2);
+  gr4.intersection_assign(gr2);
   print_congruences(gr4,
                     "*** gr4.intersection_assign(gr2) ***");
   return ok;
@@ -376,7 +377,7 @@ test13() {
   Grid known_result(gr1);
 
   Grid gr3(gr1);
-  gr3.intersection_assign_and_minimize(gr2);
+  gr3.intersection_assign(gr2);
   print_congruences(gr3,
                     "*** gr3.intersection_assign(gr2) ***");
   Grid gr4(gr1);
@@ -387,7 +388,7 @@ test13() {
   print_congruences(gr1,
                     "*** gr1.simplify_using_context_assign(gr2) ***");
 
-  gr4.intersection_assign_and_minimize(gr2);
+  gr4.intersection_assign(gr2);
   print_congruences(gr4,
                     "*** gr4.intersection_assign(gr2) ***");
   return ok;

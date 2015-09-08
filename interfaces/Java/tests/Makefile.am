@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -40,12 +41,13 @@ ppl_java_tests_common
 # Even if the Java sources are not really needed, they are built by m4,
 # we need to include them to invoke the Automake Java build system.
 EXTRA_DIST = \
-Test_Partial_Function.java \
 Test_Executor.java \
 C_Polyhedron_test1.java \
 NNC_Polyhedron_test1.java \
 MIP_Problem_test1.java \
+PIP_Problem_test1.java \
 Parma_Polyhedra_Library_test1.java \
+Parma_Polyhedra_Library_test2.java \
 PPL_Test.java \
 ppl_interface_generator_java_test_java_code.m4 \
 ppl_interface_generator_java_test_java.m4 \
@@ -53,28 +55,32 @@ ppl_java_tests_common
 
 check_JAVA = \
 ppl_java_generated_tests.java \
-Test_Partial_Function.java \
 Test_Executor.java \
 C_Polyhedron_test1.java \
 NNC_Polyhedron_test1.java \
 MIP_Problem_test1.java \
+PIP_Problem_test1.java \
 Parma_Polyhedra_Library_test1.java \
+Parma_Polyhedra_Library_test2.java \
 PPL_Test.java
+
+if ENABLE_SHARED
 
 CLASSPATH = ../ppl_java.jar:.
 JAVACFLAGS = -classpath $(CLASSPATH)
 
+PPL_DLOPEN = -dlopen ../../../src/libppl.la
+
+if BUILD_WATCHDOG_LIBRARY
+
+PWL_DLOPEN = -dlopen ../../../Watchdog/src/libpwl.la
+
+endif BUILD_WATCHDOG_LIBRARY
+
 java_test_environment = \
-$(LIBTOOL) --mode=execute -dlopen ../../../src/libppl.la \
+$(LIBTOOL) --mode=execute $(PPL_DLOPEN) $(PWL_DLOPEN) \
 	$(JAVA) -classpath .:../ppl_java.jar \
 		-Djava.library.path=../jni/.libs
-
-check-local: ppl_java_generated_tests.java
-	$(java_test_environment) ppl_java_generated_tests
-	$(java_test_environment) C_Polyhedron_test1
-	$(java_test_environment) NNC_Polyhedron_test1
-	$(java_test_environment) MIP_Problem_test1
-	$(java_test_environment) Parma_Polyhedra_Library_test1
 
 ppl_java_generated_tests.java: $(interface_generator_dependencies)
 	$(M4) --prefix-builtin -I../.. \
@@ -82,8 +88,19 @@ ppl_java_generated_tests.java: $(interface_generator_dependencies)
 		$(srcdir)/ppl_interface_generator_java_test_java.m4 \
 			> $@
 
+check-local: ppl_java_generated_tests.java
+	$(java_test_environment) ppl_java_generated_tests
+	$(java_test_environment) C_Polyhedron_test1
+	$(java_test_environment) NNC_Polyhedron_test1
+	$(java_test_environment) MIP_Problem_test1
+	$(java_test_environment) PIP_Problem_test1
+	$(java_test_environment) Parma_Polyhedra_Library_test1
+	$(java_test_environment) Parma_Polyhedra_Library_test2
+
 CLEANFILES = \
 ppl_java_generated_tests.java
+
+endif ENABLE_SHARED
 
 $(top_builddir)/interfaces/ppl_interface_instantiations.m4:
 	$(MAKE) $(AM_MAKEFLAGS) -C $(top_builddir)/interfaces ppl_interface_instantiations.m4

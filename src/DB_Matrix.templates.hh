@@ -1,5 +1,6 @@
 /* DB_Matrix class implementation: non-inline template functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -33,7 +34,7 @@ DB_Matrix<T>::DB_Matrix(const dimension_type n_rows)
   // Construct in direct order: will destroy in reverse order.
   for (dimension_type i = 0; i < n_rows; ++i)
     rows[i].construct(n_rows, row_capacity);
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 template <typename T>
@@ -45,14 +46,14 @@ DB_Matrix<T>::DB_Matrix(const DB_Matrix<U>& y)
   // Construct in direct order: will destroy in reverse order.
   for (dimension_type i = 0, n_rows = rows.size(); i < n_rows; ++i)
     rows[i].construct_upward_approximation(y[i], row_capacity);
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 template <typename T>
 void
 DB_Matrix<T>::grow(const dimension_type new_n_rows) {
   const dimension_type old_n_rows = rows.size();
-  assert(new_n_rows >= old_n_rows);
+  PPL_ASSERT(new_n_rows >= old_n_rows);
 
   if (new_n_rows > old_n_rows) {
     if (new_n_rows <= row_capacity) {
@@ -233,12 +234,12 @@ DB_Matrix<T>::ascii_load(std::istream& s) {
   for (dimension_type i = 0; i < nrows;  ++i)
     for (dimension_type j = 0; j < nrows; ++j) {
       Result r = input(x[i][j], s, ROUND_CHECK);
-      if (r != V_EQ || is_minus_infinity(x[i][j]))
+      if (result_relation(r) != VR_EQ || is_minus_infinity(x[i][j]))
 	return false;
     }
 
   // Check invariants.
-  assert(OK());
+  PPL_ASSERT(OK());
   return true;
 }
 

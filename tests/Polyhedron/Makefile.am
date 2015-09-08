@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -24,7 +25,7 @@ if VALGRIND_TESTS_ENABLED
 
 CHECKER = \
 $(VALGRIND) --tool=memcheck -q --trace-children=yes --leak-check=yes \
---num-callers=100 --leak-resolution=high \
+--num-callers=40 --leak-resolution=high \
 --suppressions=$(top_srcdir)/tests/valgrind_suppressions
 
 else !VALGRIND_TESTS_ENABLED
@@ -50,6 +51,8 @@ $(top_builddir)/src/libppl.la \
 @extra_libraries@
 
 ORIGINAL_TESTS = \
+termination1 \
+termination2 \
 hybrid \
 addcongruence1 \
 addcongruences1 \
@@ -80,12 +83,14 @@ constraints1 \
 contains1 contains2 \
 containsintegerpoint1 \
 disjoint1 disjoint2 \
+dropsomenonintegerpoints1 dropsomenonintegerpoints2 \
 dualhypercubes \
 empty1 \
 equals1 \
 exceptions1 exceptions2  exceptions3 \
 expandspacedim1 expandspacedim2 \
 foldspacedims1 foldspacedims2 \
+frequency1 \
 frombdshape1 \
 frombox1 frombox2 \
 fromgrid1 \
@@ -132,6 +137,7 @@ topclosure1 \
 unconstrain1 \
 universe1 universe2 \
 variablesset1 \
+wrap1 wrap2 \
 writeconsys1 \
 writegensys1 \
 writepolyhedron1 writepolyhedron2 \
@@ -166,6 +172,7 @@ nnc_constraints1 \
 nnc_contains1 \
 nnc_containsintegerpoint1 \
 nnc_disjoint1 \
+nnc_dropsomenonintegerpoints1 \
 nnc_empty1 \
 nnc_equals1 \
 nnc_exceptions1 nnc_exceptions3 \
@@ -203,11 +210,16 @@ nnc_smm1 \
 nnc_timeelapse1 \
 nnc_unconstrain1 \
 nnc_universe1 \
+nnc_wrap1 nnc_wrap2 \
 nnc_writepolyhedron1
 
 #
 # Sources for the tests
 #
+
+termination1_SOURCES = termination1.cc
+
+termination2_SOURCES = termination2.cc
 
 hybrid_SOURCES = hybrid.cc
 
@@ -282,6 +294,9 @@ containsintegerpoint1_SOURCES = containsintegerpoint1.cc
 disjoint1_SOURCES = disjoint1.cc
 disjoint2_SOURCES = disjoint2.cc
 
+dropsomenonintegerpoints1_SOURCES = dropsomenonintegerpoints1.cc
+dropsomenonintegerpoints2_SOURCES = dropsomenonintegerpoints2.cc
+
 dualhypercubes_SOURCES = dualhypercubes.cc
 
 empty1_SOURCES = empty1.cc
@@ -297,6 +312,8 @@ expandspacedim2_SOURCES = expandspacedim2.cc
 
 foldspacedims1_SOURCES = foldspacedims1.cc
 foldspacedims2_SOURCES = foldspacedims2.cc
+
+frequency1_SOURCES = frequency1.cc
 
 frombdshape1_SOURCES = frombdshape1.cc
 
@@ -373,7 +390,6 @@ polyhullifexact1_SOURCES = polyhullifexact1.cc
 polyhullifexact2_SOURCES = polyhullifexact2.cc
 
 randphull1_SOURCES = randphull1.cc
-randphull1_LDADD = $(LDADD) -lm
 
 refinewithconstraint1_SOURCES = refinewithconstraint1.cc
 refinewithconstraints1_SOURCES = refinewithconstraints1.cc
@@ -402,6 +418,9 @@ universe1_SOURCES = universe1.cc
 universe2_SOURCES = universe2.cc
 
 variablesset1_SOURCES = variablesset1.cc
+
+wrap1_SOURCES = wrap1.cc
+wrap2_SOURCES = wrap2.cc
 
 writeconsys1_SOURCES = writeconsys1.cc
 
@@ -507,6 +526,9 @@ nnc_containsintegerpoint1_CXXFLAGS = $(DERIVED_CXXFLAGS)
 nnc_disjoint1_SOURCES = disjoint1.cc
 nnc_disjoint1_CXXFLAGS = $(DERIVED_CXXFLAGS)
 
+nnc_dropsomenonintegerpoints1_SOURCES = dropsomenonintegerpoints1.cc
+nnc_dropsomenonintegerpoints1_CXXFLAGS = $(DERIVED_CXXFLAGS)
+
 nnc_empty1_SOURCES = empty1.cc
 nnc_empty1_CXXFLAGS = $(DERIVED_CXXFLAGS)
 
@@ -601,7 +623,6 @@ nnc_polyhullifexact1_CXXFLAGS = $(DERIVED_CXXFLAGS)
 
 nnc_randphull1_SOURCES = randphull1.cc
 nnc_randphull1_CXXFLAGS = $(DERIVED_CXXFLAGS)
-nnc_randphull1_LDADD = $(LDADD) -lm
 
 nnc_relations1_SOURCES = relations1.cc
 nnc_relations1_CXXFLAGS = $(DERIVED_CXXFLAGS)
@@ -623,6 +644,11 @@ nnc_unconstrain1_CXXFLAGS = $(DERIVED_CXXFLAGS)
 nnc_universe1_SOURCES = universe1.cc
 nnc_universe1_CXXFLAGS = $(DERIVED_CXXFLAGS)
 
+nnc_wrap1_SOURCES = wrap1.cc
+nnc_wrap1_CXXFLAGS = $(DERIVED_CXXFLAGS)
+nnc_wrap2_SOURCES = wrap2.cc
+nnc_wrap2_CXXFLAGS = $(DERIVED_CXXFLAGS)
+
 nnc_writepolyhedron1_SOURCES = writepolyhedron1.cc
 nnc_writepolyhedron1_CXXFLAGS = $(DERIVED_CXXFLAGS)
 
@@ -634,23 +660,50 @@ memory1_SRCS = memory1.cc
 
 watchdog1_SRCS = watchdog1.cc
 
-if !VALGRIND_TESTS_ENABLED
-VALGRIND_BRITTLE_TESTS = memory1
+weightwatch1_SRCS = weightwatch1.cc
 
-memory1_SOURCES = $(memory1_SRCS)
+if !VALGRIND_TESTS_ENABLED
+# The `memory1' test is currently disabled.  The reason is that there
+# is currently no reliable way to make it work, at least on Linux.
+# The reason is that memory is limited using RLIMIT_AS, which limits
+# brk, mmap and the stack: when we run out of stack, then of course
+# we crash.  So RLIMIT_AS cannot be used.  In principle, we could use
+# RLIMIT_DATA, which limits brk only.  However, glibc uses mmap when
+# it cannot obtain memory from brk (and perhaps in other cases as well),
+# but mmap is not limited by RLIMIT_DATA.  In summary, RLIMIT_AS limits
+# too much (in particular the stack, that should not be limited);
+# RLIMIT_DATA limits too little (it does not limit mmap, as we would like
+# it to).
+
+#VALGRIND_BRITTLE_TESTS = memory1
+
+#memory1_SOURCES = $(memory1_SRCS)
 
 endif !VALGRIND_TESTS_ENABLED
 
 
 if BUILD_WATCHDOG_LIBRARY
-WATCHDOG_TESTS = watchdog1
 
-watchdog1_SOURCES = $(watchdog1_SRCS)
-watchdog1_CPPFLAGS = \
+WATCHDOG_TESTS = \
+watchdog1 \
+weightwatch1
+
+WATCHDOG_LIBRARY_CPPFLAGS = \
 $(AM_CPPFLAGS) \
 -I$(top_builddir)/Watchdog \
 -I$(top_builddir)/Watchdog/src
-watchdog1_LDADD = $(LDADD) $(top_builddir)/Watchdog/src/libpwl.la
+
+WATCHDOG_LIBRARY_LDADD = \
+$(LDADD) \
+$(top_builddir)/Watchdog/src/libpwl.la
+
+watchdog1_SOURCES = $(watchdog1_SRCS)
+watchdog1_CPPFLAGS = $(WATCHDOG_LIBRARY_CPPFLAGS)
+watchdog1_LDADD = $(WATCHDOG_LIBRARY_LDADD)
+
+weightwatch1_SOURCES = $(weightwatch1_SRCS)
+weightwatch1_CPPFLAGS = $(WATCHDOG_LIBRARY_CPPFLAGS)
+weightwatch1_LDADD = $(WATCHDOG_LIBRARY_LDADD)
 
 endif BUILD_WATCHDOG_LIBRARY
 
@@ -664,7 +717,7 @@ XFAIL_TESTS =
 
 check_PROGRAMS = $(TESTS) $(BUGS)
 
-EXTRA_DIST = $(memory1_SRCS) $(watchdog1_SRCS)
+EXTRA_DIST = $(memory1_SRCS) $(watchdog1_SRCS) $(weightwatch1_SRCS)
 
 BUGS =
 

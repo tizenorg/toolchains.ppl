@@ -1,5 +1,6 @@
 /* Test Grid_Generator ascii_dump() and ascii_load().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -72,7 +73,7 @@ test02() {
 
   open(f, my_file, ios_base::in);
   Grid_Generator g(grid_point(0*A));
-  bool ok =! g.ascii_load(f);
+  bool ok = !g.ascii_load(f);
   close(f);
 
   return ok;
@@ -91,7 +92,7 @@ test03() {
 
   open(f, my_file, ios_base::in);
   Grid_Generator g(grid_point(0*A));
-  bool ok =! g.ascii_load(f);
+  bool ok = !g.ascii_load(f);
   close(f);
 
   return ok;
@@ -110,7 +111,7 @@ test04() {
 
   open(f, my_file, ios_base::in);
   Grid_Generator g(grid_point(0*A));
-  bool ok =! g.ascii_load(f);
+  bool ok = !g.ascii_load(f);
   close(f);
 
   return ok;

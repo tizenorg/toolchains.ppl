@@ -5,7 +5,8 @@ dnl This m4 file contains the program code for generating the
 dnl files ppl_prolog_DOMAIN.hh for each interface domain DOMAIN
 dnl in ppl_interface instantiations.m4.
 
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -264,13 +265,6 @@ m4_define(`ppl_@CLASS@_refine_with_@REFINE_REPRESENT@_code',
 
 ')
 
-m4_define(`ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize_code',
-  `extern "C" Prolog_foreign_return_type
-  ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize(Prolog_term_ref t_ph,
-					       Prolog_term_ref t_c);
-
-')
-
 m4_define(`ppl_@CLASS@_add_@CLASS_REPRESENT@s_code',
   `extern "C" Prolog_foreign_return_type
   ppl_@CLASS@_add_@CLASS_REPRESENT@s(Prolog_term_ref t_ph,
@@ -285,23 +279,9 @@ m4_define(`ppl_@CLASS@_refine_with_@REFINE_REPRESENT@s_code',
 
 ')
 
-m4_define(`ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize_code',
-  `extern "C" Prolog_foreign_return_type
-  ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize(Prolog_term_ref t_ph,
-						Prolog_term_ref t_clist);
-
-')
-
 m4_define(`ppl_@CLASS@_@BINOP@_code',
   `extern "C" Prolog_foreign_return_type
   ppl_@CLASS@_@BINOP@
-  (Prolog_term_ref t_lhs, Prolog_term_ref t_rhs);
-
-')
-
-m4_define(`ppl_@CLASS@_@BINMINOP@_code',
-  `extern "C" Prolog_foreign_return_type
-  ppl_@CLASS@_@BINMINOP@
   (Prolog_term_ref t_lhs, Prolog_term_ref t_rhs);
 
 ')
@@ -518,6 +498,20 @@ m4_define(`ppl_@CLASS@_map_space_dimensions_code',
 
 ')
 
+m4_define(`ppl_@CLASS@_drop_some_non_integer_points_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_@CLASS@_drop_some_non_integer_points
+  (Prolog_term_ref t_ph, Prolog_term_ref t_cc);
+
+')
+
+m4_define(`ppl_@CLASS@_drop_some_non_integer_points_2_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_@CLASS@_drop_some_non_integer_points_2
+  (Prolog_term_ref t_ph, Prolog_term_ref t_vlist, Prolog_term_ref t_cc);
+
+')
+
 m4_define(`ppl_@CLASS@_ascii_dump_code',
   `extern "C" Prolog_foreign_return_type
   ppl_@CLASS@_ascii_dump
@@ -529,5 +523,94 @@ m4_define(`ppl_@CLASS@_@MEMBYTES@_code',
   `extern "C" Prolog_foreign_return_type
   ppl_@CLASS@_@MEMBYTES@(Prolog_term_ref t_pps,
 			 Prolog_term_ref t_m);
+
+')
+
+m4_define(`ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@(Prolog_term_ref t_pset);
+
+')
+
+m4_define(`ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2
+     (Prolog_term_ref t_pset_before,
+      Prolog_term_ref t_pset_after);
+
+')
+
+m4_define(`ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@
+     (Prolog_term_ref t_pset,
+      Prolog_term_ref t_g);
+
+')
+
+m4_define(`ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2
+     (Prolog_term_ref t_pset_before,
+      Prolog_term_ref t_pset_after,
+      Prolog_term_ref t_g);
+
+')
+
+m4_define(`ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@
+     (Prolog_term_ref t_pset,
+      Prolog_term_ref t_ph);
+
+')
+
+m4_define(`ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2
+     (Prolog_term_ref t_pset_before,
+      Prolog_term_ref t_pset_after,
+      Prolog_term_ref t_ph);
+
+')
+
+m4_define(`ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@
+     (Prolog_term_ref t_pset,
+      Prolog_term_ref t_ph_decreasing,
+      Prolog_term_ref t_ph_bounded);
+
+')
+
+m4_define(`ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2
+     (Prolog_term_ref t_pset_before,
+      Prolog_term_ref t_pset_after,
+      Prolog_term_ref t_ph_decreasing,
+      Prolog_term_ref t_ph_bounded);
+
+')
+
+m4_define(`ppl_@CLASS@_wrap_assign_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_@CLASS@_wrap_assign
+     (Prolog_term_ref t_ph,
+      Prolog_term_ref t_vars,
+      Prolog_term_ref t_w,
+      Prolog_term_ref t_r,
+      Prolog_term_ref t_o,
+      Prolog_term_ref t_cs,
+      Prolog_term_ref t_complexity,
+      Prolog_term_ref t_ind);
+
+')
+
+m4_define(`ppl_@CLASS@_frequency_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_@CLASS@_frequency(Prolog_term_ref t_ph, Prolog_term_ref t_le_expr,
+		       Prolog_term_ref t_freqn,  Prolog_term_ref t_freqd,
+		       Prolog_term_ref t_valn,  Prolog_term_ref t_vald);
 
 ')

@@ -1,5 +1,6 @@
 /* Constraint class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -259,7 +260,7 @@ void swap(Parma_Polyhedra_Library::Constraint& x,
 */
 class Parma_Polyhedra_Library::Constraint : private Linear_Row {
 public:
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   Constraint(const Constraint& c);
 
   //! Copy-constructs from equality congruence \p cg.
@@ -512,7 +513,7 @@ private:
   friend Constraint
   operator<(Coefficient_traits::const_reference n, const Linear_Expression& e);
 
-  //! Copy-constructor with given size.
+  //! Copy constructor with given size.
   Constraint(const Constraint& c, dimension_type sz);
 
   /*! \brief

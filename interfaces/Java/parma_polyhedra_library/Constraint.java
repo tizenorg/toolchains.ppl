@@ -1,5 +1,6 @@
 /* Constraint Java class declaration and implementation.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -48,7 +49,7 @@ public class Constraint {
       relation symbol.
     */
     public Constraint(Linear_Expression le1, Relation_Symbol rel_sym,
-            Linear_Expression le2) {
+                      Linear_Expression le2) {
 	lhs = le1.clone();
 	rhs = le2.clone();
 	kind = rel_sym;
@@ -74,4 +75,9 @@ public class Constraint {
 
     //! Returns a string representation of \p this.
     public native String toString();
+
+    private static native void initIDs();
+    static {
+        initIDs();
+    }
 }

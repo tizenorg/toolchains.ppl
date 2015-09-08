@@ -1,5 +1,6 @@
 /* Bit_Matrix class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -41,7 +42,7 @@ public:
   //! Construct a bit matrix with \p n_rows rows and \p n_columns columns.
   Bit_Matrix(dimension_type n_rows, dimension_type n_columns);
 
-  //! Copy-constructor.
+  //! Copy constructor.
   Bit_Matrix(const Bit_Matrix& y);
 
   //! Destructor.
@@ -94,7 +95,13 @@ public:
   bool sorted_contains(const Bit_Row& row) const;
 
   //! Adds \p row to \p *this.
-  void add_row(const Bit_Row& row);
+  /*!
+    \param row
+    The row whose implementation will be recycled.
+
+    The only thing that can be done with \p row upon return is destruction.
+  */
+  void add_recycled_row(Bit_Row& row);
 
   //! Erases the rows from the \p first_to_erase -th to the last one.
   void rows_erase_to_end(dimension_type first_to_erase);

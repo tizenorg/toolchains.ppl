@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -138,7 +139,11 @@ nodist_EXTRA_libppl_gprolog_la_SOURCES = \
 ../ppl_prolog_Constraints_Product_C_Polyhedron_Grid.cc \
 ../ppl_prolog_Constraints_Product_NNC_Polyhedron_Grid.cc \
 ../ppl_prolog_Constraints_Product_Grid_C_Polyhedron.cc \
-../ppl_prolog_Constraints_Product_Grid_NNC_Polyhedron.cc
+../ppl_prolog_Constraints_Product_Grid_NNC_Polyhedron.cc \
+../ppl_prolog_Shape_Preserving_Product_C_Polyhedron_Grid.cc \
+../ppl_prolog_Shape_Preserving_Product_NNC_Polyhedron_Grid.cc \
+../ppl_prolog_Shape_Preserving_Product_Grid_C_Polyhedron.cc \
+../ppl_prolog_Shape_Preserving_Product_Grid_NNC_Polyhedron.cc
 
 if NO_UNDEFINED
 
@@ -277,24 +282,24 @@ clpq2_test: gp_clpq2 ../tests/script_clpq2 $(EXPECTED_CLPQ2) $(CLPQ_TESTS)
 	diff -u --ignore-all-space $(EXPECTED_CLPQ2) obtained_clpq2
 
 ppl_prolog_generated_test: gnu_prolog_generated_test.pl  ../tests/ppl_prolog_generated_test_main.pl ../tests/expected_pgt
-	if [ $(srcdir) != `pwd` ]; then \
-	  cp -f $(srcdir)/../tests/ppl_prolog_generated_test_common.pl . ; \
+	cp -f $(srcdir)/../tests/ppl_prolog_generated_test_common.pl .
+	if [ $(abs_srcdir) != `pwd` ]; then \
           cp -f $(srcdir)/gnu_prolog_generated_test.pl . ; \
 	fi
-	cp -f ../tests/ppl_prolog_generated_test_main.pl . ; \
+	cp -f ../tests/ppl_prolog_generated_test_main.pl .
 	echo "['ppl_prolog_generated_test_main.pl', 'gnu_prolog_generated_test.pl']." \
 		>script_pgt
 	echo "main." >>script_pgt
-	GLOBALSZ=65536 $(LIBTOOL) --mode=execute \
+	GLOBALSZ=131072 $(LIBTOOL) --mode=execute \
 		-dlopen ../../../src/libppl.la \
 		$(WATCHDOG_DLOPEN) \
 		-dlopen libppl_gprolog.la \
 		./ppl_gprolog <script_pgt
-	if [ $(srcdir) != `pwd` ]; then \
-	  rm -f ppl_prolog_generated_test_common.pl; \
+	rm -f ppl_prolog_generated_test_common.pl
+	if [ $(abs_srcdir) != `pwd` ]; then \
 	  rm -f gnu_prolog_generated_test.pl; \
         fi
-	rm -f ppl_prolog_generated_test_main.pl; \
+	rm -f ppl_prolog_generated_test_main.pl
 	diff -u --ignore-all-space $(srcdir)/../tests/expected_pgt obtained_pgt
 
 CLEANFILES = \

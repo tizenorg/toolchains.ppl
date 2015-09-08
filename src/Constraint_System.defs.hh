@@ -1,5 +1,6 @@
 /* Constraint_System class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -135,7 +136,7 @@ public:
   //! Builds a system containing copies of any equalities in \p cgs.
   explicit Constraint_System(const Congruence_System& cgs);
 
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   Constraint_System(const Constraint_System& cs);
 
   //! Destructor.
@@ -149,6 +150,12 @@ public:
 
   //! Returns the dimension of the vector space enclosing \p *this.
   dimension_type space_dimension() const;
+
+  /*! \brief
+    Returns <CODE>true</CODE> if and only if \p *this
+    contains one or more equality constraints.
+  */
+  bool has_equalities() const;
 
   /*! \brief
     Returns <CODE>true</CODE> if and only if \p *this
@@ -204,7 +211,7 @@ public:
     //! Default constructor.
     const_iterator();
 
-    //! Ordinary copy-constructor.
+    //! Ordinary copy constructor.
     const_iterator(const const_iterator& y);
 
     //! Destructor.

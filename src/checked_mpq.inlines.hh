@@ -1,5 +1,6 @@
 /* Specialized "checked" functions for GMP's mpq_class numbers.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -38,19 +39,19 @@ classify_mpq(const mpq_class& v, bool nan, bool inf, bool sign) {
       && ::sgn(v.get_den()) == 0) {
     int s = ::sgn(v.get_num());
     if (Policy::has_nan && (nan || sign) && s == 0)
-      return VC_NAN;
+      return V_NAN;
     if (!inf && !sign)
-      return VC_NORMAL;
+      return V_LGE;
     if (Policy::has_infinity) {
       if (s < 0)
-	return inf ? VC_MINUS_INFINITY : V_LT;
+	return inf ? V_EQ_MINUS_INFINITY : V_LT;
       if (s > 0)
-	return inf ? VC_PLUS_INFINITY : V_GT;
+	return inf ? V_EQ_PLUS_INFINITY : V_GT;
     }
   }
   if (sign)
-    return sgn<Policy>(v);
-  return VC_NORMAL;
+    return (Result) sgn<Policy>(v);
+  return V_LGE;
 }
 
 PPL_SPECIALIZE_CLASSIFY(classify_mpq, mpq_class)
@@ -99,27 +100,33 @@ PPL_SPECIALIZE_IS_INT(is_int_mpq, mpq_class)
 
 template <typename Policy>
 inline Result
-assign_special_mpq(mpq_class& v, Result r, Rounding_Dir) {
-  Result c = classify(r);
-  if (Policy::has_nan && c == VC_NAN) {
-    v.get_num() = 0;
-    v.get_den() = 0;
-  }
-  else if (Policy::has_infinity) {
-    switch (c) {
-    case VC_MINUS_INFINITY:
+assign_special_mpq(mpq_class& v, Result_Class c, Rounding_Dir) {
+  switch (c) {
+  case VC_NAN:
+    if (Policy::has_nan) {
+      v.get_num() = 0;
+      v.get_den() = 0;
+      return V_NAN | V_UNREPRESENTABLE;
+    }
+    return V_NAN;
+  case VC_MINUS_INFINITY:
+    if (Policy::has_infinity) {
       v.get_num() = -1;
       v.get_den() = 0;
-      return V_EQ;
-    case VC_PLUS_INFINITY:
+      return V_EQ_MINUS_INFINITY;
+    }
+    return V_EQ_MINUS_INFINITY | V_UNREPRESENTABLE;
+  case VC_PLUS_INFINITY:
+    if (Policy::has_infinity) {
       v.get_num() = 1;
       v.get_den() = 0;
-      return V_EQ;
-    default:
-      break;
+      return V_EQ_PLUS_INFINITY;
     }
+    return V_EQ_PLUS_INFINITY | V_UNREPRESENTABLE;
+  default:
+    PPL_ASSERT(false);
+    return V_NAN | V_UNREPRESENTABLE;
   }
-  return r;
 }
 
 PPL_SPECIALIZE_ASSIGN_SPECIAL(assign_special_mpq, mpq_class)
@@ -134,6 +141,7 @@ construct_mpq_base(mpq_class& to, const From& from, Rounding_Dir) {
 }
 
 PPL_SPECIALIZE_CONSTRUCT(construct_mpq_base, mpq_class, mpz_class)
+PPL_SPECIALIZE_CONSTRUCT(construct_mpq_base, mpq_class, char)
 PPL_SPECIALIZE_CONSTRUCT(construct_mpq_base, mpq_class, signed char)
 PPL_SPECIALIZE_CONSTRUCT(construct_mpq_base, mpq_class, signed short)
 PPL_SPECIALIZE_CONSTRUCT(construct_mpq_base, mpq_class, signed int)
@@ -161,6 +169,7 @@ PPL_SPECIALIZE_CONSTRUCT(construct_mpq_float, mpq_class, double)
 
 PPL_SPECIALIZE_ASSIGN(assign_exact, mpq_class, mpq_class)
 PPL_SPECIALIZE_ASSIGN(assign_exact, mpq_class, mpz_class)
+PPL_SPECIALIZE_ASSIGN(assign_exact, mpq_class, char)
 PPL_SPECIALIZE_ASSIGN(assign_exact, mpq_class, signed char)
 PPL_SPECIALIZE_ASSIGN(assign_exact, mpq_class, signed short)
 PPL_SPECIALIZE_ASSIGN(assign_exact, mpq_class, signed int)
@@ -293,8 +302,9 @@ PPL_SPECIALIZE_MUL(mul_mpq, mpq_class, mpq_class, mpq_class)
 template <typename To_Policy, typename From1_Policy, typename From2_Policy>
 inline Result
 div_mpq(mpq_class& to, const mpq_class& x, const mpq_class& y, Rounding_Dir) {
-  if (CHECK_P(To_Policy::check_div_zero, sgn(y) == 0))
-    return assign_special<To_Policy>(to, V_DIV_ZERO, ROUND_IGNORE);
+  if (CHECK_P(To_Policy::check_div_zero, sgn(y) == 0)) {
+    return assign_nan<To_Policy>(to, V_DIV_ZERO);
+  }
   to = x / y;
   return V_EQ;
 }
@@ -304,8 +314,9 @@ PPL_SPECIALIZE_DIV(div_mpq, mpq_class, mpq_class, mpq_class)
 template <typename To_Policy, typename From1_Policy, typename From2_Policy>
 inline Result
 idiv_mpq(mpq_class& to, const mpq_class& x, const mpq_class& y, Rounding_Dir dir) {
-  if (CHECK_P(To_Policy::check_div_zero, sgn(y) == 0))
-    return assign_special<To_Policy>(to, V_DIV_ZERO, ROUND_IGNORE);
+  if (CHECK_P(To_Policy::check_div_zero, sgn(y) == 0)) {
+    return assign_nan<To_Policy>(to, V_DIV_ZERO);
+  }
   to = x / y;
   return trunc<To_Policy, To_Policy>(to, to, dir);
 }
@@ -315,10 +326,13 @@ PPL_SPECIALIZE_IDIV(idiv_mpq, mpq_class, mpq_class, mpq_class)
 template <typename To_Policy, typename From1_Policy, typename From2_Policy>
 inline Result
 rem_mpq(mpq_class& to, const mpq_class& x, const mpq_class& y, Rounding_Dir) {
-  if (CHECK_P(To_Policy::check_div_zero, sgn(y) == 0))
-    return assign_special<To_Policy>(to, V_MOD_ZERO, ROUND_IGNORE);
-  to = x / y;
-  to.get_num() %= to.get_den();
+  if (CHECK_P(To_Policy::check_div_zero, sgn(y) == 0)) {
+    return assign_nan<To_Policy>(to, V_MOD_ZERO);
+  }
+  PPL_DIRTY_TEMP(mpq_class, tmp);
+  tmp = x / y;
+  tmp.get_num() %= tmp.get_den();
+  to = tmp * y;
   return V_EQ;
 }
 
@@ -326,29 +340,84 @@ PPL_SPECIALIZE_REM(rem_mpq, mpq_class, mpq_class, mpq_class)
 
 template <typename To_Policy, typename From_Policy>
 inline Result
-mul2exp_mpq(mpq_class& to, const mpq_class& x, int exp, Rounding_Dir dir) {
-  if (exp < 0)
-    return div2exp<To_Policy, From_Policy>(to, x, -exp, dir);
+add_2exp_mpq(mpq_class& to, const mpq_class& x, unsigned int exp,
+             Rounding_Dir) {
+  PPL_DIRTY_TEMP(mpz_class, v);
+  v = 1;
+  mpz_mul_2exp(v.get_mpz_t(), v.get_mpz_t(), exp);
+  to = x + v;
+  return V_EQ;
+}
+
+PPL_SPECIALIZE_ADD_2EXP(add_2exp_mpq, mpq_class, mpq_class)
+
+template <typename To_Policy, typename From_Policy>
+inline Result
+sub_2exp_mpq(mpq_class& to, const mpq_class& x, unsigned int exp,
+             Rounding_Dir) {
+  PPL_DIRTY_TEMP(mpz_class, v);
+  v = 1;
+  mpz_mul_2exp(v.get_mpz_t(), v.get_mpz_t(), exp);
+  to = x - v;
+  return V_EQ;
+}
+
+PPL_SPECIALIZE_SUB_2EXP(sub_2exp_mpq, mpq_class, mpq_class)
+
+template <typename To_Policy, typename From_Policy>
+inline Result
+mul_2exp_mpq(mpq_class& to, const mpq_class& x, unsigned int exp,
+             Rounding_Dir) {
   mpz_mul_2exp(to.get_num().get_mpz_t(), x.get_num().get_mpz_t(), exp);
   to.get_den() = x.get_den();
   to.canonicalize();
   return V_EQ;
 }
 
-PPL_SPECIALIZE_MUL2EXP(mul2exp_mpq, mpq_class, mpq_class)
+PPL_SPECIALIZE_MUL_2EXP(mul_2exp_mpq, mpq_class, mpq_class)
 
 template <typename To_Policy, typename From_Policy>
 inline Result
-div2exp_mpq(mpq_class& to, const mpq_class& x, int exp, Rounding_Dir dir) {
-  if (exp < 0)
-    return mul2exp<To_Policy, From_Policy>(to, x, -exp, dir);
+div_2exp_mpq(mpq_class& to, const mpq_class& x, unsigned int exp,
+             Rounding_Dir) {
   to.get_num() = x.get_num();
   mpz_mul_2exp(to.get_den().get_mpz_t(), x.get_den().get_mpz_t(), exp);
   to.canonicalize();
   return V_EQ;
 }
 
-PPL_SPECIALIZE_DIV2EXP(div2exp_mpq, mpq_class, mpq_class)
+PPL_SPECIALIZE_DIV_2EXP(div_2exp_mpq, mpq_class, mpq_class)
+
+template <typename To_Policy, typename From_Policy>
+inline Result
+smod_2exp_mpq(mpq_class& to, const mpq_class& x, unsigned int exp,
+	      Rounding_Dir) {
+  mpz_mul_2exp(to.get_den().get_mpz_t(), x.get_den().get_mpz_t(), exp);
+  mpz_fdiv_r(to.get_num().get_mpz_t(), x.get_num().get_mpz_t(), to.get_den().get_mpz_t());
+  mpz_fdiv_q_2exp(to.get_den().get_mpz_t(), to.get_den().get_mpz_t(), 1);
+  bool neg = to.get_num() >= to.get_den();
+  mpz_mul_2exp(to.get_den().get_mpz_t(), to.get_den().get_mpz_t(), 1);
+  if (neg)
+    to.get_num() -= to.get_den();
+  mpz_mul_2exp(to.get_num().get_mpz_t(), to.get_num().get_mpz_t(), exp);
+  to.canonicalize();
+  return V_EQ;
+}
+
+PPL_SPECIALIZE_SMOD_2EXP(smod_2exp_mpq, mpq_class, mpq_class)
+
+template <typename To_Policy, typename From_Policy>
+inline Result
+umod_2exp_mpq(mpq_class& to, const mpq_class& x, unsigned int exp,
+	      Rounding_Dir) {
+  mpz_mul_2exp(to.get_den().get_mpz_t(), x.get_den().get_mpz_t(), exp);
+  mpz_fdiv_r(to.get_num().get_mpz_t(), x.get_num().get_mpz_t(), to.get_den().get_mpz_t());
+  mpz_mul_2exp(to.get_num().get_mpz_t(), to.get_num().get_mpz_t(), exp);
+  to.canonicalize();
+  return V_EQ;
+}
+
+PPL_SPECIALIZE_UMOD_2EXP(umod_2exp_mpq, mpq_class, mpq_class)
 
 template <typename To_Policy, typename From_Policy>
 inline Result
@@ -379,13 +448,14 @@ sub_mul_mpq(mpq_class& to, const mpq_class& x, const mpq_class& y,
 
 PPL_SPECIALIZE_SUB_MUL(sub_mul_mpq, mpq_class, mpq_class, mpq_class)
 
-extern unsigned long rational_sqrt_precision_parameter;
+extern unsigned irrational_precision;
 
 template <typename To_Policy, typename From_Policy>
 inline Result
 sqrt_mpq(mpq_class& to, const mpq_class& from, Rounding_Dir dir) {
-  if (CHECK_P(To_Policy::check_sqrt_neg, from < 0))
-    return assign_special<To_Policy>(to, V_SQRT_NEG, ROUND_IGNORE);
+  if (CHECK_P(To_Policy::check_sqrt_neg, from < 0)) {
+    return assign_nan<To_Policy>(to, V_SQRT_NEG);
+  }
   if (from == 0) {
     to = 0;
     return V_EQ;
@@ -396,12 +466,14 @@ sqrt_mpq(mpq_class& to, const mpq_class& from, Rounding_Dir dir) {
   mpz_class& to_a = gt1 ? to.get_num() : to.get_den();
   mpz_class& to_b = gt1 ? to.get_den() : to.get_num();
   Rounding_Dir rdir = gt1 ? dir : inverse(dir);
-  mul2exp<To_Policy, From_Policy>(to_a, from_a, 2*rational_sqrt_precision_parameter, ROUND_IGNORE);
+  mul_2exp<To_Policy, From_Policy>(to_a, from_a,
+                                   2*irrational_precision, ROUND_IGNORE);
   Result rdiv
     = div<To_Policy, To_Policy, To_Policy>(to_a, to_a, from_b, rdir);
   Result rsqrt = sqrt<To_Policy, To_Policy>(to_a, to_a, rdir);
   to_b = 1;
-  mul2exp<To_Policy, To_Policy>(to_b, to_b, rational_sqrt_precision_parameter, ROUND_IGNORE);
+  mul_2exp<To_Policy, To_Policy>(to_b, to_b,
+                                 irrational_precision, ROUND_IGNORE);
   to.canonicalize();
   return rdiv != V_EQ ? rdiv : rsqrt;
 }
@@ -410,13 +482,15 @@ PPL_SPECIALIZE_SQRT(sqrt_mpq, mpq_class, mpq_class)
 
 template <typename Policy>
 inline Result
-input_mpq(mpq_class& to, std::istream& is, Rounding_Dir) {
+input_mpq(mpq_class& to, std::istream& is, Rounding_Dir dir) {
   Result r = input_mpq(to, is);
-  switch (classify(r)) {
+  Result_Class c = result_class(r);
+  switch (c) {
   case VC_MINUS_INFINITY:
   case VC_PLUS_INFINITY:
+    return assign_special<Policy>(to, c, dir);
   case VC_NAN:
-    return assign_special<Policy>(to, r, ROUND_IGNORE);
+    return assign_nan<Policy>(to, r);
   default:
     return r;
   }
@@ -455,27 +529,27 @@ PPL_SPECIALIZE_ASSIGN(assign_mpq_long_double, mpq_class, long double)
 
 } // namespace Checked
 
-//! Returns the precision parameter used for rational square root calculations.
+//! Returns the precision parameter used for irrational calculations.
 inline unsigned
-rational_sqrt_precision_parameter() {
-  return Checked::rational_sqrt_precision_parameter;
+irrational_precision() {
+  return Checked::irrational_precision;
 }
 
-//! Sets the precision parameter used for rational square root calculations.
+//! Sets the precision parameter used for irrational calculations.
 /*! The lesser between numerator and denominator is limited to 2**\p p.
 
   If \p p is less than or equal to <CODE>INT_MAX</CODE>, sets the
-  precision parameter used for rational square root calculations to \p p.
+  precision parameter used for irrational calculations to \p p.
 
   \exception std::invalid_argument
   Thrown if \p p is greater than <CODE>INT_MAX</CODE>.
 */
 inline void
-set_rational_sqrt_precision_parameter(const unsigned p) {
+set_irrational_precision(const unsigned p) {
   if (p <= INT_MAX)
-    Checked::rational_sqrt_precision_parameter = p;
+    Checked::irrational_precision = p;
   else
-    throw std::invalid_argument("PPL::set_rational_sqrt_precision_parameter(p)"
+    throw std::invalid_argument("PPL::set_irrational_precision(p)"
 				" with p > INT_MAX");
 }
 

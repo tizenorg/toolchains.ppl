@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -24,7 +25,7 @@ if VALGRIND_TESTS_ENABLED
 
 CHECKER = \
 $(VALGRIND) --tool=memcheck -q --trace-children=yes --leak-check=yes \
---num-callers=100 --leak-resolution=high \
+--num-callers=40 --leak-resolution=high \
 --suppressions=$(srcdir)/valgrind_suppressions
 
 else !VALGRIND_TESTS_ENABLED
@@ -96,10 +97,10 @@ PWL_DLOPEN = -dlopen ../../../Watchdog/src/libpwl.la
 endif BUILD_WATCHDOG_LIBRARY
 
 .ml.cmo:
-	$(OCAMLC_ENV) ocamlc -o $@ -c $(OCAMLC_COMPILE_FLAGS) $<
+	$(OCAMLC_ENV) $(OCAMLC) -o $@ -c $(OCAMLC_COMPILE_FLAGS) $<
 
 .ml.cmx:
-	$(OCAMLOPT_ENV) ocamlopt -o $@ -c $(OCAMLOPT_COMPILE_FLAGS) $<
+	$(OCAMLOPT_ENV) $(OCAMLOPT) -o $@ -c $(OCAMLOPT_COMPILE_FLAGS) $<
 
 if HAVE_OCAMLC
 
@@ -124,7 +125,7 @@ check_PROGRAMS = $(TESTS)
 test1_SOURCES = test1.ml
 
 test1$(EXEEXT): test1.cmo ../ppl_ocaml.cma
-	$(OCAMLC_ENV) ocamlc -o $@ \
+	$(OCAMLC_ENV) $(OCAMLC) -o $@ \
 		-cc "$(CXX)" $(OCAMLC_COMPILE_FLAGS) \
 		$(BUILT_PPL_FLAGS) $(BUILT_PWL_FLAGS) $(OCAMLC_LINK_FLAGS) \
 		ppl_ocaml.cma $<
@@ -132,7 +133,7 @@ test1$(EXEEXT): test1.cmo ../ppl_ocaml.cma
 test1_opt_SOURCES = test1.ml
 
 test1_opt$(EXEEXT): test1.cmx ../ppl_ocaml.cmxa
-	$(OCAMLOPT_ENV) ocamlopt -o $@ \
+	$(OCAMLOPT_ENV) $(OCAMLOPT) -o $@ \
 		-cc "$(CXX)" $(OCAMLOPT_COMPILE_FLAGS) \
 		$(BUILT_PPL_FLAGS) $(BUILT_PWL_FLAGS) $(OCAMLOPT_LINK_FLAGS) \
 		ppl_ocaml.cmxa $<
@@ -150,14 +151,14 @@ ppl_ocaml_generated_test.ml: $(interface_generator_dependencies)
 
 ppl_ocaml_generated_test$(EXEEXT): \
 ppl_ocaml_generated_test.cmo ../ppl_ocaml.cma
-	$(OCAMLC_ENV) ocamlc -o $@ \
+	$(OCAMLC_ENV) $(OCAMLC) -o $@ \
 		-cc "$(CXX)" $(OCAMLC_COMPILE_FLAGS) \
 		$(BUILT_PPL_FLAGS) $(BUILT_PWL_FLAGS) $(OCAMLC_LINK_FLAGS) \
 		ppl_ocaml.cma $<
 
 ppl_ocaml_generated_test_opt$(EXEEXT): \
 ppl_ocaml_generated_test.cmx ../ppl_ocaml.cmxa
-	$(OCAMLOPT_ENV) ocamlopt -o $@ \
+	$(OCAMLOPT_ENV) $(OCAMLOPT) -o $@ \
 		-cc "$(CXX)" $(OCAMLOPT_COMPILE_FLAGS) \
 		$(BUILT_PPL_FLAGS) $(BUILT_PWL_FLAGS) $(OCAMLOPT_LINK_FLAGS) \
 		ppl_ocaml.cmxa $<

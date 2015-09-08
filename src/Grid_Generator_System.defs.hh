@@ -1,5 +1,6 @@
 /* Grid_Generator_System class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -27,6 +28,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "Generator_System.defs.hh"
 #include "Grid_Generator.types.hh"
 #include "Variables_Set.types.hh"
+#include "Grid.types.hh"
 #include <iosfwd>
 
 namespace Parma_Polyhedra_Library {
@@ -186,7 +188,7 @@ public:
   //! Builds an empty system of generators of dimension \p dim.
   explicit Grid_Generator_System(dimension_type dim);
 
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   Grid_Generator_System(const Grid_Generator_System& gs);
 
   //! Destructor.
@@ -250,16 +252,16 @@ public:
     The following code prints the system of generators
     of the grid <CODE>gr</CODE>:
     \code
-  const Grid_Generator_System& gs = gr.generators();
-  for (Grid_Generator_System::const_iterator i = gs.begin(),
-        gs_end = gs.end(); i != gs_end; ++i)
+  const Grid_Generator_System& ggs = gr.generators();
+  for (Grid_Generator_System::const_iterator i = ggs.begin(),
+        ggs_end = ggs.end(); i != ggs_end; ++i)
     cout << *i << endl;
     \endcode
     The same effect can be obtained more concisely by using
     more features of the STL:
     \code
-  const Generator_System& gs = gr.generators();
-  copy(gs.begin(), gs.end(), ostream_iterator<Grid_Generator>(cout, "\n"));
+  const Grid_Generator_System& ggs = gr.generators();
+  copy(ggs.begin(), ggs.end(), ostream_iterator<Grid_Generator>(cout, "\n"));
     \endcode
   */
   class const_iterator
@@ -273,7 +275,7 @@ public:
     //! Default constructor.
     const_iterator();
 
-    //! Ordinary copy-constructor.
+    //! Ordinary copy constructor.
     const_iterator(const const_iterator& y);
 
     //! Destructor.
@@ -309,7 +311,7 @@ public:
   private:
     friend class Grid_Generator_System;
 
-    //! Copy-constructor from Generator_System::const_iterator.
+    //! Copy constructor from Generator_System::const_iterator.
     const_iterator(const Generator_System::const_iterator& y);
   };
 
@@ -453,10 +455,10 @@ private:
   //! Removes all the specified dimensions from the generator system.
   /*!
     The space dimension of the variable with the highest space
-    dimension in \p to_be_removed must be at most the space dimension
+    dimension in \p vars must be at most the space dimension
     of \p this.
   */
-  void remove_space_dimensions(const Variables_Set& to_be_removed);
+  void remove_space_dimensions(const Variables_Set& vars);
 
   /*! \brief
     Removes the higher dimensions of the system so that the resulting

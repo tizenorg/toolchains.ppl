@@ -1,5 +1,6 @@
 /* Polyhedron::Status class implementation (non-inline functions).
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -25,7 +26,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "Polyhedron.defs.hh"
 #include <iostream>
 #include <string>
-#include <cassert>
+#include "assert.hh"
 
 namespace PPL = Parma_Polyhedra_Library;
 
@@ -154,7 +155,7 @@ PPL::Polyhedron::Status::ascii_load(std::istream& s) {
     reset_sat_g_up_to_date();
 
   // Check invariants.
-  assert(OK());
+  PPL_ASSERT(OK());
   return true;
 }
 

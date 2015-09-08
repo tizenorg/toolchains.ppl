@@ -1,5 +1,6 @@
 /* A collection of useful convex polyhedra algorithms: inline functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -26,7 +27,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "NNC_Polyhedron.defs.hh"
 #include "Pointset_Powerset.defs.hh"
 #include <utility>
-#include <cassert>
+#include "assert.hh"
 
 namespace Parma_Polyhedra_Library {
 
@@ -60,7 +61,7 @@ poly_hull_assign_if_exact(PH& p, const PH& q) {
     // The polyhedral hull is exact if and only if all the elements
     // of the partition of the polyhedral hull of `p' and `q' with
     // respect to `q' are included in `p'
-    if (!nnc_p.contains(i->element()))
+    if (!nnc_p.contains(i->pointset()))
       return false;
   p = phull;
   return true;

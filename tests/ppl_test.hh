@@ -1,5 +1,6 @@
 /* Header file for test programs.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -24,11 +25,11 @@ site: http://www.cs.unipr.it/ppl/ . */
 #define PPL_ppl_test_hh 1
 
 #include "ppl_header.hh"
-#include "Partial_Function.defs.hh"
 #include "Random_Number_Generator.defs.hh"
 #include <stdexcept>
 #include <sstream>
 #include <list>
+#include <map>
 #include <iterator>
 #include <string>
 #include <iostream>
@@ -59,24 +60,33 @@ catch (const std::exception& e) { \
   exit(1); \
 }
 
-#define BEGIN_MAIN				\
-int						\
-main() try {					\
-  set_handlers();				\
-  bool succeeded = false;			\
-  bool overflow = false;			\
-  std::list<std::string> failed_tests;
+#define BEGIN_MAIN                                       \
+int                                                      \
+main() try {                                             \
+  set_handlers();                                        \
+  bool succeeded = false;                                \
+  bool overflow = false;                                 \
+  std::list<std::string> failed_tests;                   \
+  std::list<std::string> unexpectedly_succeeded_tests;
 
 #define END_MAIN							\
-  if (failed_tests.empty())						\
-    return 0;								\
-  else {								\
-    std::cerr << "failed tests: ";					\
-    std::copy(failed_tests.begin(), failed_tests.end(),			\
+  if (!failed_tests.empty()) {						\
+    std::cerr << "tests failed: ";					\
+    std::copy(failed_tests.begin(),                                     \
+              failed_tests.end(),                                       \
 	      std::ostream_iterator<std::string>(std::cerr, " "));	\
     std::cerr << std::endl;						\
     return 1;								\
   }									\
+  if (!unexpectedly_succeeded_tests.empty()) {				\
+    std::cerr << "tests unexpectedly succeeded: ";                      \
+    std::copy(unexpectedly_succeeded_tests.begin(),                     \
+              unexpectedly_succeeded_tests.end(),                       \
+	      std::ostream_iterator<std::string>(std::cerr, " "));	\
+    std::cerr << std::endl;						\
+    return 1;								\
+  }									\
+  return 0;								\
 }									\
 catch (const std::overflow_error& e) {					\
   std::cerr << "arithmetic overflow (" << e.what() << ")"		\
@@ -122,16 +132,18 @@ catch (const std::exception& e) {					\
   if (!succeeded)			 \
     failed_tests.push_back(#test);
 
-#define DO_TEST_F(test)			 \
-  ANNOUNCE_TEST(test);			 \
-  RUN_TEST(test);			 \
-  if (succeeded)			 \
-    failed_tests.push_back(#test);
+#define DO_TEST_F(test)                                 \
+  ANNOUNCE_TEST(test);                                  \
+  RUN_TEST(test);                                       \
+  if (succeeded)                                        \
+    unexpectedly_succeeded_tests.push_back(#test);
 
-#define DO_TEST_OVERFLOW(test)		 \
-  ANNOUNCE_TEST(test);			 \
-  RUN_TEST(test);			 \
-  if (succeeded || !overflow)		 \
+#define DO_TEST_OVERFLOW(test)                          \
+  ANNOUNCE_TEST(test);                                  \
+  RUN_TEST(test);                                       \
+  if (succeeded)                                        \
+    unexpectedly_succeeded_tests.push_back(#test);      \
+  else if (!overflow)                                   \
     failed_tests.push_back(#test);
 
 #define DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)			\
@@ -141,267 +153,176 @@ catch (const std::exception& e) {					\
     if (!overflow || has_exact_coefficient_type(shape(0, EMPTY)))	\
       failed_tests.push_back(#test);
 
-#if PPL_COEFFICIENT_BITS == 0
 
-#define DO_TEST_F64(test) DO_TEST(test)
-#define DO_TEST_F64A(test) DO_TEST(test)
-#define DO_TEST_F32(test) DO_TEST(test)
-#define DO_TEST_F32A(test) DO_TEST(test)
-#define DO_TEST_F16(test) DO_TEST(test)
-#define DO_TEST_F16A(test) DO_TEST(test)
-#define DO_TEST_F8(test) DO_TEST(test)
-#define DO_TEST_F8A(test) DO_TEST(test)
+// Macros for arbitrary combination of preprocessor conditions.
 
-#define DO_TEST_F64_MAY_OVERFLOW_IF_INEXACT(test, shape) DO_TEST(test)
-#define DO_TEST_F64A_MAY_OVERFLOW_IF_INEXACT(test, shape) DO_TEST(test)
-#define DO_TEST_F32_MAY_OVERFLOW_IF_INEXACT(test, shape) DO_TEST(test)
-#define DO_TEST_F32A_MAY_OVERFLOW_IF_INEXACT(test, shape) DO_TEST(test)
-#define DO_TEST_F16_MAY_OVERFLOW_IF_INEXACT(test, shape) DO_TEST(test)
-#define DO_TEST_F16A_MAY_OVERFLOW_IF_INEXACT(test, shape) DO_TEST(test)
-#define DO_TEST_F8_MAY_OVERFLOW_IF_INEXACT(test, shape) DO_TEST(test)
-#define DO_TEST_F8A_MAY_OVERFLOW_IF_INEXACT(test, shape) DO_TEST(test)
+#define PPL_CPP_AND_false_false false
+#define PPL_CPP_AND_false_true false
+#define PPL_CPP_AND_true_false false
+#define PPL_CPP_AND_true_true true
+#define PPL_CPP_AND_(x,y) PPL_CPP_AND_ ## x ## _ ## y
+#define PPL_CPP_AND(x,y) PPL_CPP_AND_(x, y)
 
-#elif PPL_COEFFICIENT_BITS == 64
+#define PPL_CPP_OR_false_false false
+#define PPL_CPP_OR_false_true true
+#define PPL_CPP_OR_true_false true
+#define PPL_CPP_OR_true_true true
+#define PPL_CPP_OR_(x,y) PPL_CPP_OR_ ## x ## _ ## y
+#define PPL_CPP_OR(x,y) PPL_CPP_OR_(x, y)
 
-#ifdef NDEBUG
+#define PPL_CPP_NOT_false true
+#define PPL_CPP_NOT_true false
+#define PPL_CPP_NOT_(x) PPL_CPP_NOT_ ## x
+#define PPL_CPP_NOT(x) PPL_CPP_NOT_(x)
 
-#define DO_TEST_F64(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A(test) DO_TEST(test)
-#define DO_TEST_F32(test) DO_TEST(test)
-#define DO_TEST_F32A(test) DO_TEST(test)
-#define DO_TEST_F16(test) DO_TEST(test)
-#define DO_TEST_F16A(test) DO_TEST(test)
-#define DO_TEST_F8(test) DO_TEST(test)
-#define DO_TEST_F8A(test) DO_TEST(test)
+#define PPL_CPP_VAL_true_ true
+#define PPL_CPP_VAL_false_ false
+#define PPL_CPP_VAL_false(v) PPL_CPP_VAL_true
+#define PPL_CPP_VAL_b(v) PPL_CPP_VAL_false
+#define PPL_CPP_VAL_a(v) PPL_CPP_VAL_b(v)
 
-#define DO_TEST_F64_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
+#define PPL_CPP_IS_NEGx_arg_neg 0)(0
+#define PPL_CPP_IS_NEGx(v) PPL_CPP_VAL_a(PPL_CPP_IS_NEGx_arg_##v)
+
+#define PPL_CPP_IS_NEG__(v) v ## _
+#define PPL_CPP_IS_NEG_(v) PPL_CPP_IS_NEG__(v)
+#define PPL_CPP_IS_NEG(v) PPL_CPP_IS_NEG_(PPL_CPP_IS_NEGx(v))
+
+#define PPL_CPP_IS_ZEROx_arg_0 0)(0
+#define PPL_CPP_IS_ZEROx(v) PPL_CPP_VAL_a(PPL_CPP_IS_ZEROx_arg_##v)
+
+#define PPL_CPP_IS_ZERO__(v) v ## _
+#define PPL_CPP_IS_ZERO_(v) PPL_CPP_IS_ZERO__(v)
+#define PPL_CPP_IS_ZERO(v) PPL_CPP_IS_ZERO_(PPL_CPP_IS_ZEROx(v))
+
+#define PPL_CPP_DECR_neg neg
+#define PPL_CPP_DECR_0 neg
+#define PPL_CPP_DECR_1 0
+#define PPL_CPP_DECR_2 1
+#define PPL_CPP_DECR_3 2
+#define PPL_CPP_DECR_4 3
+#define PPL_CPP_DECR_5 4
+#define PPL_CPP_DECR_6 5
+#define PPL_CPP_DECR_7 6
+#define PPL_CPP_DECR_8 7
+#define PPL_CPP_DECR_9 8
+
+#define PPL_CPP_DECR_(x) PPL_CPP_DECR_ ## x
+#define PPL_CPP_DECR(x) PPL_CPP_DECR_(x)
+
+#define PPL_CPP_SUB_0(x) x
+#define PPL_CPP_SUB_1(x) PPL_CPP_DECR(x)
+#define PPL_CPP_SUB_2(x) PPL_CPP_DECR(PPL_CPP_SUB_1(x))
+#define PPL_CPP_SUB_3(x) PPL_CPP_DECR(PPL_CPP_SUB_2(x))
+#define PPL_CPP_SUB_4(x) PPL_CPP_DECR(PPL_CPP_SUB_3(x))
+#define PPL_CPP_SUB_5(x) PPL_CPP_DECR(PPL_CPP_SUB_4(x))
+#define PPL_CPP_SUB_6(x) PPL_CPP_DECR(PPL_CPP_SUB_5(x))
+#define PPL_CPP_SUB_7(x) PPL_CPP_DECR(PPL_CPP_SUB_6(x))
+#define PPL_CPP_SUB_8(x) PPL_CPP_DECR(PPL_CPP_SUB_7(x))
+#define PPL_CPP_SUB_9(x) PPL_CPP_DECR(PPL_CPP_SUB_8(x))
+
+#define PPL_CPP_SUB_(x, y) PPL_CPP_SUB_ ## y (x)
+#define PPL_CPP_SUB(x, y) PPL_CPP_SUB_(x, y)
+
+#define PPL_CPP_LT(x, y) PPL_CPP_IS_NEG(PPL_CPP_SUB(x, y))
+#define PPL_CPP_GT(x, y) PPL_CPP_LT(y, x)
+#define PPL_CPP_LE(x, y) PPL_CPP_NOT(PPL_CPP_LT(y, x))
+#define PPL_CPP_GE(x, y) PPL_CPP_NOT(PPL_CPP_LT(x, y))
+#define PPL_CPP_EQ(x, y) PPL_CPP_IS_ZERO(PPL_CPP_SUB(x, y))
+#define PPL_CPP_NE(x, y) PPL_CPP_NOT(PPL_CPP_EQ(x,y))
+
+#define PPL_CPP_LOG2_64 6
+#define PPL_CPP_LOG2_32 5
+#define PPL_CPP_LOG2_16 4
+#define PPL_CPP_LOG2_8  3
+#define PPL_CPP_LOG2_0  neg
+
+#define PPL_CPP_LOG2_(x) PPL_CPP_LOG2_ ## x
+#define PPL_CPP_LOG2(x) PPL_CPP_LOG2_(x)
+
+#define COND_MACRO_2(prefix, v) prefix ## _ ## v
+#define COND_MACRO_1(prefix, v) COND_MACRO_2(prefix, v)
+#define COND_MACRO(prefix, expr) COND_MACRO_1(prefix, expr)
+
+
+#define PPL_CPP_LOGBITS PPL_CPP_LOG2(PPL_COEFFICIENT_BITS)
+
+#define COND_F64 PPL_CPP_LT(PPL_CPP_LOGBITS, 0)
+#define COND_F32 PPL_CPP_OR(PPL_CPP_GT(PPL_CPP_LOGBITS, 5), \
+                            PPL_CPP_LT(PPL_CPP_LOGBITS, 0))
+#define COND_F16 PPL_CPP_OR(PPL_CPP_GT(PPL_CPP_LOGBITS, 4), \
+                            PPL_CPP_LT(PPL_CPP_LOGBITS, 0))
+#define COND_F8  PPL_CPP_OR(PPL_CPP_GT(PPL_CPP_LOGBITS, 3), \
+                            PPL_CPP_LT(PPL_CPP_LOGBITS, 0))
+
+#ifndef NDEBUG
+# define COND_ASSERT_OFF false
+#else
+# define COND_ASSERT_OFF true
+#endif
+
+#define COND_SUCC_64_ONLY \
+  PPL_CPP_AND(PPL_CPP_EQ(PPL_CPP_LOGBITS, 6), COND_ASSERT_OFF)
+#define COND_SUCC_32_ONLY \
+  PPL_CPP_AND(PPL_CPP_EQ(PPL_CPP_LOGBITS, 5), COND_ASSERT_OFF)
+#define COND_SUCC_16_ONLY \
+  PPL_CPP_AND(PPL_CPP_EQ(PPL_CPP_LOGBITS, 4), COND_ASSERT_OFF)
+#define COND_SUCC_8_ONLY \
+  PPL_CPP_AND(PPL_CPP_EQ(PPL_CPP_LOGBITS, 3), COND_ASSERT_OFF)
+
+#define COND_F64A PPL_CPP_OR(COND_F64, COND_SUCC_64_ONLY)
+#define COND_F32A PPL_CPP_OR(COND_F32, COND_SUCC_32_ONLY)
+#define COND_F16A PPL_CPP_OR(COND_F16, COND_SUCC_16_ONLY)
+#define COND_F8A  PPL_CPP_OR(COND_F8,  COND_SUCC_8_ONLY)
+
+
+#define COND_DO_TEST_false(test) DO_TEST_OVERFLOW(test)
+#define COND_DO_TEST_true(test)  DO_TEST(test)
+#define COND_DO_TEST(cond, test) COND_MACRO(COND_DO_TEST, cond)(test)
+
+#define DO_TEST_F64(test)  COND_DO_TEST(COND_F64, test)
+#define DO_TEST_F64A(test) COND_DO_TEST(COND_F64A, test)
+#define DO_TEST_F32(test)  COND_DO_TEST(COND_F32, test)
+#define DO_TEST_F32A(test) COND_DO_TEST(COND_F32A, test)
+#define DO_TEST_F16(test)  COND_DO_TEST(COND_F16, test)
+#define DO_TEST_F16A(test) COND_DO_TEST(COND_F16A, test)
+#define DO_TEST_F8(test)   COND_DO_TEST(COND_F8, test)
+#define DO_TEST_F8A(test)  COND_DO_TEST(COND_F8A, test)
+
+
+#define COND_DO_TEST_MAY_OVERFLOW_IF_INEXACT_false(test, shape) \
   DO_TEST_OVERFLOW(test)
+#define COND_DO_TEST_MAY_OVERFLOW_IF_INEXACT_true(test, shape)  \
+  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
+#define COND_DO_TEST_MAY_OVERFLOW_IF_INEXACT(cond, test, shape) \
+  COND_MACRO(COND_DO_TEST_MAY_OVERFLOW_IF_INEXACT, cond)(test, shape)
+
+#define DO_TEST_F64_MAY_OVERFLOW_IF_INEXACT(test, shape) \
+  COND_DO_TEST_MAY_OVERFLOW_IF_INEXACT(COND_F64, test, shape)
 #define DO_TEST_F64A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F32_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
+  COND_DO_TEST_MAY_OVERFLOW_IF_INEXACT(COND_F64A, test, shape)
+#define DO_TEST_F32_MAY_OVERFLOW_IF_INEXACT(test, shape) \
+  COND_DO_TEST_MAY_OVERFLOW_IF_INEXACT(COND_F32, test, shape)
 #define DO_TEST_F32A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F16_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
+  COND_DO_TEST_MAY_OVERFLOW_IF_INEXACT(COND_F32A, test, shape)
+#define DO_TEST_F16_MAY_OVERFLOW_IF_INEXACT(test, shape) \
+  COND_DO_TEST_MAY_OVERFLOW_IF_INEXACT(COND_F16, test, shape)
 #define DO_TEST_F16A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F8_MAY_OVERFLOW_IF_INEXACT(test, shape)   \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F8A_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
+  COND_DO_TEST_MAY_OVERFLOW_IF_INEXACT(COND_F16A, test, shape)
+#define DO_TEST_F8_MAY_OVERFLOW_IF_INEXACT(test, shape) \
+  COND_DO_TEST_MAY_OVERFLOW_IF_INEXACT(COND_F8, test, shape)
+#define DO_TEST_F8A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
+  COND_DO_TEST_MAY_OVERFLOW_IF_INEXACT(COND_F8A, test, shape)
 
-#else // PPL_COEFFICIENT_BITS == 64 && !defined(NDEBUG)
-
-#define DO_TEST_F64(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32(test) DO_TEST(test)
-#define DO_TEST_F32A(test) DO_TEST(test)
-#define DO_TEST_F16(test) DO_TEST(test)
-#define DO_TEST_F16A(test) DO_TEST(test)
-#define DO_TEST_F8(test) DO_TEST(test)
-#define DO_TEST_F8A(test) DO_TEST(test)
-
-#define DO_TEST_F64_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F32A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F16_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F16A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F8_MAY_OVERFLOW_IF_INEXACT(test, shape)   \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F8A_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-
-#endif // !defined(NDEBUG)
-
-#elif PPL_COEFFICIENT_BITS == 32
-
-#ifdef NDEBUG
-
-#define DO_TEST_F64(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32A(test) DO_TEST(test)
-#define DO_TEST_F16(test) DO_TEST(test)
-#define DO_TEST_F16A(test) DO_TEST(test)
-#define DO_TEST_F8(test) DO_TEST(test)
-#define DO_TEST_F8A(test) DO_TEST(test)
-
-#define DO_TEST_F64_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F16_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F16A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F8_MAY_OVERFLOW_IF_INEXACT(test, shape)   \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F8A_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-
-#else // PPL_COEFFICIENT_BITS == 32 && !defined(NDEBUG)
-
-#define DO_TEST_F64(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16(test) DO_TEST(test)
-#define DO_TEST_F16A(test) DO_TEST(test)
-#define DO_TEST_F8(test) DO_TEST(test)
-#define DO_TEST_F8A(test) DO_TEST(test)
-
-#define DO_TEST_F64_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F16A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F8_MAY_OVERFLOW_IF_INEXACT(test, shape)   \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F8A_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-
-#endif // !defined(NDEBUG)
-
-#elif PPL_COEFFICIENT_BITS == 16
-
-#ifdef NDEBUG
-
-#define DO_TEST_F64(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16A(test) DO_TEST(test)
-#define DO_TEST_F8(test) DO_TEST(test)
-#define DO_TEST_F8A(test) DO_TEST(test)
-
-#define DO_TEST_F64_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F8_MAY_OVERFLOW_IF_INEXACT(test, shape)   \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F8A_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-
-#else // PPL_COEFFICIENT_BITS == 16 && !defined(NDEBUG)
-
-#define DO_TEST_F64(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F8(test) DO_TEST(test)
-#define DO_TEST_F8A(test) DO_TEST(test)
-
-#define DO_TEST_F64_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F8_MAY_OVERFLOW_IF_INEXACT(test, shape)   \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-#define DO_TEST_F8A_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-
-#endif // !defined(NDEBUG)
-
-#elif PPL_COEFFICIENT_BITS == 8
-
-#ifdef NDEBUG
-
-#define DO_TEST_F64(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F8(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F8A(test) DO_TEST(test)
-
-#define DO_TEST_F64_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F8_MAY_OVERFLOW_IF_INEXACT(test, shape)   \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F8A_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_MAY_OVERFLOW_IF_INEXACT(test, shape)
-
-#else // PPL_COEFFICIENT_BITS == 8 && !defined(NDEBUG)
-
-#define DO_TEST_F64(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16A(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F8(test) DO_TEST_OVERFLOW(test)
-#define DO_TEST_F8A(test) DO_TEST_OVERFLOW(test)
-
-#define DO_TEST_F64_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F64A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F32A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F16A_MAY_OVERFLOW_IF_INEXACT(test, shape) \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F8_MAY_OVERFLOW_IF_INEXACT(test, shape)   \
-  DO_TEST_OVERFLOW(test)
-#define DO_TEST_F8A_MAY_OVERFLOW_IF_INEXACT(test, shape)  \
-  DO_TEST_OVERFLOW(test)
-
-#endif // !defined(NDEBUG)
-
-#endif // PPL_COEFFICIENT_BITS == 8
+// Encoding floating point formats.
+#define PPL_CPP_FP_FORMAT_float                1
+#define PPL_CPP_FP_FORMAT_double               2
+#define PPL_CPP_FP_FORMAT_long_double          3
+#define PPL_CPP_FP_FORMAT_float_ieee754_single 4
+#define PPL_CPP_FP_FORMAT_float_ieee754_double 5
+#define PPL_CPP_FP_FORMAT_float_ieee754_quad   6
+#define PPL_CPP_FP_FORMAT_(format) PPL_CPP_FP_FORMAT_ ## format
+#define PPL_CPP_FP_FORMAT(format) PPL_CPP_FP_FORMAT_(format)
 
 
 // Turn s into a string: PPL_TEST_STR(x + y) => "x + y".
@@ -426,12 +347,6 @@ catch (const std::exception& e) {					\
 #ifndef OCTAGONAL_SHAPE_INSTANCE
 #define OCTAGONAL_SHAPE_INSTANCE mpq_class
 #endif
-
-// These using directive and declaration are just to avoid the
-// corresponding namespace qualifications in all the tests.
-using namespace Parma_Polyhedra_Library;
-using namespace Parma_Polyhedra_Library::Test;
-using std::endl;
 
 namespace Parma_Polyhedra_Library {
 
@@ -497,6 +412,19 @@ struct Floating_Real_Open_Interval_Info_Policy {
   const_bool_nodef(cache_normalized, false);
   const_int_nodef(next_bit, 0);
   const_bool_nodef(may_be_empty, true);
+  const_bool_nodef(may_contain_infinity, false);
+  const_bool_nodef(check_empty_result, false);
+  const_bool_nodef(check_inexact, false);
+};
+
+struct Floating_Real_Closed_Interval_Info_Policy {
+  const_bool_nodef(store_special, false);
+  const_bool_nodef(store_open, false);
+  const_bool_nodef(cache_empty, false);
+  const_bool_nodef(cache_singleton, true);
+  const_bool_nodef(cache_normalized, false);
+  const_int_nodef(next_bit, 0);
+  const_bool_nodef(may_be_empty, false);
   const_bool_nodef(may_contain_infinity, false);
   const_bool_nodef(check_empty_result, false);
   const_bool_nodef(check_inexact, false);
@@ -571,7 +499,7 @@ check_result_i(const BD_Shape<T>& computed_result,
 	   << q_computed_result
 	   << "\nknown result is\n"
 	   << known_result
-	   << endl;
+	   << std::endl;
       return false;
     }
     else
@@ -585,7 +513,7 @@ check_result_i(const BD_Shape<T>& computed_result,
 	 << q_computed_result
 	 << "\nknown result is\n"
 	 << known_result
-	 << endl;
+	 << std::endl;
     return false;
   }
 
@@ -605,7 +533,7 @@ check_result_i(const BD_Shape<T>& computed_result,
 	 << q_computed_result
 	 << "\nknown result is\n"
 	 << known_result
-	 << endl;
+	 << std::endl;
   }
   return ok;
 }
@@ -637,7 +565,7 @@ check_result(const BD_Shape<T>& computed_result,
          << computed_result
          << "\nknown result is\n"
          << known_result
-         << endl;
+         << std::endl;
     return false;
   }
 }
@@ -672,7 +600,7 @@ check_result_i(const Octagonal_Shape<T>& computed_result,
            << q_computed_result
 	   << "\nknown result is\n"
            << known_result
-	   << endl;
+	   << std::endl;
       return false;
     }
     else
@@ -686,7 +614,7 @@ check_result_i(const Octagonal_Shape<T>& computed_result,
 	 << q_computed_result
 	 << "\nknown result is\n"
 	 << known_result
-	 << endl;
+	 << std::endl;
     return false;
   }
 
@@ -706,7 +634,7 @@ check_result_i(const Octagonal_Shape<T>& computed_result,
 	 << q_computed_result
 	 << "\nknown result is\n"
 	 << known_result
-	 << endl;
+	 << std::endl;
   }
   return ok;
 }
@@ -763,7 +691,7 @@ check_result_i(const Box<Interval>& computed_result,
 	   << q_computed_result
 	   << "\nknown result is\n"
 	   << known_result
-	   << endl;
+	   << std::endl;
       return false;
     }
     else
@@ -777,7 +705,7 @@ check_result_i(const Box<Interval>& computed_result,
 	 << q_computed_result
 	 << "\nknown result is\n"
 	 << known_result
-	 << endl;
+	 << std::endl;
     nout << "Individual dimensions where containment does not hold"
 	 << "\n(Variable: computed-result known-result):\n";
     for (dimension_type i = 0; i < computed_result.space_dimension(); ++i) {
@@ -788,7 +716,7 @@ check_result_i(const Box<Interval>& computed_result,
 	     << q_computed_result.get_interval(Variable(i))
 	     << ' '
 	     << known_result.get_interval(Variable(i))
-	     << endl;
+	     << std::endl;
       }
     }
     return false;
@@ -810,7 +738,7 @@ check_result_i(const Box<Interval>& computed_result,
 	 << q_computed_result
 	 << "\nknown result is\n"
 	 << known_result
-	 << endl;
+	 << std::endl;
   }
   return ok;
 }
@@ -842,7 +770,7 @@ check_result(const Box<Interval>& computed_result,
          << computed_result
          << "\nknown result is\n"
          << known_result
-         << endl;
+         << std::endl;
     return false;
   }
 }
@@ -1045,6 +973,13 @@ print_constraints(const Polyhedron& ph,
 		  const std::string& intro = "",
 		  std::ostream& s = nout);
 
+#if 0
+void
+print_constraints(const Affine_Space& affs,
+		  const std::string& intro = "",
+		  std::ostream& s = nout);
+#endif
+
 template <typename Interval>
 void
 print_constraints(const Box<Interval>& box,
@@ -1175,12 +1110,18 @@ print_congruences(const Partially_Reduced_Product<D1, D2, R>& pd,
 }
 
 void
-print_function(const Parma_Polyhedra_Library::Test::Partial_Function& function,
+print_function(const Parma_Polyhedra_Library::Partial_Function& function,
 	       const std::string& intro = "",
 	       std::ostream& s = nout);
 
 } // namespace Test
 
 } // namespace Parma_Polyhedra_Library
+
+// These using directive and declaration are just to avoid the
+// corresponding namespace qualifications in all the tests.
+using namespace Parma_Polyhedra_Library;
+using namespace Parma_Polyhedra_Library::Test;
+using std::endl;
 
 #endif // !defined(PPL_ppl_test_hh)

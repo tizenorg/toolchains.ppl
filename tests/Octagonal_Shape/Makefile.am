@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -24,7 +25,7 @@ if VALGRIND_TESTS_ENABLED
 
 CHECKER = \
 $(VALGRIND) --tool=memcheck -q --trace-children=yes --leak-check=yes \
---num-callers=100 --leak-resolution=high \
+--num-callers=40 --leak-resolution=high \
 --suppressions=$(top_srcdir)/tests/valgrind_suppressions
 
 else !VALGRIND_TESTS_ENABLED
@@ -76,8 +77,10 @@ containsintegerpoint1 \
 difference1 \
 discrete1 \
 disjoint1 \
+dropsomenonintegerpoints1 \
 empty1 \
 expandspacedim1 \
+frequency1 \
 foldspacedims1 \
 frombdshape1 \
 frombox1 \
@@ -95,6 +98,7 @@ generalizedaffinepreimage1 \
 generalizedaffinepreimage2 \
 generalizedaffinepreimage3 \
 generalizedaffinepreimage4 \
+integerupperboundifexact1 \
 intersection1 \
 limitedbhmz05extrapolation1 \
 limitedcc76extrapolation1 \
@@ -115,6 +119,7 @@ unconstrain1 \
 universe1 \
 upperbound1 \
 upperboundifexact1 \
+wrap1 \
 writeoctagon1
 
 
@@ -127,7 +132,7 @@ TESTS = run_tests.stamp
 
 .PHONY: run_tests.stamp
 run_tests.stamp: run_tests
-	+MAKE=$(MAKE) $(srcdir)/run_tests
+	+MAKE="$(MAKE)" $(srcdir)/run_tests
 	echo "true" >run_tests.stamp
 	chmod +x run_tests.stamp
 
@@ -213,11 +218,15 @@ discrete1_SOURCES = discrete1.cc
 
 disjoint1_SOURCES = disjoint1.cc
 
+dropsomenonintegerpoints1_SOURCES = dropsomenonintegerpoints1.cc
+
 empty1_SOURCES = empty1.cc
 
 expandspacedim1_SOURCES = expandspacedim1.cc
 
 foldspacedims1_SOURCES = foldspacedims1.cc
+
+frequency1_SOURCES = frequency1.cc
 
 frombdshape1_SOURCES = frombdshape1.cc
 
@@ -243,6 +252,8 @@ generalizedaffinepreimage1_SOURCES = generalizedaffinepreimage1.cc
 generalizedaffinepreimage2_SOURCES = generalizedaffinepreimage2.cc
 generalizedaffinepreimage3_SOURCES = generalizedaffinepreimage3.cc
 generalizedaffinepreimage4_SOURCES = generalizedaffinepreimage4.cc
+
+integerupperboundifexact1_SOURCES = integerupperboundifexact1.cc
 
 intersection1_SOURCES = intersection1.cc
 
@@ -280,6 +291,8 @@ universe1_SOURCES = universe1.cc
 upperbound1_SOURCES = upperbound1.cc
 
 upperboundifexact1_SOURCES = upperboundifexact1.cc
+
+wrap1_SOURCES = wrap1.cc
 
 writeoctagon1_SOURCES = writeoctagon1.cc
 

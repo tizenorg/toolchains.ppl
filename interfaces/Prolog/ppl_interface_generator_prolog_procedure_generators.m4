@@ -6,7 +6,8 @@ dnl - the list in the imported file and any Prolog specific predicates;
 dnl   ppl_interface_generator_common_procedure_generators.m4;
 dnl - the list of library predicates needed for the system dependent files.
 
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -41,6 +42,7 @@ ppl_version_beta/1,
 ppl_version/1,
 ppl_banner/1,
 ppl_max_space_dimension/1,
+ppl_Coefficient_bits/1,
 ppl_Coefficient_is_bounded/0,
 ppl_Coefficient_max/1,
 ppl_Coefficient_min/1,
@@ -48,10 +50,14 @@ ppl_initialize/0 *nofail,
 ppl_finalize/0 *nofail,
 ppl_set_rounding_for_PPL/0 *nofail,
 ppl_restore_pre_PPL_rounding/0 *nofail,
+ppl_irrational_precision/1,
+ppl_set_irrational_precision/1,
 ppl_set_timeout_exception_atom/1 *nofail,
 ppl_timeout_exception_atom/1,
 ppl_set_timeout/1 *nofail,
 ppl_reset_timeout/0 *nofail,
+ppl_set_deterministic_timeout/1 *nofail,
+ppl_reset_deterministic_timeout/0 *nofail,
 ppl_new_MIP_Problem_from_space_dimension/2,
 ppl_new_MIP_Problem/5,
 ppl_new_MIP_Problem_from_MIP_Problem/2,
@@ -78,11 +84,50 @@ ppl_MIP_Problem_optimizing_point/2,
 ppl_MIP_Problem_optimal_value/3,
 ppl_MIP_Problem_evaluate_objective_function/4,
 ppl_MIP_Problem_OK/1
-ppl_MIP_Problem_ascii_dump/1`'dnl
+ppl_MIP_Problem_ascii_dump/1,
+ppl_new_PIP_Problem_from_space_dimension/2,
+ppl_new_PIP_Problem/4,
+ppl_new_PIP_Problem_from_PIP_Problem/2,
+ppl_PIP_Problem_swap/2 *nofail,
+ppl_delete_PIP_Problem/1 *nofail,
+ppl_PIP_Problem_space_dimension/2,
+ppl_PIP_Problem_parameter_space_dimensions/2,
+ppl_PIP_Problem_constraints/2,
+ppl_PIP_Problem_clear/1,
+ppl_PIP_Problem_add_space_dimensions_and_embed/3,
+ppl_PIP_Problem_add_to_parameter_space_dimensions/2,
+ppl_PIP_Problem_add_constraint/2,
+ppl_PIP_Problem_add_constraints/2,
+ppl_PIP_Problem_set_control_parameter/2 *nofail,
+ppl_PIP_Problem_get_control_parameter/3,
+ppl_PIP_Problem_has_big_parameter_dimension/2,
+ppl_PIP_Problem_set_big_parameter_dimension/2,
+ppl_PIP_Problem_is_satisfiable/1,
+ppl_PIP_Problem_solve/2,
+ppl_PIP_Problem_solution/2,
+ppl_PIP_Problem_optimizing_solution/2,
+ppl_PIP_Problem_OK/1,
+ppl_PIP_Problem_ascii_dump/1,
+ppl_PIP_Tree_Node_constraints/2,
+ppl_PIP_Tree_Node_is_solution/1,
+ppl_PIP_Tree_Node_is_decision/1,
+ppl_PIP_Tree_Node_is_bottom/1,
+ppl_PIP_Tree_Node_artificials/2,
+ppl_PIP_Tree_Node_OK/1,
+ppl_PIP_Tree_Node_parametric_values/3,
+ppl_PIP_Tree_Node_true_child/2,
+ppl_PIP_Tree_Node_false_child/2`'dnl
 ')
 
-m4_define(`m4_procedure_list', `m4_echo_unquoted(`m4_common_procedure_list',
-ppl_@CLASS@_@BINMINOP@/2 +polyhedron,
-ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize/2 +polyhedron,
-ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize/2 +polyhedron)
+m4_define(`m4_procedure_list',
+  `m4_echo_unquoted(`m4_common_procedure_list',
+ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@/1 +simple,
+ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@/2 +simple,
+ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@/2 +simple,
+ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@/3 +simple,
+ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2/2 +simple,
+ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2/3 +simple,
+ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2/3 +simple,
+ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2/4 +simple,
+)
 ')

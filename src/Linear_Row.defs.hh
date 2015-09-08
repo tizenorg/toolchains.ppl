@@ -1,5 +1,6 @@
 /* Linear_Row class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -358,6 +359,12 @@ public:
     the resulting Linear_Row to \p *this and normalizes it.
   */
   void linear_combine(const Linear_Row& y, dimension_type k);
+
+  /*! \brief
+    Returns <CODE>true</CODE> if and only if all the
+    terms of \p *this are \f$0\f$.
+  */
+  bool is_zero() const;
 
   /*! \brief
     Returns <CODE>true</CODE> if and only if all the homogeneous

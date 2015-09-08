@@ -1,5 +1,6 @@
 /* Generator_System class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -31,7 +32,6 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "Constraint.types.hh"
 #include "Polyhedron.types.hh"
 #include "Poly_Con_Relation.defs.hh"
-#include "Grid.types.hh"
 #include <iosfwd>
 
 namespace Parma_Polyhedra_Library {
@@ -188,7 +188,7 @@ public:
   //! Builds the singleton system containing only generator \p g.
   explicit Generator_System(const Generator& g);
 
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   Generator_System(const Generator_System& gs);
 
   //! Destructor.
@@ -257,7 +257,7 @@ public:
     //! Default constructor.
     const_iterator();
 
-    //! Ordinary copy-constructor.
+    //! Ordinary copy constructor.
     const_iterator(const const_iterator& y);
 
     //! Destructor.

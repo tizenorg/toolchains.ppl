@@ -4,7 +4,8 @@ dnl This m4 file defines the list of procedures
 dnl for the OCaml interface; this includes:
 dnl - the list in the imported file and any OCaml specific procedures.
 
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -40,4 +41,17 @@ dnl in the ppl_interface_generator_*_code.m4 file.
 dnl The <name> must be exactly as written here.
 dnl
 
-m4_define(`m4_procedure_list', `m4_common_procedure_list')
+m4_define(`m4_procedure_list',
+  `m4_echo_unquoted(ppl_new_@CLASS@_iterator +pointset_powerset,
+`m4_common_procedure_list',
+ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@ +simple,
+ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@ +simple,
+ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@ +simple,
+ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@ +simple,
+ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2 +simple,
+ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2 +simple,
+ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2 +simple,
+ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2 +simple,
+)
+')
+

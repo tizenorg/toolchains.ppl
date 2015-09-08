@@ -1,5 +1,6 @@
 /* Test Grid::affine_dimension().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -67,7 +68,7 @@ test04() {
   Variable B(1);
 
   Grid gr_gs_min(2, EMPTY);
-  gr_gs_min.add_grid_generator_and_minimize(grid_point(3*A + 2*B));
+  gr_gs_min.add_grid_generator(grid_point(3*A + 2*B));
 
   Grid gr_gs_needs_min(2, EMPTY);
   gr_gs_needs_min.add_grid_generator(grid_point(3*A + 2*B));
@@ -100,7 +101,7 @@ test05() {
 
   Grid gr_gs_min(3, EMPTY);
   gr_gs_min.add_grid_generator(grid_point(3*A + 2*B));
-  gr_gs_min.add_grid_generator_and_minimize(grid_line(C));
+  gr_gs_min.add_grid_generator(grid_line(C));
 
   Grid gr_gs_needs_min(3, EMPTY);
   gr_gs_needs_min.add_grid_generator(grid_point(3*A + 2*B));
@@ -134,7 +135,7 @@ test06() {
 
   Grid gr_gs_min(3, EMPTY);
   gr_gs_min.add_grid_generator(grid_point(3*A + 2*B));
-  gr_gs_min.add_grid_generator_and_minimize(grid_point(3*A + B));
+  gr_gs_min.add_grid_generator(grid_point(3*A + B));
 
   Grid gr_gs_needs_min(3, EMPTY);
   gr_gs_needs_min.add_grid_generator(grid_point(3*A + 2*B));
@@ -170,7 +171,7 @@ test07() {
   Grid gr_gs_min(3, EMPTY);
   gr_gs_min.add_grid_generator(grid_point(3*A + 2*B));
   gr_gs_min.add_grid_generator(grid_point(3*A + B));
-  gr_gs_min.add_grid_generator_and_minimize(grid_line(C));
+  gr_gs_min.add_grid_generator(grid_line(C));
 
   Grid gr_gs_needs_min(3, EMPTY);
   gr_gs_needs_min.add_grid_generator(grid_point(3*A + 2*B));
@@ -206,7 +207,7 @@ test08() {
   Grid gr_gs_min(2, EMPTY);
   gr_gs_min.add_grid_generator(grid_point());
   gr_gs_min.add_grid_generator(grid_point(A));
-  gr_gs_min.add_grid_generator_and_minimize(grid_point(3*A + 3*B, 4));
+  gr_gs_min.add_grid_generator(grid_point(3*A + 3*B, 4));
 
   Grid gr_gs_needs_min(2, EMPTY);
   gr_gs_needs_min.add_grid_generator(grid_point());
@@ -243,7 +244,7 @@ test09() {
   gr_gs_min.add_grid_generator(grid_point());
   gr_gs_min.add_grid_generator(grid_point(A));
   gr_gs_min.add_grid_generator(grid_line(C));
-  gr_gs_min.add_grid_generator_and_minimize(grid_point(3*A + 3*B, 4));
+  gr_gs_min.add_grid_generator(grid_point(3*A + 3*B, 4));
 
   Grid gr_gs_needs_min(3, EMPTY);
   gr_gs_needs_min.add_grid_generator(grid_point());
@@ -280,7 +281,7 @@ test10() {
   Grid gr_gs_min(4, EMPTY);
   gr_gs_min.add_grid_generator(grid_point());
   gr_gs_min.add_grid_generator(grid_line(B));
-  gr_gs_min.add_grid_generator_and_minimize(grid_line(C));
+  gr_gs_min.add_grid_generator(grid_line(C));
 
   Grid gr_gs_needs_min(4, EMPTY);
   gr_gs_needs_min.add_grid_generator(grid_point());

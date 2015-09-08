@@ -1,5 +1,6 @@
 /* GMP_Integer class implementation: inline functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -23,7 +24,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #ifndef PPL_GMP_Integer_inlines_hh
 #define PPL_GMP_Integer_inlines_hh 1
 
-#include <cassert>
+#include "assert.hh"
 
 namespace Parma_Polyhedra_Library {
 
@@ -81,8 +82,18 @@ sub_mul_assign(GMP_Integer& x, const GMP_Integer& y, const GMP_Integer& z) {
 }
 
 inline void
+mul_2exp_assign(GMP_Integer& x, const GMP_Integer& y, unsigned int exp) {
+  mpz_mul_2exp(x.get_mpz_t(), y.get_mpz_t(), exp);
+}
+
+inline void
+div_2exp_assign(GMP_Integer& x, const GMP_Integer& y, unsigned int exp) {
+  mpz_tdiv_q_2exp(x.get_mpz_t(), y.get_mpz_t(), exp);
+}
+
+inline void
 exact_div_assign(GMP_Integer& x, const GMP_Integer& y, const GMP_Integer& z) {
-  assert(y % z == 0);
+  PPL_ASSERT(y % z == 0);
   mpz_divexact(x.get_mpz_t(), y.get_mpz_t(), z.get_mpz_t());
 }
 

@@ -1,4 +1,5 @@
-Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 See below for the copying conditions.
 
 
@@ -99,7 +100,7 @@ is not standard for your compiler and/or for your linker, you will
 have to make sure the configure script of the PPL is invoked with,
 among others, the option
 
-  --with-libgmpxx-prefix=<GMP prefix>
+  --with-gmp-prefix=<GMP prefix>
 
 If you use shared libraries, consult the documentation of your dynamic
 linker/loader (`man ld.so' will do on most Un*x-like systems) to see
@@ -108,6 +109,11 @@ how to make sure that GMP's shared library will be found at run-time
 "<GMP prefix>/lib:$LD_LIBRARY_PATH" or
 "<GMP prefix>/lib64:$LD_LIBRARY_PATH" is the most commonly used
 solution).
+
+It is also possible to use a non-installed build of GMP.  In order to
+do that you should configure the PPL with, among others, the option
+
+  --with-gmp-build=<GMP build directory>
 
 
 3. Using the Right C and C++ Compilers
@@ -136,28 +142,26 @@ It should be noted that no version of GCC prior to 4.0.3 is known to
 reliably compile PPL 0.10.
 
 Here is an example of a configuration that uses the Intel C/C++ compiler
-version 10.1.x.  Assuming you have configured GMP with a command like
+version 11.1.x.  Assuming you have configured GMP with a command like
 
-  CC=icc CXX=icpc /path/to/gmp-4.2.4/configure --enable-cxx \
-    --prefix=/opt/intel/cce/10.1.018
+  CC=icc CXX=icpc /path/to/gmp-5.0.1/configure --enable-cxx \
+    --prefix=/opt/intel/Compiler/11.1/072 \
+    --libdir=/opt/intel/Compiler/11.1/072/lib/intel64
 
 you can configure the PPL with a command like
 
-  CPPFLAGS=-D_GCC_LIMITS_H_ /path/to/ppl-x.y/configure \
-    --with-cxx=icpc --with-cc=icc \
+  /path/to/ppl-x.y/configure --with-cxx=icpc --with-cc=icc \
     --with-cxxflags=-pch \
-    --with-libgmpxx-prefix=/opt/intel/cce/10.1.018
+    --with-gmp-prefix=/opt/intel/Compiler/11.1/072
 
-Notice that the `CPPFLAGS=-D_GCC_LIMITS_H_' environment variable
-assignment is required in order to overcome a bug in the Intel C/C++
-compiler version 10.1.x.  Notice also that the `--with-cxxflags' option
-is not essential here and is only included to show how extra
-compiler options can be passed to the configure script.
+Notice that the `--with-cxxflags' option is not essential here and is
+only included to show how extra compiler options can be passed to the
+configure script.
 
 As another example, here is how you can compile the PPL with
 Comeau C/C++ 4.3.10.1.  First configure GMP with a command like
 
-  CXX=como /path/to/gmp-4.2.4/configure --enable-cxx \
+  CXX=como /path/to/gmp-5.0.1/configure --enable-cxx \
     --disable-shared --prefix=/opt/comeau/local
 
 Then you can configure the PPL with a command like
@@ -165,7 +169,7 @@ Then you can configure the PPL with a command like
   /path/to/ppl/configure --with-cc="como --c" --with-cxx="como -tused" \
     --with-cxxflags="-g++ --remarks --long_long \
     --display_error_number --diag_suppress 340,401,679" \
-    --disable-shared --with-libgmpxx-prefix=/opt/comeau/local
+    --disable-shared --with-gmp-prefix=/opt/comeau/local
 
 Notice the use of the option `--disable-shared' both in the configuration
 of GMP and the configuration of the PPL.  This is due to the fact that
@@ -353,7 +357,10 @@ For floating point computations, the option
 
 allows for selecting, on the IA32 and x86_64, the floating point instruction
 set.  The allowed values for INSTRUCTION_SET are `sse', `sse2', `387,
-`sse+387', and `sse2+387'.
+`sse+387', and `sse2+387', `default', and `no'.  The latter option, which
+is equivalent to specifying `--disable-fpmath', has the effect of disabling
+all floating point computation and, consequently, all the numerical
+abstractions based on floating point numbers.
 
 On the other hand, there are configure options to request lesser
 degrees of optimization for the sake of debugging.  These are,
@@ -442,7 +449,8 @@ you cannot explain otherwise, use `autoreconf -f'.
 
 --------
 
-Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 

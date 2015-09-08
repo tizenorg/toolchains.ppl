@@ -1,5 +1,6 @@
 # Automake source file for the Parma Watchdog Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Watchdog Library (PWL).
 #
@@ -24,7 +25,7 @@ if VALGRIND_TESTS_ENABLED
 
 CHECKER = \
 $(VALGRIND) --tool=memcheck -q --trace-children=yes --leak-check=yes \
---num-callers=100 --leak-resolution=high \
+--num-callers=40 --leak-resolution=high \
 --suppressions=$(srcdir)/valgrind_suppressions
 
 else !VALGRIND_TESTS_ENABLED
@@ -47,8 +48,7 @@ pwl_test.cc
 
 LDADD = \
 ../src/libpwl.la \
-libpwl_tests.a \
--lm
+libpwl_tests.a
 
 noinst_HEADERS = \
 pwl_test.hh
@@ -56,7 +56,7 @@ pwl_test.hh
 EXTRA_DIST = valgrind_suppressions
 
 TESTS = \
-simple1
+watchdog1
 
 XFAIL_TESTS =
 
@@ -64,7 +64,7 @@ XFAIL_TESTS =
 # Sources for the tests
 #
 
-simple1_SOURCES = simple1.cc
+watchdog1_SOURCES = watchdog1.cc
 
 check_PROGRAMS = $(TESTS)
 

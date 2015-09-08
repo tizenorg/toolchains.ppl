@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -81,7 +82,8 @@ devref.tex \
 ppl.sty \
 $(PPL_SOURCE_FILES)
 
-##### Configuration Independent Language Interface Manuals #####
+
+if BUILD_C_INTERFACE
 
 # C Language Interface Manuals
 
@@ -124,6 +126,45 @@ devref-language-interface.tex \
 ../interfaces/C/ppl_c_implementation_common.inlines.hh \
 ../interfaces/C/ppl_c_implementation_common.cc
 
+
+# Configuration Dependent C Language Interface Manuals.
+
+USER_CONFIGURED_C_INTERFACE_HTML_MANUAL = \
+ppl-user-configured-c-interface-@VERSION@-html.tar.gz
+DEVREF_CONFIGURED_C_INTERFACE_HTML_MANUAL = \
+ppl-devref-configured-c-interface-@VERSION@-html.tar.gz
+
+USER_CONFIGURED_C_INTERFACE_PDF_MANUAL = \
+ppl-user-configured-c-interface-@VERSION@.pdf
+DEVREF_CONFIGURED_C_INTERFACE_PDF_MANUAL = \
+ppl-devref-configured-c-interface-@VERSION@.pdf
+
+USER_CONFIGURED_C_INTERFACE_PS_MANUAL = \
+ppl-user-configured-c-interface-@VERSION@.ps.gz
+DEVREF_CONFIGURED_C_INTERFACE_PS_MANUAL = \
+ppl-devref-configured-c-interface-@VERSION@.ps.gz
+
+USER_CONFIGURED_C_INTERFACE_HTML_DIR = \
+ppl-user-configured-c-interface-@VERSION@-html
+DEVREF_CONFIGURED_C_INTERFACE_HTML_DIR = \
+ppl-devref-configured-c-interface-@VERSION@-html
+
+USER_CONFIGURED_C_INTERFACE_STUFF = \
+$(COMMON_C_INTERFACE_STUFF) \
+$(top_builddir)/interfaces/C/ppl_c.h
+
+DEVREF_CONFIGURED_C_INTERFACE_STUFF = \
+$(COMMON_C_INTERFACE_STUFF) \
+$(top_builddir)/interfaces/C/ppl_c.h \
+../interfaces/C/ppl_c_implementation_common.defs.hh \
+../interfaces/C/ppl_c_implementation_common.inlines.hh \
+../interfaces/C/ppl_c_implementation_common.cc
+
+endif BUILD_C_INTERFACE
+
+
+if BUILD_SOME_PROLOG_INTERFACES
+
 # Prolog Language Interface Manuals
 
 USER_PROLOG_INTERFACE_HTML_MANUAL = \
@@ -160,6 +201,51 @@ ppl.sty \
 ../interfaces/Prolog/ppl_prolog_common.defs.hh \
 ../interfaces/Prolog/ppl_prolog_common.inlines.hh \
 ../interfaces/Prolog/ppl_prolog_common.cc
+
+
+# Configuration Dependent Prolog Language Interface Manuals
+
+USER_CONFIGURED_PROLOG_INTERFACE_HTML_MANUAL = \
+ppl-user-configured-prolog-interface-@VERSION@-html.tar.gz
+DEVREF_CONFIGURED_PROLOG_INTERFACE_HTML_MANUAL = \
+ppl-devref-configured-prolog-interface-@VERSION@-html.tar.gz
+
+USER_CONFIGURED_PROLOG_INTERFACE_PDF_MANUAL = \
+ppl-user-configured-prolog-interface-@VERSION@.pdf
+DEVREF_CONFIGURED_PROLOG_INTERFACE_PDF_MANUAL = \
+ppl-devref-configured-prolog-interface-@VERSION@.pdf
+
+USER_CONFIGURED_PROLOG_INTERFACE_PS_MANUAL = \
+ppl-user-configured-prolog-interface-@VERSION@.ps.gz
+DEVREF_CONFIGURED_PROLOG_INTERFACE_PS_MANUAL = \
+ppl-devref-configured-prolog-interface-@VERSION@.ps.gz
+
+USER_CONFIGURED_PROLOG_INTERFACE_HTML_DIR = \
+ppl-user-configured-prolog-interface-@VERSION@-html
+DEVREF_CONFIGURED_PROLOG_INTERFACE_HTML_DIR = \
+ppl-devref-configured-prolog-interface-@VERSION@-html
+
+USER_CONFIGURED_PROLOG_INTERFACE_STUFF = \
+$(DOX_LICENCE_FILES) \
+user-language-interface.tex \
+ppl.sty \
+$(top_builddir)/interfaces/Prolog/Prolog_configured_interface.dox
+
+DEVREF_CONFIGURED_PROLOG_INTERFACE_STUFF = \
+$(DOX_LICENCE_FILES) \
+devref-language-interface.tex \
+ppl.sty \
+$(top_builddir)/interfaces/Prolog/Prolog_configured_interface.dox \
+../interfaces/Prolog/ppl_prolog_common.defs.hh \
+../interfaces/Prolog/ppl_prolog_common.inlines.hh \
+../interfaces/Prolog/ppl_prolog_common.cc \
+$(top_builddir)/interfaces/Prolog/ppl_prolog_domains.hh \
+$(top_builddir)/interfaces/Prolog/ppl_prolog_domains.cc.stamp
+
+endif BUILD_SOME_PROLOG_INTERFACES
+
+
+if BUILD_OCAML_INTERFACE
 
 # OCaml Language Interface Manuals
 
@@ -199,6 +285,41 @@ ppl.sty \
 ../interfaces/OCaml/ppl_ocaml_common.inlines.hh \
 ../interfaces/OCaml/ppl_ocaml_common.cc \
 ../interfaces/OCaml/ppl_ocaml_globals.mli
+
+
+# Configuration Dependent OCaml Language Interface Manuals.
+
+USER_CONFIGURED_OCAML_INTERFACE_HTML_MANUAL = \
+ppl-user-configured-ocaml-interface-@VERSION@-html.tar.gz
+DEVREF_CONFIGURED_OCAML_INTERFACE_HTML_MANUAL = \
+ppl-devref-configured-ocaml-interface-@VERSION@-html.tar.gz
+
+USER_CONFIGURED_OCAML_INTERFACE_PDF_MANUAL = \
+ppl-user-configured-ocaml-interface-@VERSION@.pdf
+DEVREF_CONFIGURED_OCAML_INTERFACE_PDF_MANUAL = \
+ppl-devref-configured-ocaml-interface-@VERSION@.pdf
+
+USER_CONFIGURED_OCAML_INTERFACE_PS_MANUAL = \
+ppl-user-configured-ocaml-interface-@VERSION@.ps.gz
+DEVREF_CONFIGURED_OCAML_INTERFACE_PS_MANUAL = \
+ppl-devref-configured-ocaml-interface-@VERSION@.ps.gz
+
+USER_CONFIGURED_OCAML_INTERFACE_HTML_DIR = \
+ppl-user-configured-ocaml-interface-@VERSION@-html
+DEVREF_CONFIGURED_OCAML_INTERFACE_HTML_DIR = \
+ppl-devref-configured-ocaml-interface-@VERSION@-html
+
+USER_CONFIGURED_OCAML_INTERFACE_STUFF = \
+$(USER_OCAML_INTERFACE_STUFF) \
+$(top_builddir)/interfaces/OCaml/ppl_ocaml.mli
+
+DEVREF_CONFIGURED_OCAML_INTERFACE_STUFF = \
+$(DEVREF_OCAML_INTERFACE_STUFF) \
+$(top_builddir)/interfaces/OCaml/ppl_ocaml.mli
+
+endif BUILD_OCAML_INTERFACE
+
+if BUILD_JAVA_INTERFACE
 
 # Java Language Interface Manuals
 
@@ -281,123 +402,8 @@ $(JAVA_INTERFACE_JAVA_FILES) \
 ../interfaces/Java/jni/ppl_java_common.inlines.hh \
 ../interfaces/Java/jni/ppl_java_globals.cc
 
-##### Configuration Dependent Language Interface Manuals #####
-
-# Configuration Dependent C Language Interface Manuals.
-if BUILD_C_INTERFACE
-
-USER_CONFIGURED_C_INTERFACE_HTML_MANUAL = \
-ppl-user-configured-c-interface-@VERSION@-html.tar.gz
-DEVREF_CONFIGURED_C_INTERFACE_HTML_MANUAL = \
-ppl-devref-configured-c-interface-@VERSION@-html.tar.gz
-
-USER_CONFIGURED_C_INTERFACE_PDF_MANUAL = \
-ppl-user-configured-c-interface-@VERSION@.pdf
-DEVREF_CONFIGURED_C_INTERFACE_PDF_MANUAL = \
-ppl-devref-configured-c-interface-@VERSION@.pdf
-
-USER_CONFIGURED_C_INTERFACE_PS_MANUAL = \
-ppl-user-configured-c-interface-@VERSION@.ps.gz
-DEVREF_CONFIGURED_C_INTERFACE_PS_MANUAL = \
-ppl-devref-configured-c-interface-@VERSION@.ps.gz
-
-USER_CONFIGURED_C_INTERFACE_HTML_DIR = \
-ppl-user-configured-c-interface-@VERSION@-html
-DEVREF_CONFIGURED_C_INTERFACE_HTML_DIR = \
-ppl-devref-configured-c-interface-@VERSION@-html
-
-USER_CONFIGURED_C_INTERFACE_STUFF = \
-$(COMMON_C_INTERFACE_STUFF) \
-$(top_builddir)/interfaces/C/ppl_c.h
-
-DEVREF_CONFIGURED_C_INTERFACE_STUFF = \
-$(COMMON_C_INTERFACE_STUFF) \
-$(top_builddir)/interfaces/C/ppl_c.h \
-../interfaces/C/ppl_c_implementation_common.defs.hh \
-../interfaces/C/ppl_c_implementation_common.inlines.hh \
-../interfaces/C/ppl_c_implementation_common.cc
-
-endif BUILD_C_INTERFACE
-
-
-# Configuration Dependent Prolog Language Interface Manuals
-if BUILD_SOME_PROLOG_INTERFACES
-
-USER_CONFIGURED_PROLOG_INTERFACE_HTML_MANUAL = \
-ppl-user-configured-prolog-interface-@VERSION@-html.tar.gz
-DEVREF_CONFIGURED_PROLOG_INTERFACE_HTML_MANUAL = \
-ppl-devref-configured-prolog-interface-@VERSION@-html.tar.gz
-
-USER_CONFIGURED_PROLOG_INTERFACE_PDF_MANUAL = \
-ppl-user-configured-prolog-interface-@VERSION@.pdf
-DEVREF_CONFIGURED_PROLOG_INTERFACE_PDF_MANUAL = \
-ppl-devref-configured-prolog-interface-@VERSION@.pdf
-
-USER_CONFIGURED_PROLOG_INTERFACE_PS_MANUAL = \
-ppl-user-configured-prolog-interface-@VERSION@.ps.gz
-DEVREF_CONFIGURED_PROLOG_INTERFACE_PS_MANUAL = \
-ppl-devref-configured-prolog-interface-@VERSION@.ps.gz
-
-USER_CONFIGURED_PROLOG_INTERFACE_HTML_DIR = \
-ppl-user-configured-prolog-interface-@VERSION@-html
-DEVREF_CONFIGURED_PROLOG_INTERFACE_HTML_DIR = \
-ppl-devref-configured-prolog-interface-@VERSION@-html
-
-USER_CONFIGURED_PROLOG_INTERFACE_STUFF = \
-$(DOX_LICENCE_FILES) \
-user-language-interface.tex \
-ppl.sty \
-$(top_builddir)/interfaces/Prolog/Prolog_configured_interface.dox
-
-DEVREF_CONFIGURED_PROLOG_INTERFACE_STUFF = \
-$(DOX_LICENCE_FILES) \
-devref-language-interface.tex \
-ppl.sty \
-$(top_builddir)/interfaces/Prolog/Prolog_configured_interface.dox \
-../interfaces/Prolog/ppl_prolog_common.defs.hh \
-../interfaces/Prolog/ppl_prolog_common.inlines.hh \
-../interfaces/Prolog/ppl_prolog_common.cc \
-$(top_builddir)/interfaces/Prolog/ppl_prolog_domains.hh \
-$(top_builddir)/interfaces/Prolog/ppl_prolog_domains.cc.stamp
-
-endif BUILD_SOME_PROLOG_INTERFACES
-
-
-# Configuration Dependent OCaml Language Interface Manuals.
-if BUILD_OCAML_INTERFACE
-
-USER_CONFIGURED_OCAML_INTERFACE_HTML_MANUAL = \
-ppl-user-configured-ocaml-interface-@VERSION@-html.tar.gz
-DEVREF_CONFIGURED_OCAML_INTERFACE_HTML_MANUAL = \
-ppl-devref-configured-ocaml-interface-@VERSION@-html.tar.gz
-
-USER_CONFIGURED_OCAML_INTERFACE_PDF_MANUAL = \
-ppl-user-configured-ocaml-interface-@VERSION@.pdf
-DEVREF_CONFIGURED_OCAML_INTERFACE_PDF_MANUAL = \
-ppl-devref-configured-ocaml-interface-@VERSION@.pdf
-
-USER_CONFIGURED_OCAML_INTERFACE_PS_MANUAL = \
-ppl-user-configured-ocaml-interface-@VERSION@.ps.gz
-DEVREF_CONFIGURED_OCAML_INTERFACE_PS_MANUAL = \
-ppl-devref-configured-ocaml-interface-@VERSION@.ps.gz
-
-USER_CONFIGURED_OCAML_INTERFACE_HTML_DIR = \
-ppl-user-configured-ocaml-interface-@VERSION@-html
-DEVREF_CONFIGURED_OCAML_INTERFACE_HTML_DIR = \
-ppl-devref-configured-ocaml-interface-@VERSION@-html
-
-USER_CONFIGURED_OCAML_INTERFACE_STUFF = \
-$(USER_OCAML_INTERFACE_STUFF) \
-$(top_builddir)/interfaces/OCaml/ppl_ocaml.mli
-
-DEVREF_CONFIGURED_OCAML_INTERFACE_STUFF = \
-$(DEVREF_OCAML_INTERFACE_STUFF) \
-$(top_builddir)/interfaces/OCaml/ppl_ocaml.mli
-
-endif BUILD_OCAML_INTERFACE
 
 # Configuration Dependent Java Language Interface Manuals.
-if BUILD_JAVA_INTERFACE
 
 USER_CONFIGURED_JAVA_INTERFACE_HTML_MANUAL = \
 ppl-user-configured-java-interface-@VERSION@-html.tar.gz
@@ -869,6 +875,7 @@ $(SED_LATEX_OPTION) \
 # C Language Interface Targets
 
 SED_C_OPTION = \
+  -e 's/<PPL_SED_CONFIGURED_MANUAL>//' \
   -e 's/<PPL_SED_LANGUAGE_NAME>/C/' \
   -e 's/<PPL_SED_INTERFACE_NAME>/c-interface/' \
   -e 's/<PPL_SED_USEPACKAGE_OCAMLDOC>//'
@@ -949,6 +956,7 @@ $(DEVREF_C_INTERFACE_STUFF) $(DEVREF_CORE_HTML_DIR)
 # (System Independent) Prolog Language Interface Targets
 
 SED_PROLOG_OPTION = \
+  -e 's/<PPL_SED_CONFIGURED_MANUAL>//' \
   -e 's/<PPL_SED_LANGUAGE_NAME>/Prolog/' \
   -e 's/<PPL_SED_INTERFACE_NAME>/prolog-interface/' \
   -e 's/<PPL_SED_USEPACKAGE_OCAMLDOC>//'
@@ -1025,6 +1033,7 @@ $(DEVREF_PROLOG_INTERFACE_STUFF) $(DEVREF_CORE_HTML_DIR)
 # OCaml Language Interface Targets
 
 SED_OCAML_OPTION = \
+  -e 's/<PPL_SED_CONFIGURED_MANUAL>//' \
   -e 's/<PPL_SED_LANGUAGE_NAME>/OCaml/' \
   -e 's/<PPL_SED_INTERFACE_NAME>/ocaml-interface/' \
   -e 's/<PPL_SED_USEPACKAGE_OCAMLDOC>/\\usepackage{ocamldoc}/'
@@ -1058,7 +1067,7 @@ $(USER_OCAML_INTERFACE_STUFF)
 	  -e 's|<PPL_SED_INPUT>|'"$(SED_OCAML_INPUT_USER)"'|' \
 	  $<  > Doxyfile.user-ocaml-interface-latex
 	$(TEX_ENV) $(DOXYGEN) Doxyfile.user-ocaml-interface-latex
-	ocamldoc $(OCAMLDOC_LATEX_OPTIONS) -o $@/ocamldoc.tex \
+	$(OCAMLDOC) $(OCAMLDOC_LATEX_OPTIONS) -o $@/ocamldoc.tex \
 		$(srcdir)/../interfaces/OCaml/ppl_ocaml_globals.mli
 
 devref-ocaml-interface.latex-dir: \
@@ -1072,7 +1081,7 @@ $(DEVREF_OCAML_INTERFACE_STUFF)
 	  -e 's|<PPL_SED_INPUT>|'"$(SED_OCAML_INPUT_DEVREF)"'|' \
 	  $<  > Doxyfile.devref-ocaml-interface-latex
 	$(TEX_ENV) $(DOXYGEN) Doxyfile.devref-ocaml-interface-latex
-	ocamldoc $(OCAMLDOC_LATEX_OPTIONS) -o $@/ocamldoc.tex \
+	$(OCAMLDOC) $(OCAMLDOC_LATEX_OPTIONS) -o $@/ocamldoc.tex \
 		$(srcdir)/../interfaces/OCaml/ppl_ocaml_globals.mli
 
 ppl-user-ocaml-interface-@VERSION@.pdf: user-ocaml-interface.latex-dir
@@ -1095,7 +1104,7 @@ $(USER_OCAML_INTERFACE_STUFF) $(USER_CORE_HTML_DIR)
 	(cd $@; $(INSTALLDOX) \
 		-l $(USER_CORE_HTML_DIR).tag@../$(USER_CORE_HTML_DIR))
 	mkdir $@/ocamldoc
-	ocamldoc $(OCAMLDOC_HTML_OPTIONS) -d $@/ocamldoc \
+	$(OCAMLDOC) $(OCAMLDOC_HTML_OPTIONS) -d $@/ocamldoc \
 		$(srcdir)/../interfaces/OCaml/ppl_ocaml_globals.mli
 
 ppl-devref-ocaml-interface-@VERSION@-html: \
@@ -1112,12 +1121,13 @@ $(DEVREF_OCAML_INTERFACE_STUFF) $(DEVREF_CORE_HTML_DIR)
 	(cd $@; $(INSTALLDOX) \
 		-l $(DEVREF_CORE_HTML_DIR).tag@../$(DEVREF_CORE_HTML_DIR))
 	mkdir $@/ocamldoc
-	ocamldoc $(OCAMLDOC_HTML_OPTIONS) -d $@/ocamldoc \
+	$(OCAMLDOC) $(OCAMLDOC_HTML_OPTIONS) -d $@/ocamldoc \
 		$(srcdir)/../interfaces/OCaml/ppl_ocaml_globals.mli
 
 # Java Language Interface Targets
 
 SED_JAVA_OPTION = \
+  -e 's/<PPL_SED_CONFIGURED_MANUAL>//' \
   -e 's/<PPL_SED_LANGUAGE_NAME>/Java/' \
   -e 's/<PPL_SED_INTERFACE_NAME>/java-interface/' \
   -e 's/<PPL_SED_USEPACKAGE_OCAMLDOC>//'
@@ -1200,6 +1210,7 @@ $(DEVREF_JAVA_INTERFACE_STUFF) $(DEVREF_CORE_HTML_DIR)
 if BUILD_C_INTERFACE
 
 SED_CONFIGURED_C_OPTION = \
+  -e 's/<PPL_SED_CONFIGURED_MANUAL>/PPL_DOXYGEN_CONFIGURED_MANUAL/' \
   -e 's/<PPL_SED_LANGUAGE_NAME>/Configured C/' \
   -e 's/<PPL_SED_INTERFACE_NAME>/configured-c-interface/' \
   -e 's/<PPL_SED_USEPACKAGE_OCAMLDOC>//'
@@ -1284,6 +1295,7 @@ endif BUILD_C_INTERFACE
 if BUILD_SOME_PROLOG_INTERFACES
 
 SED_CONFIGURED_PROLOG_OPTION = \
+  -e 's/<PPL_SED_CONFIGURED_MANUAL>/PPL_DOXYGEN_CONFIGURED_MANUAL/' \
   -e 's/<PPL_SED_LANGUAGE_NAME>/Configured Prolog/' \
   -e 's/<PPL_SED_INTERFACE_NAME>/configured-prolog-interface/' \
   -e 's/<PPL_SED_USEPACKAGE_OCAMLDOC>//'
@@ -1366,6 +1378,7 @@ endif BUILD_SOME_PROLOG_INTERFACES
 if BUILD_OCAML_INTERFACE
 
 SED_CONFIGURED_OCAML_OPTION = \
+  -e 's/<PPL_SED_CONFIGURED_MANUAL>/PPL_DOXYGEN_CONFIGURED_MANUAL/' \
   -e 's/<PPL_SED_LANGUAGE_NAME>/Configured OCaml/' \
   -e 's/<PPL_SED_INTERFACE_NAME>/configured-ocaml-interface/' \
   -e 's/<PPL_SED_USEPACKAGE_OCAMLDOC>/\\usepackage{ocamldoc}/'
@@ -1392,7 +1405,7 @@ $(USER_CONFIGURED_OCAML_INTERFACE_STUFF)
 	  -e 's|<PPL_SED_INPUT>|'"$(SED_CONFIGURED_OCAML_INPUT_USER)"'|' \
 	  $<  > Doxyfile.user-configured-ocaml-interface-latex
 	$(TEX_ENV) $(DOXYGEN) Doxyfile.user-configured-ocaml-interface-latex
-	ocamldoc $(OCAMLDOC_LATEX_OPTIONS) -o $@/ocamldoc.tex \
+	$(OCAMLDOC) $(OCAMLDOC_LATEX_OPTIONS) -o $@/ocamldoc.tex \
 		../interfaces/OCaml/ppl_ocaml.mli
 
 devref-configured-ocaml-interface.latex-dir: \
@@ -1406,7 +1419,7 @@ $(DEVREF_CONFIGURED_OCAML_INTERFACE_STUFF)
 	  -e 's|<PPL_SED_INPUT>|'"$(SED_CONFIGURED_OCAML_INPUT_DEVREF)"'|' \
 	  $<  > Doxyfile.devref-configured-ocaml-interface-latex
 	$(TEX_ENV) $(DOXYGEN) Doxyfile.devref-configured-ocaml-interface-latex
-	ocamldoc $(OCAMLDOC_LATEX_OPTIONS) -o $@/ocamldoc.tex \
+	$(OCAMLDOC) $(OCAMLDOC_LATEX_OPTIONS) -o $@/ocamldoc.tex \
 		../interfaces/OCaml/ppl_ocaml.mli
 
 ppl-user-configured-ocaml-interface-@VERSION@.pdf: \
@@ -1431,7 +1444,7 @@ $(USER_CONFIGURED_OCAML_INTERFACE_STUFF) $(USER_CORE_HTML_DIR)
 	(cd $@; $(INSTALLDOX) \
 		-l $(USER_CORE_HTML_DIR).tag@../$(USER_CORE_HTML_DIR))
 	mkdir $@/ocamldoc
-	ocamldoc $(OCAMLDOC_HTML_OPTIONS) -d $@/ocamldoc \
+	$(OCAMLDOC) $(OCAMLDOC_HTML_OPTIONS) -d $@/ocamldoc \
 		../interfaces/OCaml/ppl_ocaml.mli
 
 ppl-devref-configured-ocaml-interface-@VERSION@-html: \
@@ -1448,7 +1461,7 @@ $(DEVREF_CONFIGURED_OCAML_INTERFACE_STUFF) $(DEVREF_CORE_HTML_DIR)
 	(cd $@; $(INSTALLDOX) \
 		-l $(DEVREF_CORE_HTML_DIR).tag@../$(DEVREF_CORE_HTML_DIR))
 	mkdir $@/ocamldoc
-	ocamldoc $(OCAMLDOC_HTML_OPTIONS) -d $@/ocamldoc \
+	$(OCAMLDOC) $(OCAMLDOC_HTML_OPTIONS) -d $@/ocamldoc \
 		../interfaces/OCaml/ppl_ocaml.mli
 
 endif BUILD_OCAML_INTERFACE
@@ -1457,6 +1470,7 @@ endif BUILD_OCAML_INTERFACE
 if BUILD_JAVA_INTERFACE
 
 SED_CONFIGURED_JAVA_OPTION = \
+  -e 's/<PPL_SED_CONFIGURED_MANUAL>/PPL_DOXYGEN_CONFIGURED_MANUAL/' \
   -e 's/<PPL_SED_LANGUAGE_NAME>/Configured Java/' \
   -e 's/<PPL_SED_INTERFACE_NAME>/configured-java-interface/' \
   -e 's/<PPL_SED_USEPACKAGE_OCAMLDOC>//'

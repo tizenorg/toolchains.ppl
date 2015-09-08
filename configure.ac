@@ -1,5 +1,6 @@
 # Autoconf source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -23,7 +24,7 @@
 # Process this file with Autoconf to produce a configure script.
 
 # Every other copy of the package version number gets its value from here.
-AC_INIT([the Parma Polyhedra Library], [0.10.2], [ppl-devel@cs.unipr.it], [ppl])
+AC_INIT([the Parma Polyhedra Library], [0.11.2], [ppl-devel@cs.unipr.it], [ppl])
 
 # Minimum Autoconf version required.
 AC_PREREQ(2.61)
@@ -39,7 +40,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
 
 # Use Automake.
-AM_INIT_AUTOMAKE([foreign no-define dist-bzip2 dist-zip tar-ustar 1.9])
+AM_INIT_AUTOMAKE([foreign no-define dist-bzip2 dist-zip dist-lzma tar-ustar silent-rules 1.11])
 
 AC_SUBST(VERSION)
 
@@ -78,6 +79,8 @@ ISODATE=`date +%Y-%m-%d`
 AC_SUBST(ISODATE)
 
 AH_TOP([
+/* BEGIN ppl-config.h */
+
 /* Unique (nonzero) code for the IEEE 754 Single Precision
    floating point format.  */
 #define PPL_FLOAT_IEEE754_SINGLE 1
@@ -116,6 +119,8 @@ AH_BOTTOM([
 #ifdef PPL_HAVE_INTTYPES_H
 # include <inttypes.h>
 #endif
+
+/* END ppl-config.h */
 ])
 
 
@@ -241,6 +246,7 @@ yes)
   AC_MSG_RESULT(yes)
   OPT_FLAGS="-g"
   COMP_FLAGS="$COMP_FLAGS -fprofile-arcs -ftest-coverage"
+  extra_libraries="${extra_libraries} -lgcov"
   ;;
 no)
   AC_MSG_RESULT(no)
@@ -372,23 +378,24 @@ no)
 esac
 
 enableval=default
+use_fpmath=yes
 fpmath_may_use_387=yes
 fpmath_may_use_sse=yes
-AC_MSG_CHECKING([whether to select specific floating point arithmetics])
+AC_MSG_CHECKING([whether to use (a specific) floating point arithmetic])
 AC_ARG_ENABLE(fpmath,
   AS_HELP_STRING([--enable-fpmath=INSTRUCTION_SET],
-                 [select floating point arithmetics]))
+                 [select floating point arithmetic]))
 case "${enableval}" in
 sse)
   AC_MSG_RESULT(sse)
   OPT_FLAGS="$OPT_FLAGS -msse -mfpmath=sse"
-  # The SSE instruction set only supports single precision arithmetics:
-  # double and extended precision arithmetics is still done using 387.
+  # The SSE instruction set only supports single precision arithmetic:
+  # double and extended precision arithmetic is still done using 387.
   ;;
 sse2)
   AC_MSG_RESULT(sse2)
   OPT_FLAGS="$OPT_FLAGS -msse2 -mfpmath=sse"
-  # SSE2 still does not support extended precision arithmetics.
+  # SSE2 still does not support extended precision arithmetic.
   ;;
 387)
   AC_MSG_RESULT(387)
@@ -412,7 +419,8 @@ default)
   AC_MSG_RESULT(default)
   ;;
 no)
-  AC_MSG_RESULT(default)
+  AC_MSG_RESULT(no)
+  use_fpmath=no
   ;;
 *)
   AC_MSG_ERROR([bad value ${enableval} for --enable-fpmath, needs sse, sse2, 387, sse+387, sse2+387, default or no])
@@ -421,12 +429,12 @@ esac
 
 if test x"$fpmath_may_use_387" = xyes
 then
-  AC_DEFINE(PPL_FPMATH_MAY_USE_387, 1, [Defined if floating point arithmetics may use the 387 unit.])
+  AC_DEFINE(PPL_FPMATH_MAY_USE_387, 1, [Defined if floating point arithmetic may use the 387 unit.])
 fi
 
 if test x"$fpmath_may_use_sse" = xyes
 then
-  AC_DEFINE(PPL_FPMATH_MAY_USE_SSE, 1, [Defined if floating point arithmetics may use the SSE instruction set.])
+  AC_DEFINE(PPL_FPMATH_MAY_USE_SSE, 1, [Defined if floating point arithmetic may use the SSE instruction set.])
 fi
 
 # Disable all transformations and optimizations that assume default
@@ -490,7 +498,7 @@ x86_64*)
 esac
 
 case "${host_os}" in
-cygwin)
+cygwin*)
   cygwin=yes
   no_undefined=yes
   ;;
@@ -499,6 +507,7 @@ darwin*)
   ;;
 mingw*)
   mingw=yes
+  no_undefined=yes
   ;;
 solaris*)
   solaris=yes
@@ -599,7 +608,7 @@ then
   AC_DEFINE(PPL_NATIVE_INTEGERS, 1, [Defined if the integral type to be used for coefficients is a native one.])
 elif test x"$coefficient_kind" = xchecked
 then
-  coefficient_type="Parma_Polyhedra_Library::Checked_Number<int${coefficient_bits}_t>"
+  coefficient_type="Parma_Polyhedra_Library::Checked_Number<int${coefficient_bits}_t, Bounded_Integer_Coefficient_Policy>"
   AC_DEFINE_UNQUOTED(PPL_COEFFICIENT_TYPE, $coefficient_type)
   AC_DEFINE_UNQUOTED(PPL_COEFFICIENT_BITS, $coefficient_bits)
   AC_DEFINE(PPL_CHECKED_INTEGERS, 1, [Defined if the integral type to be used for coefficients is a checked one.])
@@ -610,22 +619,17 @@ then
   AC_DEFINE(PPL_GMP_INTEGERS, 1, [Defined if the integral type to be used for coefficients is GMP's one.])
 fi
 
-# Allow additions to C and C++ compilation flags.
-
+# Allow additions to C compilation flags.
 AC_ARG_WITH(cflags,
   AS_HELP_STRING([--with-cflags=XXX],
                  [add XXX to the options for the C compiler]),
   CFLAGS="$CFLAGS $with_cflags")
 
+# Allow additions to C++ compilation flags.
 AC_ARG_WITH(cxxflags,
   AS_HELP_STRING([--with-cxxflags=XXX],
                  [add XXX to the options for the C++ compiler]),
   CXXFLAGS="$CXXFLAGS $with_cxxflags")
-
-# Check for Perl.
-AC_PATH_PROG([PERL], perl, no)
-AC_SUBST([PERL])
-AM_CONDITIONAL(HAVE_PERL, test x"$PERL" != xno)
 
 # Checks for C typedefs, structures, compiler and architecture characteristics.
 AC_LANG(C)
@@ -650,11 +654,30 @@ AC_CHECK_SIZEOF(long double)
 AC_CHECK_SIZEOF([int*])
 AC_CHECK_SIZEOF([fp], [], [typedef int *(*fp)();])
 
+# Check for Perl.
+AC_PATH_PROG([PERL], perl, no)
+AC_SUBST([PERL])
+AM_CONDITIONAL(HAVE_PERL, test x"$PERL" != xno)
+
 # Use C++ for the remaining checks.
 AC_LANG(C++)
 
-# Check for the possibility to control the FPU.
-AC_CHECK_FPU_CONTROL
+# The PPL uses <cmath> for sqrt and other functions in several places.
+AC_SEARCH_LIBS([sqrt], [m])
+
+if test x"$use_fpmath" = xyes
+then
+  # Check for the possibility to control the FPU.
+  AC_CHECK_FPU_CONTROL
+else
+  ac_cv_can_control_fpu=0
+fi
+AM_CONDITIONAL(CAN_CONTROL_FPU, test $ac_cv_can_control_fpu = 1)
+AC_DEFINE_UNQUOTED(PPL_CAN_CONTROL_FPU, $ac_cv_can_control_fpu,
+    [Not zero if the FPU can be controlled.])
+
+# Check whether for the C++ compiler the plain char type is signed.
+AC_CXX_PLAIN_CHAR_IS_SIGNED
 
 # Check whether the C++ compiler provides proper long doubles.
 AC_CXX_PROVIDES_PROPER_LONG_DOUBLE
@@ -712,10 +735,12 @@ AC_CHECK_DECLS([fma,fmaf,fmal,rintf,rintl], , , [#include <cmath>])
 # Checks for the availability of "fast" integral types.
 AC_CHECK_TYPES([int_fast16_t,int_fast32_t,int_fast64_t,uint_fast16_t,uint_fast32_t,uint_fast64_t])
 
-# Must link everything with libm.
-extra_libraries="${extra_libraries} -lm"
+# Make sure uintptr_t is defined to an unsigned integer type wide enough
+# to hold a pointer, if such a type exists.
+AC_TYPE_UINTPTR_T
 
-# GMP library.
+
+# Checks on the GMP library.
 
 AC_CHECK_GMP
 if test x"$have_gmp" = xno
@@ -755,26 +780,14 @@ fi
 extra_includes="${extra_includes}${extra_includes:+ }${gmp_includes_option}"
 extra_libraries="${extra_libraries}${extra_libraries:+ }${gmp_library_option}"
 
-# setitimer() is a strong requisite for the PWL.
-AC_CHECK_FUNCS([setitimer], [have_setitimer=yes], [have_setitimer=no])
-
-enableval=default
+enableval=yes
 AC_MSG_CHECKING([whether to build the Parma Watchdog Library])
 AC_ARG_ENABLE(watchdog,
   AS_HELP_STRING([--enable-watchdog],
                  [build also the Parma Watchdog Library]))
 case "${enableval}" in
 yes)
-  if test x"$have_setitimer" = xyes
-  then
-    build_watchdog_library=yes
-  else
-    AC_MSG_ERROR([CANNOT BUILD THE WATCHDOG LIBRARY
-*** THE SYSTEM DOES NOT PROVIDE THE SETITIMER FUNCTION.])
-  fi
-  ;;
-default)
-  build_watchdog_library=$have_setitimer
+  build_watchdog_library=yes
   ;;
 no)
   build_watchdog_library=no
@@ -828,6 +841,24 @@ no)
 esac
 build_ppl_lpsol=$enableval
 AM_CONDITIONAL(BUILD_PPL_LPSOL, test x"$build_ppl_lpsol" = xyes)
+
+enableval=yes
+AC_MSG_CHECKING([whether to build the ppl_pips program])
+AC_ARG_ENABLE(ppl_pips,
+  AS_HELP_STRING([--enable-ppl_pips], [build the ppl_pips program]))
+case "${enableval}" in
+yes)
+  AC_MSG_RESULT(yes)
+  ;;
+no)
+  AC_MSG_RESULT(no)
+  ;;
+*)
+  AC_MSG_ERROR([bad value ${enableval} for --enable-ppl_pips, needs yes or no])
+  ;;
+esac
+build_ppl_pips=$enableval
+AM_CONDITIONAL(BUILD_PPL_PIPS, test x"$build_ppl_pips" = xyes)
 
 # Define lists of available interfaces: lowercase and blank-separated.
 non_prolog_interfaces="cxx c ocaml java"
@@ -895,17 +926,13 @@ xall)
   ;;
 esac
 
-# Perl is needed to build the C++ interface.
-if test x${cxx_interface_enabled} = xyes \
-&& test x"$PERL" != xno
+if test x${cxx_interface_enabled} = xyes
 then
   build_cxx_interface=yes
 fi
 AM_CONDITIONAL(BUILD_CXX_INTERFACE, test x$build_cxx_interface = xyes)
 
-# Perl is needed to build the C interface.
-if test x${c_interface_enabled} = xyes \
-&& test x"$PERL" != xno
+if test x${c_interface_enabled} = xyes
 then
   build_c_interface=yes
 fi
@@ -926,7 +953,7 @@ darwin*)
     java_dir="/Library/Java/Home"
   fi
   ;;
-# On Fedora 9 systems the JDK is usually in /usr/lib/jvm/java .
+# On modern Fedora systems the JDK is usually in /usr/lib/jvm/java .
 linux*)
   if test "x$java_dir" = x
   then
@@ -1000,41 +1027,36 @@ AC_ARG_WITH(mlgmp,
 # Checks for OCaml.
 if test x${ocaml_interface_enabled} = xyes
 then
-  # Check for the bytecode compiler.
-  AC_CHECK_PROG(OCAMLC, ocamlc, ocamlc)
-  ocamlc_gmp="no"
-  if test x"$OCAMLC" = xocamlc
+  # Detect which tools of the OCaml toolchain are available.
+  AC_PROG_OCAML
+  if test x"$OCAMLC" != xno
   then
-     ocamlc_root=`ocamlc -where`
-     # Check for the bytecode version of ML GMP.
-     AC_MSG_CHECKING([for ML GMP bytecode module gmp.cma])
-     if ( test ${mlgmp_dir} = +gmp && test -f ${ocamlc_root}/gmp/gmp.cma ) \
-        || test -f ${mlgmp_dir}/gmp.cma;
-     then
-         AC_MSG_RESULT(yes)
-	 ocamlc_gmp="yes"
-     else
-         AC_MSG_RESULT(no)
-	 ocamlc_gmp="no"
-     fi
-  fi
-  # Check for the native compiler.
-  AC_CHECK_PROG(OCAMLOPT, ocamlopt, ocamlopt)
-  ocamlopt_gmp="no"
-  if test x"$OCAMLOPT" = xocamlopt
-  then
-     ocamlopt_root=`ocamlopt -where`
-     # Check for the native version of ML GMP.
-     AC_MSG_CHECKING([for ML GMP native module gmp.cmxa])
-     if ( test ${mlgmp_dir} = +gmp && test -f ${ocamlopt_root}/gmp/gmp.cmxa ) \
+    # Check for the bytecode version of ML GMP.
+    AC_MSG_CHECKING([for ML GMP bytecode module gmp.cma])
+    if ( test ${mlgmp_dir} = +gmp && test -f ${OCAMLLIB}/gmp/gmp.cma ) \
+      || test -f ${mlgmp_dir}/gmp.cma;
+    then
+      AC_MSG_RESULT(yes)
+      ocamlc_gmp="yes"
+    else
+      AC_MSG_RESULT(no)
+      ocamlc_gmp="no"
+    fi
+    if test x"$OCAMLOPT" != xno
+    then
+      ocamlopt_root=`${OCAMLOPT} -where`
+      # Check for the native version of ML GMP.
+      AC_MSG_CHECKING([for ML GMP native module gmp.cmxa])
+      if ( test ${mlgmp_dir} = +gmp && test -f ${ocamlopt_root}/gmp/gmp.cmxa ) \
         || test -f ${mlgmp_dir}/gmp.cmxa;
-     then
-         AC_MSG_RESULT(yes)
-	 ocamlopt_gmp="yes"
-     else
-         AC_MSG_RESULT(no)
-	 ocamlopt_gmp="no"
-     fi
+      then
+        AC_MSG_RESULT(yes)
+        ocamlopt_gmp="yes"
+      else
+        AC_MSG_RESULT(no)
+	ocamlopt_gmp="no"
+      fi
+    fi
   fi
 fi
 AM_CONDITIONAL(HAVE_OCAMLC, test x$ocamlc_gmp = xyes)
@@ -1129,17 +1151,11 @@ AM_CONDITIONAL(BUILD_XSB_PROLOG_INTERFACE,
 # Checks for YAP.
 if test x${yap_prolog_interface_enabled} = xyes
 then
-  AC_CHECK_PROG(YAP_PROLOG, yap, yap)
-  if test x"$YAP_PROLOG" = xyap
-  then
-    AC_CHECK_HEADER(Yap/c_interface.h,
-                    [],
-                    YAP_PROLOG="")
-  fi
+  AC_CHECK_YAP_PROLOG
 fi
 
 if test x${yap_prolog_interface_enabled} = xyes \
-&& test x$YAP_PROLOG = xyap
+&& test x$have_yap_prolog = xyes
 then
   build_yap_prolog_interface=yes
 fi
@@ -1272,7 +1288,7 @@ xno | xnone)
     enableval=${available_instantiations}
   fi
   # Avoid extra blanks.
-  required_instantiations=`echo "${enableval}" | sed -e 's/[[	 ]][[	 ]]*/ /g' -e 's/[[ ]]*\([[@<>,]]\)[[ ]]*/\1/g' -e 's/>>/> >/g' -e 's/^[[ ]]//g' -e 's/[[ ]]$//g'`
+  required_instantiations=`echo "${enableval}" | sed -e 's/[[	 ]][[	 ]]*/ /g' -e 's/[[ ]]*\([[@<>,]]\)/\1/g' -e 's/\([[@<>,]]\)[[ ]]*/\1/g' -e 's/>>/> >/g' -e 's/^[[ ]]//g' -e 's/[[ ]]$//g'`
   # Check the specified instantiations for validity.
   ac_save_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS -I${srcdir}"
@@ -1372,7 +1388,8 @@ esac
 AM_CONDITIONAL(THOROUGH_MAKE_CHECK, test x"$enableval" = xthorough)
 
 # Libtool.
-LT_INIT([dlopen])
+LT_PREREQ([1.5.24])
+LT_INIT([dlopen,win32-dll])
 AM_CONDITIONAL(ENABLE_SHARED, test x"$enable_shared" = xyes)
 AM_CONDITIONAL(ENABLE_STATIC, test x"$enable_static" = xyes)
 
@@ -1457,6 +1474,7 @@ AC_CHECK_DECLS([getrusage],
 # include <sys/resource.h>
 #endif
 ])
+AC_CHECK_DECLS([sigaction], , , [#include <csignal>])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_TYPES([timeval])
@@ -1492,6 +1510,7 @@ then
   fi
 fi
 
+
 AC_SUBST(LIBEXT, [$libext])
 AC_SUBST(SHREXT, [$shrext_cmds])
 AC_SUBST(extra_includes)
@@ -1517,7 +1536,6 @@ AC_SUBST(required_instantiations_java_cxx_objects)
 AC_SUBST(required_instantiations_ocaml_cxx_headers)
 AC_SUBST(required_instantiations_ocaml_cxx_sources)
 AC_SUBST(required_instantiations_ocaml_cxx_objects)
-AC_SUBST(ocamlc_root)
 AC_SUBST(mlgmp_dir)
 
 AC_CONFIG_FILES(Makefile
@@ -1532,6 +1550,7 @@ AC_CONFIG_FILES(Makefile
                 tests/MIP_Problem/Makefile
                 tests/Octagonal_Shape/Makefile
                 tests/Partially_Reduced_Product/Makefile
+                tests/PIP_Problem/Makefile
                 tests/Polyhedron/Makefile
                 tests/Powerset/Makefile
                 utils/Makefile
@@ -1541,6 +1560,8 @@ AC_CONFIG_FILES(Makefile
                 demos/ppl_lcdd/examples/Makefile
                 demos/ppl_lpsol/Makefile
                 demos/ppl_lpsol/examples/Makefile
+                demos/ppl_pips/Makefile
+                demos/ppl_pips/examples/Makefile
                 doc/Makefile
                 doc/user.doxyconf-latex
                 doc/devref.doxyconf-latex
@@ -1584,23 +1605,13 @@ fi
 
 if test x"$PERL" = xno
 then
-  if test x${c_interface_enabled} = xyes
-  then
-    AC_MSG_ERROR([PERL UNAVAILABLE:
-***  CANNOT BUILD THE C_INTERFACE.
-*** Perl could not be found on your system, so that the C interface cannot
-*** be built.  You should either disable the generation of the C interface
-*** (with the `--enable-interfaces' configure option) or add Perl to your
-*** development environment: see http://www.perl.org/ for more information.])
-  else
-    AC_MSG_WARN([PERL UNAVAILABLE:
+  AC_MSG_WARN([PERL UNAVAILABLE:
 ***  CANNOT REBUILD SOME FILES IF SOURCES ARE CHANGED.
 *** Perl could not be found on your system.  This is OK, if you only plan
 *** to build the PPL without modifying the sources and without trying to
 *** build a distribution out of a CVS working copy.  If this is not the case,
 *** then you need to add Perl to your development environment:
 *** see http://www.perl.org/ for more information.])
-  fi
 fi
 
 if test x"$coefficient_kind" = xnative

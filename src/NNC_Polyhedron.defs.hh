@@ -1,5 +1,6 @@
 /* NNC_Polyhedron class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -220,7 +221,7 @@ public:
   explicit NNC_Polyhedron(const Octagonal_Shape<U>& os,
                           Complexity_Class complexity = ANY_COMPLEXITY);
 
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   NNC_Polyhedron(const NNC_Polyhedron& y,
                  Complexity_Class complexity = ANY_COMPLEXITY);
 

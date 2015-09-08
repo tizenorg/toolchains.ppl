@@ -1,5 +1,6 @@
 /* Inline functions operating on enum Rounding_Dir values.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -23,7 +24,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #ifndef PPL_Rounding_Dir_inlines_hh
 #define PPL_Rounding_Dir_inlines_hh 1
 
-#include <cassert>
+#include "assert.hh"
 
 namespace Parma_Polyhedra_Library {
 
@@ -48,6 +49,16 @@ round_ignore(Rounding_Dir dir) {
 }
 
 inline bool
+round_not_needed(Rounding_Dir dir) {
+  return round_dir(dir) == ROUND_NOT_NEEDED;
+}
+
+inline bool
+round_not_requested(Rounding_Dir dir) {
+  return round_dir(dir) == ROUND_IGNORE || round_dir(dir) == ROUND_NOT_NEEDED;
+}
+
+inline bool
 round_direct(Rounding_Dir dir) {
   return round_dir(dir) == ROUND_DIRECT;
 }
@@ -58,8 +69,8 @@ round_inverse(Rounding_Dir dir) {
 }
 
 inline bool
-round_fpu_check_inexact(Rounding_Dir dir) {
-  return dir & ROUND_FPU_CHECK_INEXACT;
+round_strict_relation(Rounding_Dir dir) {
+  return dir & ROUND_STRICT_RELATION;
 }
 
 #if PPL_CAN_CONTROL_FPU
@@ -72,7 +83,7 @@ round_fpu_dir(Rounding_Dir dir) {
   case ROUND_DOWN:
     return static_cast<fpu_rounding_direction_type>(PPL_FPU_DOWNWARD);
   default:
-    assert(false);
+    PPL_ASSERT(false);
     return static_cast<fpu_rounding_direction_type>(PPL_FPU_UPWARD);
   }
 }
@@ -96,12 +107,16 @@ inverse(Rounding_Dir dir) {
     d = ROUND_UP;
     break;
   default:
-    assert(false);
+    PPL_ASSERT(false);
     /* Fall through */
   case ROUND_IGNORE:
     return dir;
   }
   return static_cast<Rounding_Dir>((dir & ~ROUND_DIR_MASK) | d);
+}
+
+inline Rounding_Dir operator|(Rounding_Dir x, Rounding_Dir y) {
+  return static_cast<Rounding_Dir>((unsigned)x | (unsigned)y);
 }
 
 } // namespace Parma_Polyhedra_Library

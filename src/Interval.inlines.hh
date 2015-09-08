@@ -1,5 +1,6 @@
 /* Inline functions for the Interval class and its constituents.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -24,6 +25,17 @@ site: http://www.cs.unipr.it/ppl/ . */
 #define PPL_Interval_inlines_hh 1
 
 namespace Parma_Polyhedra_Library {
+
+template <typename From>
+typename Enable_If<Is_Interval<From>::value, I_Result>::type
+neg_assign(From& x) {
+  // FIXME: Avoid the creation of a temporary.
+  From y;
+  typename Enable_If<Is_Interval<From>::value, I_Result>::type res =
+                                                               y.neg_assign(x);
+  x = y;
+  return res;
+}
 
 template <typename Boundary, typename Info>
 inline memory_size_type
@@ -83,7 +95,6 @@ f_info(const Interval<Boundary, Info>& x) {
 struct Scalar_As_Interval_Policy {
   const_bool_nodef(may_be_empty, true);
   const_bool_nodef(may_contain_infinity, true);
-  const_bool_nodef(check_empty_result, false);
   const_bool_nodef(check_inexact, false);
 };
 
@@ -126,15 +137,6 @@ f_is_singleton(const T& x) {
   return !f_is_empty(x);
 }
 
-template <typename T>
-inline typename Enable_If<Is_Singleton<T>::value || Is_Interval<T>::value, Ternary>::type
-f_is_empty_lazy(const T& x) {
-  if (f_info(x).get_interval_property(CARDINALITY_0))
-    return f_info(x).get_interval_property(CARDINALITY_IS) ? T_YES : T_NO;
-  else
-    return T_MAYBE;
-}
-
 } // namespace Interval_NS
 
 template <typename T>
@@ -149,18 +151,9 @@ check_empty_arg(const T& x) {
   if (f_info(x).may_be_empty)
     return f_is_empty(x);
   else {
-    assert(!f_is_empty(x));
+    PPL_ASSERT(!f_is_empty(x));
     return false;
   }
-}
-
-template <typename Boundary, typename Info>
-inline I_Result
-check_empty_result(const Interval<Boundary, Info>& x, I_Result r) {
-  if (Info::check_empty_result && f_is_empty(x))
-    return I_EMPTY;
-  else
-    return static_cast<I_Result>(r | I_MAYBE_EMPTY);
 }
 
 template <typename T1, typename T2>
@@ -169,8 +162,8 @@ inline typename Enable_If<((Is_Singleton<T1>::value || Is_Interval<T1>::value)
 			   && (Is_Interval<T1>::value || Is_Interval<T2>::value)),
 			  bool>::type
 operator==(const T1& x, const T2& y) {
-  assert(f_OK(x));
-  assert(f_OK(y));
+  PPL_ASSERT(f_OK(x));
+  PPL_ASSERT(f_OK(y));
   if (check_empty_arg(x))
     return check_empty_arg(y);
   else if (check_empty_arg(y))
@@ -195,8 +188,8 @@ template <typename Boundary, typename Info>
 template <typename T>
 inline typename Enable_If<Is_Singleton<T>::value || Is_Interval<T>::value, bool>::type
 Interval<Boundary, Info>::contains(const T& y) const {
-  assert(OK());
-  assert(f_OK(y));
+  PPL_ASSERT(OK());
+  PPL_ASSERT(f_OK(y));
   if (check_empty_arg(y))
     return true;
   if (check_empty_arg(*this))
@@ -213,8 +206,8 @@ template <typename Boundary, typename Info>
 template <typename T>
 inline typename Enable_If<Is_Singleton<T>::value || Is_Interval<T>::value, bool>::type
 Interval<Boundary, Info>::strictly_contains(const T& y) const {
-  assert(OK());
-  assert(f_OK(y));
+  PPL_ASSERT(OK());
+  PPL_ASSERT(f_OK(y));
   if (check_empty_arg(y))
     return !check_empty_arg(*this);
   if (check_empty_arg(*this))
@@ -237,8 +230,8 @@ template <typename T>
 inline typename Enable_If<Is_Singleton<T>::value
                           || Is_Interval<T>::value, bool>::type
 Interval<Boundary, Info>::is_disjoint_from(const T& y) const {
-  assert(OK());
-  assert(f_OK(y));
+  PPL_ASSERT(OK());
+  PPL_ASSERT(f_OK(y));
   if (check_empty_arg(*this) || check_empty_arg(y))
     return true;
 //   CHECKME.
@@ -249,25 +242,11 @@ Interval<Boundary, Info>::is_disjoint_from(const T& y) const {
 }
 
 template <typename To_Boundary, typename To_Info>
-template <typename From1, typename From2>
-inline I_Result
-Interval<To_Boundary, To_Info>::assign(const From1& l, const From2& u) {
-  info().clear();
-  Result rl = Boundary_NS::assign(LOWER, lower(), info(), LOWER, l, f_info(l));
-  Result ru = Boundary_NS::assign(UPPER, upper(), info(), UPPER, u, f_info(u));
-  complete_init_internal();
-  assert(OK());
-  // The following Parma_Polyhedra_Library:: qualification is to work
-  // around a bug in version 10.0 of the Intel C/C++ compiler.
-  return Parma_Polyhedra_Library::check_empty_result(*this, combine(rl, ru));
-}
-
-template <typename To_Boundary, typename To_Info>
 template <typename From>
 inline typename Enable_If<Is_Singleton<From>::value
                           || Is_Interval<From>::value, I_Result>::type
 Interval<To_Boundary, To_Info>::assign(const From& x) {
-  assert(f_OK(x));
+  PPL_ASSERT(f_OK(x));
   if (check_empty_arg(x))
     return assign(EMPTY);
   PPL_DIRTY_TEMP(To_Info, to_info);
@@ -279,8 +258,7 @@ Interval<To_Boundary, To_Info>::assign(const From& x) {
   Result ru = Boundary_NS::assign(UPPER, upper(), to_info,
 				  UPPER, f_upper(x), f_info(x));
   assign_or_swap(info(), to_info);
-  complete_init_internal();
-  assert(OK());
+  PPL_ASSERT(OK());
   return combine(rl, ru);
 }
 
@@ -289,20 +267,17 @@ template <typename From>
 inline typename Enable_If<Is_Singleton<From>::value
                           || Is_Interval<From>::value, I_Result>::type
 Interval<To_Boundary, To_Info>::join_assign(const From& x) {
-  assert(f_OK(x));
+  PPL_ASSERT(f_OK(x));
   if (check_empty_arg(*this))
     return assign(x);
   if (check_empty_arg(x))
     return combine(V_EQ, V_EQ);
   if (!join_restriction(info(), *this, x))
     return assign(EMPTY);
-  info().set_interval_property(CARDINALITY_IS, false);
-  info().set_interval_property(CARDINALITY_0);
-  info().set_interval_property(CARDINALITY_1, false);
   Result rl, ru;
   rl = min_assign(LOWER, lower(), info(), LOWER, f_lower(x), f_info(x));
   ru = max_assign(UPPER, upper(), info(), UPPER, f_upper(x), f_info(x));
-  assert(OK());
+  PPL_ASSERT(OK());
   return combine(rl, ru);
 }
 
@@ -313,8 +288,8 @@ inline typename Enable_If<((Is_Singleton<From1>::value
 			   && (Is_Singleton<From2>::value
                                || Is_Interval<From2>::value)), I_Result>::type
 Interval<To_Boundary, To_Info>::join_assign(const From1& x, const From2& y) {
-  assert(f_OK(x));
-  assert(f_OK(y));
+  PPL_ASSERT(f_OK(x));
+  PPL_ASSERT(f_OK(y));
   if (check_empty_arg(x))
     return assign(y);
   if (check_empty_arg(y))
@@ -323,7 +298,6 @@ Interval<To_Boundary, To_Info>::join_assign(const From1& x, const From2& y) {
   to_info.clear();
   if (!join_restriction(to_info, x, y))
     return assign(EMPTY);
-  to_info.set_interval_property(CARDINALITY_0);
   Result rl, ru;
   rl = min_assign(LOWER, lower(), to_info,
 		  LOWER, f_lower(x), f_info(x),
@@ -332,8 +306,7 @@ Interval<To_Boundary, To_Info>::join_assign(const From1& x, const From2& y) {
 		  UPPER, f_upper(x), f_info(x),
 		  UPPER, f_upper(y), f_info(y));
   assign_or_swap(info(), to_info);
-  complete_init_internal();
-  assert(OK());
+  PPL_ASSERT(OK());
   return combine(rl, ru);
 }
 
@@ -349,13 +322,13 @@ Interval<Boundary, Info>::can_be_exactly_joined_to(const Type& x) const {
   PPL_DIRTY_TEMP(Boundary, b);
   if (gt(LOWER, lower(), info(), UPPER, f_upper(x), f_info(x))) {
     b = lower();
-    return info().restrict(round_dir_check(LOWER, true), b, V_LT) == V_EQ &&
-      eq(LOWER, b, info(), UPPER, f_upper(x), f_info(x));
+    return info().restrict(round_dir_check(LOWER, true), b, V_LT) == V_EQ
+      && eq(LOWER, b, info(), UPPER, f_upper(x), f_info(x));
   }
   else if (lt(UPPER, upper(), info(), LOWER, f_lower(x), f_info(x))) {
     b = upper();
-    return info().restrict(round_dir_check(UPPER, true), b, V_GT) == V_EQ &&
-      eq(UPPER, b, info(), LOWER, f_lower(x), f_info(x));
+    return info().restrict(round_dir_check(UPPER, true), b, V_GT) == V_EQ
+      && eq(UPPER, b, info(), LOWER, f_lower(x), f_info(x));
   }
   return true;
 }
@@ -366,18 +339,14 @@ template <typename From>
 inline typename Enable_If<Is_Singleton<From>::value
                           || Is_Interval<From>::value, I_Result>::type
 Interval<To_Boundary, To_Info>::intersect_assign(const From& x) {
-  assert(f_OK(x));
+  PPL_ASSERT(f_OK(x));
   if (!intersect_restriction(info(), *this, x))
     return assign(EMPTY);
-  // FIXME: more accurate?
-  invalidate_cardinality_cache();
   Result rl, ru;
   rl = max_assign(LOWER, lower(), info(), LOWER, f_lower(x), f_info(x));
   ru = min_assign(UPPER, upper(), info(), UPPER, f_upper(x), f_info(x));
-  assert(OK());
-  // The following Parma_Polyhedra_Library:: qualification is to work
-  // around a bug in version 10.0 of the Intel C/C++ compiler.
-  return Parma_Polyhedra_Library::check_empty_result(*this, combine(rl, ru));
+  PPL_ASSERT(OK());
+  return I_ANY;
 }
 
 template <typename To_Boundary, typename To_Info>
@@ -388,8 +357,8 @@ inline typename Enable_If<((Is_Singleton<From1>::value
                                || Is_Interval<From2>::value)), I_Result>::type
 Interval<To_Boundary, To_Info>::intersect_assign(const From1& x,
                                                  const From2& y) {
-  assert(f_OK(x));
-  assert(f_OK(y));
+  PPL_ASSERT(f_OK(x));
+  PPL_ASSERT(f_OK(y));
   PPL_DIRTY_TEMP(To_Info, to_info);
   to_info.clear();
   if (!intersect_restriction(to_info, x, y))
@@ -402,11 +371,8 @@ Interval<To_Boundary, To_Info>::intersect_assign(const From1& x,
 		  UPPER, f_upper(x), f_info(x),
 		  UPPER, f_upper(y), f_info(y));
   assign_or_swap(info(), to_info);
-  complete_init_internal();
-  assert(OK());
-  // The following Parma_Polyhedra_Library:: qualification is to work
-  // around a bug in version 10.0 of the Intel C/C++ compiler.
-  return Parma_Polyhedra_Library::check_empty_result(*this, combine(rl, ru));
+  PPL_ASSERT(OK());
+  return I_NOT_EMPTY;
 }
 
 template <typename To_Boundary, typename To_Info>
@@ -414,9 +380,10 @@ template <typename From>
 inline typename Enable_If<Is_Singleton<From>::value
                           || Is_Interval<From>::value, I_Result>::type
 Interval<To_Boundary, To_Info>::difference_assign(const From& x) {
-  assert(f_OK(x));
+  PPL_ASSERT(f_OK(x));
   // FIXME: restrictions
-  if (lt(UPPER, upper(), info(), LOWER, f_lower(x), f_info(x)) ||
+  if (lt(UPPER, upper(), info(), LOWER, f_lower(x), f_info(x))
+      ||
       gt(LOWER, lower(), info(), UPPER, f_upper(x), f_info(x)))
     return combine(V_EQ, V_EQ);
   bool nl = ge(LOWER, lower(), info(), LOWER, f_lower(x), f_info(x));
@@ -426,17 +393,15 @@ Interval<To_Boundary, To_Info>::difference_assign(const From& x) {
     if (nu)
       return assign(EMPTY);
     else {
-      invalidate_cardinality_cache();
       info().clear_boundary_properties(LOWER);
       rl = complement(LOWER, lower(), info(), UPPER, f_upper(x), f_info(x));
     }
   }
   else if (nu) {
-    invalidate_cardinality_cache();
     info().clear_boundary_properties(UPPER);
     ru = complement(UPPER, upper(), info(), LOWER, f_lower(x), f_info(x));
   }
-  assert(OK());
+  PPL_ASSERT(OK());
   return combine(rl, ru);
 }
 
@@ -448,12 +413,13 @@ inline typename Enable_If<((Is_Singleton<From1>::value
                                || Is_Interval<From2>::value)), I_Result>::type
 Interval<To_Boundary, To_Info>::difference_assign(const From1& x,
                                                   const From2& y) {
-  assert(f_OK(x));
-  assert(f_OK(y));
+  PPL_ASSERT(f_OK(x));
+  PPL_ASSERT(f_OK(y));
   PPL_DIRTY_TEMP(To_Info, to_info);
   to_info.clear();
   // FIXME: restrictions
-  if (lt(UPPER, f_upper(x), f_info(x), LOWER, f_lower(y), f_info(y)) ||
+  if (lt(UPPER, f_upper(x), f_info(x), LOWER, f_lower(y), f_info(y))
+      ||
       gt(LOWER, f_lower(x), f_info(x), UPPER, f_upper(y), f_info(y)))
     return assign(x);
   bool nl = ge(LOWER, f_lower(x), f_info(x), LOWER, f_lower(y), f_info(y));
@@ -472,8 +438,7 @@ Interval<To_Boundary, To_Info>::difference_assign(const From1& x,
     rl = Boundary_NS::assign(LOWER, lower(), info(), LOWER, f_lower(x), f_info(x));
   }
   assign_or_swap(info(), to_info);
-  complete_init_internal();
-  assert(OK());
+  PPL_ASSERT(OK());
   return combine(rl, ru);
 }
 
@@ -483,8 +448,8 @@ inline typename Enable_If<Is_Singleton<From>::value
                           || Is_Interval<From>::value, I_Result>::type
 Interval<To_Boundary, To_Info>
 ::refine_existential(Relation_Symbol rel, const From& x) {
-  assert(OK());
-  assert(f_OK(x));
+  PPL_ASSERT(OK());
+  PPL_ASSERT(f_OK(x));
   if (check_empty_arg(x))
     return assign(EMPTY);
   switch (rel) {
@@ -493,56 +458,40 @@ Interval<To_Boundary, To_Info>
       if (lt(UPPER, upper(), info(), UPPER, f_upper(x), f_info(x)))
 	return combine(V_EQ, V_EQ);
       info().clear_boundary_properties(UPPER);
-      Result ru = Boundary_NS::assign(UPPER, upper(), info(),
-				      UPPER, f_upper(x), f_info(x), true);
-      invalidate_cardinality_cache();
+      Boundary_NS::assign(UPPER, upper(), info(),
+			  UPPER, f_upper(x), f_info(x), true);
       normalize();
-      // The following Parma_Polyhedra_Library:: qualification is to work
-      // around a bug in version 10.0 of the Intel C/C++ compiler.
-      return Parma_Polyhedra_Library::check_empty_result(*this,
-							 combine(V_EQ, ru));
+      return I_ANY;
     }
   case LESS_OR_EQUAL:
     {
       if (le(UPPER, upper(), info(), UPPER, f_upper(x), f_info(x)))
 	return combine(V_EQ, V_EQ);
       info().clear_boundary_properties(UPPER);
-      Result ru = Boundary_NS::assign(UPPER, upper(), info(),
-				      UPPER, f_upper(x), f_info(x));
-      invalidate_cardinality_cache();
+      Boundary_NS::assign(UPPER, upper(), info(),
+			  UPPER, f_upper(x), f_info(x));
       normalize();
-      // The following Parma_Polyhedra_Library:: qualification is to work
-      // around a bug in version 10.0 of the Intel C/C++ compiler.
-      return Parma_Polyhedra_Library::check_empty_result(*this,
-							 combine(V_EQ, ru));
+      return I_ANY;
     }
   case GREATER_THAN:
     {
       if (gt(LOWER, lower(), info(), LOWER, f_lower(x), f_info(x)))
 	return combine(V_EQ, V_EQ);
       info().clear_boundary_properties(LOWER);
-      Result rl = Boundary_NS::assign(LOWER, lower(), info(),
-				      LOWER, f_lower(x), f_info(x), true);
-      invalidate_cardinality_cache();
+      Boundary_NS::assign(LOWER, lower(), info(),
+			  LOWER, f_lower(x), f_info(x), true);
       normalize();
-      // The following Parma_Polyhedra_Library:: qualification is to work
-      // around a bug in version 10.0 of the Intel C/C++ compiler.
-      return Parma_Polyhedra_Library::check_empty_result(*this,
-							 combine(rl, V_EQ));
+      return I_ANY;
     }
   case GREATER_OR_EQUAL:
     {
       if (ge(LOWER, lower(), info(), LOWER, f_lower(x), f_info(x)))
 	return combine(V_EQ, V_EQ);
       info().clear_boundary_properties(LOWER);
-      Result rl = Boundary_NS::assign(LOWER, lower(), info(),
-				      LOWER, f_lower(x), f_info(x));
-      invalidate_cardinality_cache();
+      Boundary_NS::assign(LOWER, lower(), info(),
+			  LOWER, f_lower(x), f_info(x));
       normalize();
-      // The following Parma_Polyhedra_Library:: qualification is to work
-      // around a bug in version 10.0 of the Intel C/C++ compiler.
-      return Parma_Polyhedra_Library::check_empty_result(*this,
-							 combine(rl, V_EQ));
+      return I_ANY;
     }
   case EQUAL:
     return intersect_assign(x);
@@ -553,18 +502,14 @@ Interval<To_Boundary, To_Info>
       if (check_empty_arg(*this))
 	return I_EMPTY;
       if (eq(LOWER, lower(), info(), LOWER, f_lower(x), f_info(x)))
-	lower_shrink();
+	remove_inf();
       if (eq(UPPER, upper(), info(), UPPER, f_upper(x), f_info(x)))
-	upper_shrink();
-      invalidate_cardinality_cache();
+	remove_sup();
       normalize();
-      // The following Parma_Polyhedra_Library:: qualification is to work
-      // around a bug in version 10.0 of the Intel C/C++ compiler.
-      return Parma_Polyhedra_Library::check_empty_result(*this,
-							 combine(V_EQ, V_EQ));
+      return I_ANY;
     }
   default:
-    assert(false);
+    PPL_ASSERT(false);
     return I_EMPTY;
   }
 }
@@ -575,8 +520,8 @@ inline typename Enable_If<Is_Singleton<From>::value
                           || Is_Interval<From>::value, I_Result>::type
 Interval<To_Boundary, To_Info>::refine_universal(Relation_Symbol rel,
                                                  const From& x) {
-  assert(OK());
-  assert(f_OK(x));
+  PPL_ASSERT(OK());
+  PPL_ASSERT(f_OK(x));
   if (check_empty_arg(x))
     return combine(V_EQ, V_EQ);
   switch (rel) {
@@ -587,12 +532,8 @@ Interval<To_Boundary, To_Info>::refine_universal(Relation_Symbol rel,
       info().clear_boundary_properties(UPPER);
       Result ru = Boundary_NS::assign(UPPER, upper(), info(),
 				      LOWER, f_lower(x), SCALAR_INFO, !is_open(LOWER, f_lower(x), f_info(x)));
-      invalidate_cardinality_cache();
       normalize();
-      // The following Parma_Polyhedra_Library:: qualification is to work
-      // around a bug in version 10.0 of the Intel C/C++ compiler.
-      return Parma_Polyhedra_Library::check_empty_result(*this,
-							 combine(V_EQ, ru));
+      return I_ANY;
     }
   case LESS_OR_EQUAL:
     {
@@ -601,12 +542,8 @@ Interval<To_Boundary, To_Info>::refine_universal(Relation_Symbol rel,
       info().clear_boundary_properties(UPPER);
       Result ru = Boundary_NS::assign(UPPER, upper(), info(),
 				      LOWER, f_lower(x), SCALAR_INFO);
-      invalidate_cardinality_cache();
       normalize();
-      // The following Parma_Polyhedra_Library:: qualification is to work
-      // around a bug in version 10.0 of the Intel C/C++ compiler.
-      return Parma_Polyhedra_Library::check_empty_result(*this,
-							 combine(V_EQ, ru));
+      return I_ANY;
     }
   case GREATER_THAN:
     {
@@ -615,12 +552,8 @@ Interval<To_Boundary, To_Info>::refine_universal(Relation_Symbol rel,
       info().clear_boundary_properties(LOWER);
       Result rl = Boundary_NS::assign(LOWER, lower(), info(),
 				      UPPER, f_upper(x), SCALAR_INFO, !is_open(UPPER, f_upper(x), f_info(x)));
-      invalidate_cardinality_cache();
       normalize();
-      // The following Parma_Polyhedra_Library:: qualification is to work
-      // around a bug in version 10.0 of the Intel C/C++ compiler.
-      return Parma_Polyhedra_Library::check_empty_result(*this,
-							 combine(rl, V_EQ));
+      return I_ANY;
     }
   case GREATER_OR_EQUAL:
     {
@@ -629,12 +562,8 @@ Interval<To_Boundary, To_Info>::refine_universal(Relation_Symbol rel,
       info().clear_boundary_properties(LOWER);
       Result rl = Boundary_NS::assign(LOWER, lower(), info(),
 				      UPPER, f_upper(x), SCALAR_INFO);
-      invalidate_cardinality_cache();
       normalize();
-      // The following Parma_Polyhedra_Library:: qualification is to work
-      // around a bug in version 10.0 of the Intel C/C++ compiler.
-      return Parma_Polyhedra_Library::check_empty_result(*this,
-							 combine(rl, V_EQ));
+      return I_ANY;
     }
   case EQUAL:
     if (!f_is_singleton(x))
@@ -645,18 +574,14 @@ Interval<To_Boundary, To_Info>::refine_universal(Relation_Symbol rel,
       if (check_empty_arg(*this))
 	return I_EMPTY;
       if (eq(LOWER, lower(), info(), LOWER, f_lower(x), f_info(x)))
-	lower_shrink();
+	remove_inf();
       if (eq(UPPER, upper(), info(), UPPER, f_upper(x), f_info(x)))
-	upper_shrink();
-      invalidate_cardinality_cache();
+	remove_sup();
       normalize();
-      // The following Parma_Polyhedra_Library:: qualification is to work
-      // around a bug in version 10.0 of the Intel C/C++ compiler.
-      return Parma_Polyhedra_Library::check_empty_result(*this,
-							 combine(V_EQ, V_EQ));
+      return I_ANY;
     }
   default:
-    assert(false);
+    PPL_ASSERT(false);
     return I_EMPTY;
   }
 }
@@ -666,7 +591,7 @@ template <typename From>
 inline typename Enable_If<Is_Singleton<From>::value
                           || Is_Interval<From>::value, I_Result>::type
 Interval<To_Boundary, To_Info>::neg_assign(const From& x) {
-  assert(f_OK(x));
+  PPL_ASSERT(f_OK(x));
   if (check_empty_arg(x))
     return assign(EMPTY);
   PPL_DIRTY_TEMP(To_Info, to_info);
@@ -679,8 +604,7 @@ Interval<To_Boundary, To_Info>::neg_assign(const From& x) {
   ru = Boundary_NS::neg_assign(UPPER, upper(), to_info, LOWER, f_lower(x), f_info(x));
   assign_or_swap(lower(), to_lower);
   assign_or_swap(info(), to_info);
-  complete_init_internal();
-  assert(OK());
+  PPL_ASSERT(OK());
   return combine(rl, ru);
 }
 
@@ -691,8 +615,8 @@ inline typename Enable_If<((Is_Singleton<From1>::value
 			   && (Is_Singleton<From2>::value
                                || Is_Interval<From2>::value)), I_Result>::type
 Interval<To_Boundary, To_Info>::add_assign(const From1& x, const From2& y) {
-  assert(f_OK(x));
-  assert(f_OK(y));
+  PPL_ASSERT(f_OK(x));
+  PPL_ASSERT(f_OK(y));
   if (check_empty_arg(x) || check_empty_arg(y))
     return assign(EMPTY);
   int inf = Parma_Polyhedra_Library::is_infinity(x);
@@ -717,8 +641,7 @@ Interval<To_Boundary, To_Info>::add_assign(const From1& x, const From2& y) {
 				      UPPER, f_upper(x), f_info(x),
 				      UPPER, f_upper(y), f_info(y));
   assign_or_swap(info(), to_info);
-  complete_init_internal();
-  assert(OK());
+  PPL_ASSERT(OK());
   return combine(rl, ru);
 }
 
@@ -729,8 +652,8 @@ inline typename Enable_If<((Is_Singleton<From1>::value
 			   && (Is_Singleton<From2>::value
                                || Is_Interval<From2>::value)), I_Result>::type
 Interval<To_Boundary, To_Info>::sub_assign(const From1& x, const From2& y) {
-  assert(f_OK(x));
-  assert(f_OK(y));
+  PPL_ASSERT(f_OK(x));
+  PPL_ASSERT(f_OK(y));
   if (check_empty_arg(x) || check_empty_arg(y))
     return assign(EMPTY);
   int inf = Parma_Polyhedra_Library::is_infinity(x);
@@ -759,8 +682,7 @@ Interval<To_Boundary, To_Info>::sub_assign(const From1& x, const From2& y) {
 			       LOWER, f_lower(y), f_info(y));
   assign_or_swap(lower(), to_lower);
   assign_or_swap(info(), to_info);
-  complete_init_internal();
-  assert(OK());
+  PPL_ASSERT(OK());
   return combine(rl, ru);
 }
 
@@ -783,8 +705,8 @@ inline typename Enable_If<((Is_Singleton<From1>::value
 			   && (Is_Singleton<From2>::value
                                || Is_Interval<From2>::value)), I_Result>::type
 Interval<To_Boundary, To_Info>::mul_assign(const From1& x, const From2& y) {
-  assert(f_OK(x));
-  assert(f_OK(y));
+  PPL_ASSERT(f_OK(x));
+  PPL_ASSERT(f_OK(y));
   if (check_empty_arg(x) || check_empty_arg(y))
     return assign(EMPTY);
   int xls = sgn_b(LOWER, f_lower(x), f_info(x));
@@ -930,8 +852,7 @@ Interval<To_Boundary, To_Info>::mul_assign(const From1& x, const From2& y) {
   }
   assign_or_swap(lower(), to_lower);
   assign_or_swap(info(), to_info);
-  complete_init_internal();
-  assert(OK());
+  PPL_ASSERT(OK());
   return combine(rl, ru);
 }
 
@@ -953,8 +874,8 @@ inline typename Enable_If<((Is_Singleton<From1>::value
 			   && (Is_Singleton<From2>::value
                                || Is_Interval<From2>::value)), I_Result>::type
 Interval<To_Boundary, To_Info>::div_assign(const From1& x, const From2& y) {
-  assert(f_OK(x));
-  assert(f_OK(y));
+  PPL_ASSERT(f_OK(x));
+  PPL_ASSERT(f_OK(y));
   if (check_empty_arg(x) || check_empty_arg(y))
     return assign(EMPTY);
   int yls = sgn_b(LOWER, f_lower(y), f_info(y));
@@ -1041,8 +962,7 @@ Interval<To_Boundary, To_Info>::div_assign(const From1& x, const From2& y) {
   }
   assign_or_swap(lower(), to_lower);
   assign_or_swap(info(), to_info);
-  complete_init_internal();
-  assert(OK());
+  PPL_ASSERT(OK());
   return combine(rl, ru);
 }
 
@@ -1145,7 +1065,7 @@ operator/(const Interval<B, Info>& x, const Interval<B, Info>& y) {
 template <typename Boundary, typename Info>
 inline std::ostream&
 operator<<(std::ostream& os, const Interval<Boundary, Info>& x) {
-  // assert(x.OK());
+  // PPL_ASSERT(x.OK());
   if (check_empty_arg(x))
     return os << "[]";
   if (x.is_singleton()) {
@@ -1197,10 +1117,7 @@ Interval<Boundary, Info>::ascii_load(std::istream& s) {
     return false;
   if (!ascii_load(s, upper()))
     return false;
-#ifdef PPL_ABI_BREAKING_EXTRA_DEBUG
-  complete_init_internal();
-#endif
-  assert(OK());
+  PPL_ASSERT(OK());
   return true;
 }
 
@@ -1219,6 +1136,11 @@ struct Select_Temp_Boundary_Type {
 template <>
 struct Select_Temp_Boundary_Type<float> {
   typedef double type;
+};
+
+template <>
+struct Select_Temp_Boundary_Type<char> {
+  typedef signed long long type;
 };
 
 template <>

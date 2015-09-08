@@ -1,4 +1,5 @@
-/* Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+/* Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is free software; as a special exception the author gives
 unlimited permission to copy and/or distribute it, with or without
@@ -14,6 +15,7 @@ PURPOSE. */
 
 namespace Parma_Watchdog_Library {
 
+template <class Threshold>
 class Pending_Element;
 
 } // namespace Parma_Watchdog_Library

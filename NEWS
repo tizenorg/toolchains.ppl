@@ -1,6 +1,225 @@
+Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
+
+Verbatim copying and distribution of this entire article is permitted
+in any medium, provided this notice is preserved.
+
 
 Parma Polyhedra Library NEWS -- history of user-visible changes
 ===============================================================
+
+
+--------------------------------------------------------------------------
+NEWS for version 0.11.2  (released on February 27, 2011)
+--------------------------------------------------------------------------
+
+Bugfixes
+========
+
+o  Fixed the semantics of the `--disable-fpmath' configure option
+   (which is equivalent to `--enable-fpmath=no').  It now disables all
+   floating point computations and, consequently, all numerical
+   abstractions based on floating point numbers.
+
+o  The PPL no longer overwrites the SIGILL signal handler.
+
+o  Minor documentation fixes.
+
+o  Portability improved.
+
+
+--------------------------------------------------------------------------
+NEWS for version 0.11.1  (released on February 20, 2011)
+--------------------------------------------------------------------------
+
+Bugfixes
+========
+
+o  Corrected a problem in the simplification of PIP_Problem solution trees
+   whereby, under specific conditions, the node merging process produced
+   decision nodes that did not satisfy their class invariant.
+
+o  Corrected a precision bug in method
+
+     Octagonal_Shape<T>::affine_image()
+
+   whereby in the case of an invertible affine transformation implementing
+   a variable sign symmetry (and optional translation), the computed result
+   was correct but unnecessarily imprecise.
+
+o  Corrected a problem in the input method for checked integers whereby,
+   under specific conditions, the input stream state bits were not updated.
+   The bug was only affecting builds using checked integer coefficients.
+
+o  Corrected a bug in the OCaml interface, which was affecting functions
+
+     ppl_Pointset_Powerset_<INSTANCE>_get_disjunct.
+
+o  Corrected a couple of resource (re-)allocation problems that, under
+   specific conditions, could affect the correctness of Grid constructor
+
+     Grid::Grid(const Box<Interval>& box)
+
+   and NNC_Polyhedron method
+
+     Polyhedron::generalized_affine_image().
+
+o  Corrected an efficiency bug in the C language interface function
+
+     ppl_Linear_Expression_add_to_coefficient().
+
+o  Corrected an efficiency bug in method
+
+     MIP_Problem::compute_generator().
+
+o  Corrected a bug affecting the input routine of ppl_lpsol, whereby
+   the inhomogeneous term of the objective function was disregarded.
+
+o  Corrected a bug affecting methods
+
+     Box::CC76_widening_assign(const T&, Iterator, Iterator)
+     Interval::CC76_widening_assign(const From&, Iterator, Iterator)
+
+   whereby a lower bound would not be computed correctly when the two
+   iterators specify an empty list of stop points.
+
+o  Fixed a bug affecting
+
+     Interval::Interval(const char* s)
+
+   whereby a wrong interval would be constructed if `s' denotes a number
+   that can only be represented as an infinity.
+
+o  Fixed a bug whereby the argument of all the methods
+
+     unconstrain(Variable var)
+
+   was not checked correctly for space dimension compatibility.
+
+o  Portability improved.
+
+
+--------------------------------------------------------------------------
+NEWS for version 0.11  (released on August 2, 2010)
+--------------------------------------------------------------------------
+
+New and Changed Features
+========================
+
+o  New class PIP_Problem provides a Parametric Integer Programming
+   (PIP) problem solver (mainly based on P. Feautrier's
+   specification).  The implementation combines a parametric dual
+   simplex algorithm using exact arithmetic with Gomory's cut
+   generation.
+
+o  New "deterministic" timeout computation facilities: it is now
+   possible to set computational bounds (on the library calls taking
+   exponential time) that do not depend on the actual elapsed time and
+   hence are independent from the actual computation environment (CPU,
+   operating system, etc.).
+
+o  New support for termination analysis via the automatic synthesis of
+   linear ranking functions.  Given a sound approximation of a loop,
+   the PPL provides methods to decide whether that approximation
+   admits a linear ranking function (possibly obtaining one as a
+   witness for termination) and to compute the space of all such
+   functions.  In addition, methods are provided to obtain the space
+   of all linear quasi-ranking functions, for use in conditional
+   termination analysis.
+
+o  New support for approximating computations involving (bounded)
+   machine integers.  A general wrapping operator is provided that is
+   parametric with respect to the set of space dimensions (variables)
+   to be wrapped, the width, representation and overflow behavior of
+   all these variables.  An optional constraint system can, when
+   given, improve the precision.
+
+o  All the PPL semantic objects provide new methods
+
+     void drop_some_non_integer_points(Complexity_Class)
+     void drop_some_non_integer_points(const Variables_Set&,
+                                       Complexity_Class)
+
+   which possibly tighten the object by dropping some points with
+   non-integer coordinates (for the space dimensions corresponding to
+   `vars'), within a certain computational complexity bound.
+
+o  New Linear_Expression methods
+
+     bool is_zero() const
+     bool all_homogeneous_terms_are_zero() const
+
+   return true if and only if `*this' is 0, and if and only if all the
+   homogeneous terms of `*this' are 0, respectively.
+
+o  New Linear_Expression methods
+
+     void add_mul_assign(Coefficient_traits::const_reference c, Variable v)
+     void sub_mul_assign(Coefficient_traits::const_reference c, Variable v)
+
+   assign linear expression *this + c * v (resp., *this - c * v) to *this,
+   while avoiding the allocation of a temporary Linear_Expression.
+
+o  For the PPL semantic objects, other than the Pointset_Powerset and
+   Partially_Reduced Product, there is a new method:
+
+     bool frequency(const Linear_Expression& expr,
+                    Coefficient& freq_n, Coefficient& freq_d,
+                    Coefficient& val_n, Coefficient& val_d)
+
+   This operator computes both the "frequency" (f = freq_n/freq_d)
+   and a value (v = val_n/val_d)  closest to zero so that every point
+   in the object satisfies the congruence (expr %= v) / f.
+
+o  New reduction operator "Shape_Preserving_Reduction" has been added
+   to the Partially_Reduced_Product abstraction.  This operator is
+   aimed at the product of a grid and a shape domain, allowing the
+   bounds of the shape to shrink to touch the points of the grid,
+   such that the new bounds are parallel to the old bounds.
+
+o  The Java interface has to be explicitly initialized before use by
+   calling static method Parma_Polyhedra_Library.initialize_library().
+   Initialization makes more explicit the exact point where PPL
+   floating point rounding mode is set; it also allows for the caching
+   of Java classes and field/method IDs, thereby reducing the overhead
+   of native method callbacks.
+
+o  The C and Java interfaces now support timeout computation facilities.
+
+o  Implementation of general (C and NNC) polyhedra speeded up.
+
+o  Implementation of the MIP solver speeded up.
+
+o  When the PPL has been configured with
+   CPPFLAGS="-DPPL_ARM_CAN_CONTROL_FPU=1", the library initialization
+   procedure checks that the FPU can indeed be controlled and fails if
+   that is not the case.
+
+o  New configure option --with-gmp-prefix supersedes the (now removed)
+   options --with-libgmp-prefix and --with-libgmpxx-prefix.
+
+o  New configuration option `--with-gmp-build=DIR' allows to use a
+   non-installed build of GMP in DIR.
+
+
+Deprecated and Removed Methods
+==============================
+
+o  All methods having a name ending in `_and_minimize' (e.g.,
+   add_constraints_and_minimize, poly_hull_assign_and_minimize, ...)
+   have been removed (they were deprecated in version 0.10).
+
+
+Bugfixes
+========
+
+o  Corrected a bug in maximize and mininimize optimization methods of
+   class template Pointset_Powerset, whereby the Boolean value true
+   (indicating successful optimization) was returned for empty powersets.
+
+o  Corrected a bug in method
+     bool NNC_Polyhedron::poly_hull_assign_if_exact(const NNC_Polyhedron&);
+   whereby some inexact NNC hulls were incorrectly flagged as exact.
 
 
 --------------------------------------------------------------------------
@@ -347,8 +566,8 @@ o  The methods
    (i.e., it has no constraints, generators, congruences or grid-generators,
    respectively).
 
-Deprecated and removed methods
-------------------------------
+Deprecated and Removed Methods
+==============================
 
 o  As all PPL semantic objects can now be constructed from boxes,
    the constructors

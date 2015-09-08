@@ -1,7 +1,8 @@
 /* Test Pointset_Powerset<PH>::affine_image(),
         Pointset_Powerset<PH>::generalized_affine_image(),
         Pointset_Powerset<PH>::bounded_affine_image().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -52,9 +53,9 @@ test01() {
   ph1.affine_image(x, x + y);
 
   Pointset_Powerset<C_Polyhedron>::const_iterator i = c_ps.begin();
-  C_Polyhedron phi = i->element();
+  C_Polyhedron phi = i->pointset();
   i++;
-  C_Polyhedron phi1 = i->element();
+  C_Polyhedron phi1 = i->pointset();
 
   bool ok = phi.OK() && phi == ph;
 
@@ -164,9 +165,9 @@ test04() {
   ph1.generalized_affine_image(x - y, GREATER_OR_EQUAL, Linear_Expression(3));
 
   Pointset_Powerset<C_Polyhedron>::const_iterator i = c_ps.begin();
-  C_Polyhedron phi = i->element();
+  C_Polyhedron phi = i->pointset();
   i++;
-  C_Polyhedron phi1 = i->element();
+  C_Polyhedron phi1 = i->pointset();
 
   bool ok = phi.OK() && phi == ph;
 
@@ -211,9 +212,9 @@ test05() {
   ph1.bounded_affine_image(y, Linear_Expression(0), 2*y, 5);
 
   Pointset_Powerset<C_Polyhedron>::const_iterator i = c_ps.begin();
-  C_Polyhedron phi = i->element();
+  C_Polyhedron phi = i->pointset();
   i++;
-  C_Polyhedron phi1 = i->element();
+  C_Polyhedron phi1 = i->pointset();
 
   bool ok = phi.OK() && phi == ph;
 

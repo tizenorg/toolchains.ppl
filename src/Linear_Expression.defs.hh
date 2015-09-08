@@ -1,5 +1,6 @@
 /* Linear_Expression class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -166,6 +167,18 @@ operator-=(Linear_Expression& e, Coefficient_traits::const_reference n);
 Linear_Expression&
 operator*=(Linear_Expression& e, Coefficient_traits::const_reference n);
 
+//! Returns the linear expression \p e + \p n * \p v and assigns it to \p e.
+/*! \relates Linear_Expression */
+Linear_Expression&
+add_mul_assign(Linear_Expression& e,
+               Coefficient_traits::const_reference n, Variable v);
+
+//! Returns the linear expression \p e - \p n * \p v and assigns it to \p e.
+/*! \relates Linear_Expression */
+Linear_Expression&
+sub_mul_assign(Linear_Expression& e,
+               Coefficient_traits::const_reference n, Variable v);
+
 namespace IO_Operators {
 
 //! Output operator.
@@ -238,7 +251,7 @@ public:
   //! Default constructor: returns a copy of Linear_Expression::zero().
   Linear_Expression();
 
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   Linear_Expression(const Linear_Expression& e);
 
   //! Destructor.
@@ -316,6 +329,15 @@ public:
   //! Returns the inhomogeneous term of \p *this.
   Coefficient_traits::const_reference inhomogeneous_term() const;
 
+  //! Returns <CODE>true</CODE> if and only if \p *this is \f$0\f$.
+  bool is_zero() const;
+
+  /*! \brief
+    Returns <CODE>true</CODE> if and only if all the homogeneous
+    terms of \p *this are \f$0\f$.
+  */
+  bool all_homogeneous_terms_are_zero() const;
+
   //! Initializes the class.
   static void initialize();
 
@@ -382,7 +404,7 @@ private:
   // Grid_Generator_System::affine_image().
   friend class Parma_Polyhedra_Library::Grid_Generator_System;
 
-  //! Copy-constructor with a specified space dimension.
+  //! Copy constructor with a specified space dimension.
   Linear_Expression(const Linear_Expression& e, dimension_type sz);
 
   //! Implementation sizing constructor.
@@ -450,6 +472,13 @@ private:
 
   friend Linear_Expression&
   operator*=(Linear_Expression& e, Coefficient_traits::const_reference n);
+
+  friend Linear_Expression&
+  add_mul_assign(Linear_Expression& e,
+                 Coefficient_traits::const_reference n, Variable v);
+  friend Linear_Expression&
+  sub_mul_assign(Linear_Expression& e,
+                 Coefficient_traits::const_reference n, Variable v);
 
   friend std::ostream&
   Parma_Polyhedra_Library::IO_Operators

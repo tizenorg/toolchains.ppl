@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -25,7 +26,7 @@ if VALGRIND_TESTS_ENABLED
 
 CHECKER = \
 $(VALGRIND) --tool=memcheck -q --trace-children=yes --leak-check=yes \
---num-callers=100 --leak-resolution=high \
+--num-callers=40 --leak-resolution=high \
 --suppressions=$(top_srcdir)/tests/valgrind_suppressions
 
 else !VALGRIND_TESTS_ENABLED
@@ -76,12 +77,13 @@ congruences2 \
 constraints1 \
 contains1 \
 containsintegerpoint1 \
-coveringbox1 coveringbox2 \
 discrete1 \
 disjoint1 \
+dropnonintegerpoints1 \
 equals1 \
 expandspacedim1 \
 foldspacedims1 \
+frequency1 \
 frombdshape1 \
 frombox1 \
 fromgrid1 \
@@ -118,7 +120,8 @@ topclosed1 \
 topclosure1 \
 unconstrain1 \
 upperbound1 upperbound2 \
-widening1 widening2  widening3\
+widening1 widening2  widening3 \
+wrap1 \
 writecongruencesystem
 
 XFAIL_TESTS =
@@ -187,9 +190,13 @@ discrete1_SOURCES = discrete1.cc
 
 disjoint1_SOURCES = disjoint1.cc
 
+dropnonintegerpoints1_SOURCES = dropnonintegerpoints1.cc
+
 equals1_SOURCES = equals1.cc
 
 expandspacedim1_SOURCES = expandspacedim1.cc
+
+frequency1_SOURCES = frequency1.cc
 
 frombdshape1_SOURCES = frombdshape1.cc
 
@@ -215,9 +222,6 @@ generator1_SOURCES = generator1.cc
 
 generators1_SOURCES = generators1.cc
 generators2_SOURCES = generators2.cc
-
-coveringbox1_SOURCES = coveringbox1.cc
-coveringbox2_SOURCES = coveringbox2.cc
 
 grid1_SOURCES = grid1.cc
 grid2_SOURCES = grid2.cc
@@ -283,6 +287,8 @@ widening2_SOURCES = widening2.cc
 widening3_SOURCES = widening3.cc
 
 writecongruencesystem_SOURCES = writecongruencesystem.cc
+
+wrap1_SOURCES = wrap1.cc
 
 check_PROGRAMS = $(TESTS)
 

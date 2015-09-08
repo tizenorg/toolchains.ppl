@@ -4,7 +4,8 @@ m4_divert(-1)
 This m4 file contains the program header code for generating the
 files ppl_c_domains.h.
 
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -33,6 +34,89 @@ m4_define(`ppl_@CLASS@_ascii_dump_code', `')
 dnl There is no code at present for these procedures in the C interface.
 dnl Remove the macro if its definition is added.
 dnl
+
+m4_define(`ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+`dnl
+/*! \relates ppl_@CLASS@_tag */
+int
+ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@
+PPL_PROTO((ppl_const_@CLASS@_t pset));
+
+')
+
+m4_define(`ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+`dnl
+/*! \relates ppl_@CLASS@_tag */
+int
+ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2
+PPL_PROTO((ppl_const_@CLASS@_t pset_before, ppl_const_@CLASS@_t pset_after));
+
+')
+
+m4_define(`ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+`dnl
+/*! \relates ppl_@CLASS@_tag */
+int
+ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@
+PPL_PROTO((ppl_const_@CLASS@_t pset,
+           ppl_Generator_t point));
+
+')
+
+m4_define(`ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+`dnl
+/*! \relates ppl_@CLASS@_tag */
+int
+ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2
+PPL_PROTO((ppl_const_@CLASS@_t pset_before,
+           ppl_const_@CLASS@_t pset_after,
+           ppl_Generator_t point));
+
+')
+
+m4_define(`ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+`dnl
+/*! \relates ppl_@CLASS@_tag */
+int
+ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@
+PPL_PROTO((ppl_const_@CLASS@_t pset,
+           ppl_Polyhedron_t ph));
+
+')
+
+m4_define(`ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+`dnl
+/*! \relates ppl_@CLASS@_tag */
+int
+ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2
+PPL_PROTO((ppl_const_@CLASS@_t pset_before,
+           ppl_const_@CLASS@_t pset_after,
+           ppl_Polyhedron_t ph));
+
+')
+
+m4_define(`ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_code',
+`dnl
+/*! \relates ppl_@CLASS@_tag */
+int
+ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@
+PPL_PROTO((ppl_const_@CLASS@_t pset,
+           ppl_Polyhedron_t ph_decreasing,
+           ppl_Polyhedron_t ph_bounded));
+
+')
+
+m4_define(`ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2_code',
+`dnl
+/*! \relates ppl_@CLASS@_tag */
+int
+ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2
+PPL_PROTO((ppl_const_@CLASS@_t pset_before,
+           ppl_const_@CLASS@_t pset_after,
+           ppl_Polyhedron_t ph_decreasing,
+           ppl_Polyhedron_t ph_bounded));
+
+')
 
 m4_define(`ppl_@CLASS@_linear_@PARTITION@_code',
 `dnl
@@ -196,6 +280,19 @@ PPL_PROTO((ppl_const_@CLASS@_t ph,
 
 ')
 
+m4_define(`ppl_@CLASS@_frequency_code',
+`/*! \relates ppl_@CLASS@_tag */
+int
+ppl_@CLASS@_frequency
+PPL_PROTO((ppl_const_@CLASS@_t ph,
+           ppl_const_Linear_Expression_t le,
+           ppl_Coefficient_t ext_fn,
+           ppl_Coefficient_t ext_fd,
+           ppl_Coefficient_t ext_vn,
+           ppl_Coefficient_t ext_vd));
+
+')
+
 m4_define(`ppl_@CLASS@_@COMPARISON@_@CLASS@_code',
 `/*! \relates ppl_@CLASS@_tag */
 int
@@ -267,15 +364,6 @@ PPL_PROTO((ppl_@CLASS@_t x,
 
 ')
 
-m4_define(`ppl_@CLASS@_@BINMINOP@_code',
-`/*! \relates ppl_@CLASS@_tag */
-int
-ppl_@CLASS@_@BINMINOP@
-PPL_PROTO((ppl_@CLASS@_t x,
-           ppl_const_@CLASS@_t y));
-
-')
-
 m4_define(`ppl_@CLASS@_@UB_EXACT@_code',
 `/*! \relates ppl_@CLASS@_tag */
 int
@@ -312,15 +400,6 @@ PPL_PROTO((ppl_@CLASS@_t ph,
 
 ')
 
-m4_define(`ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize_code',
-`/*! \relates ppl_@CLASS@_tag */
-int
-ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize
-PPL_PROTO((ppl_@CLASS@_t ph,
-           ppl_const_@!CLASS_REPRESENT@_t c));
-
-')
-
 m4_define(`ppl_@CLASS@_add_@CLASS_REPRESENT@s_code',
 `/*! \relates ppl_@CLASS@_tag */
 int
@@ -336,15 +415,6 @@ int
 ppl_@CLASS@_refine_with_@REFINE_REPRESENT@s
 PPL_PROTO((ppl_@CLASS@_t ph,
            ppl_const_@!REFINE_REPRESENT@_System_t cs));
-
-')
-
-m4_define(`ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize_code',
-`/*! \relates ppl_@CLASS@_tag */
-int
-ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize
-PPL_PROTO((ppl_@CLASS@_t ph,
-           ppl_const_@!CLASS_REPRESENT@_System_t cs));
 
 ')
 
@@ -591,6 +661,43 @@ PPL_PROTO((ppl_@CLASS@_t ph,
            size_t n,
            ppl_dimension_type d));
 
+')
+
+m4_define(`ppl_@CLASS@_drop_some_non_integer_points_code',
+`dnl
+/*! \relates ppl_@CLASS@_tag */
+int
+ppl_@CLASS@_drop_some_non_integer_points
+PPL_PROTO((ppl_@CLASS@_t ph,
+           int complexity));
+
+')
+
+m4_define(`ppl_@CLASS@_drop_some_non_integer_points_2_code',
+`dnl
+/*! \relates ppl_@CLASS@_tag */
+int
+ppl_@CLASS@_drop_some_non_integer_points_2
+PPL_PROTO((ppl_@CLASS@_t ph,
+           ppl_dimension_type ds[],
+           size_t n,
+           int complexity));
+
+')
+
+m4_define(`ppl_@CLASS@_wrap_assign_code',
+`/*! \relates ppl_@CLASS@_tag */
+int
+ppl_@CLASS@_wrap_assign
+PPL_PROTO((ppl_@CLASS@_t ph,
+           ppl_dimension_type ds[],
+           size_t n,
+           enum ppl_enum_Bounded_Integer_Type_Width w,
+           enum ppl_enum_Bounded_Integer_Type_Representation r,
+           enum ppl_enum_Bounded_Integer_Type_Overflow o,
+           const ppl_const_Constraint_System_t* pcs,
+           unsigned complexity_threshold,
+           int wrap_individually));
 ')
 
 m4_define(`ppl_@CLASS@_@MEMBYTES@_code',

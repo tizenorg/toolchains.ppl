@@ -1,5 +1,6 @@
 /* Test Grid::minimized_grid_generators().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -187,7 +188,7 @@ test08() {
 
   // Empty the grid.  The idea is to check that `gs' still refers to a
   // generator system that matches the grid.
-  gr1.add_congruence_and_minimize(Congruence::zero_dim_false());
+  gr1.add_congruence(Congruence::zero_dim_false());
   print_congruences(gr1, "*** gr1 ***");
 
   Grid known_gr = gr1;

@@ -4,7 +4,8 @@ m4_divert(-1)
 dnl This m4 file generates the file ppl_java_classes_test.java
 dnl using the code in ppl_interface_generator_java_test_code.m4.
 dnl
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -44,16 +45,14 @@ m4_include(`ppl_interface_generator_copyright') */
 m4_include(`ppl_java_tests_common')
 
     public static void main(String[] args) {
-	ppl_java_generated_tests test1 = new ppl_java_generated_tests();
-        // Initialize output variables.
-        PPL_Test.initialize();
-	test1.initialize();
-
-dnl ==================================================================
-dnl Add test statements (one for each domain instantiation.
-dnl ==================================================================
-	// Here generated tests are called.
-m4_divert(1)
+	Parma_Polyhedra_Library.initialize_library();
+        ppl_java_generated_tests.initialize();
+	boolean test_result_ok =
+	    Test_Executor.executeTests(ppl_java_generated_tests.class);
+        Parma_Polyhedra_Library.finalize_library();
+	if (!test_result_ok)
+	    System.exit(1);
+	System.exit(0);
     }
 
 dnl ==================================================================
@@ -67,9 +66,7 @@ m4_divert(-1)
 dnl ==================================================================
 dnl Define a test statement for each domain, for m4_divert(1)
 dnl ==================================================================
-m4_pushdef(`m4_one_class_code', `
-    test1.run_`'m4_interface_class$1`'_test();
-')
+m4_pushdef(`m4_one_class_code', `')
 
 m4_divert`'dnl
 m4_all_code`'dnl
@@ -82,7 +79,8 @@ dnl Define code for all tests to check all methods, for m4_divert(2)
 dnl ==================================================================
 dnl Prefix extra code for each domain.
 m4_pushdef(`m4_pre_extra_class_code', `
-    public boolean run_`'m4_interface_class$1`'_test() {
+    public static boolean test_`'m4_interface_class$1`'() {
+        globally_ok = true;
     try {
 
 ')
@@ -90,10 +88,11 @@ dnl Postfix extra code for each domain.
 m4_pushdef(`m4_post_extra_class_code', `dnl
 }
 catch (parma_polyhedra_library.Overflow_Error_Exception e) {
-System.out.println("*Overflow detected*::exception caught");
+    System.out.println("Overflow exception caught:");
+    System.out.println(e.getMessage());
 }
 System.gc();
-return true;
+return globally_ok;
 
     }
 

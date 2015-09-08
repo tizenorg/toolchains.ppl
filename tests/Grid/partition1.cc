@@ -1,5 +1,6 @@
 /* Test Pointset_Powerset<Grid>.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -44,7 +45,8 @@ partition_aux(const Congruence& c,
   for (i = c_modulus; i-- > 0; )
     if (i != n) {
       Grid qqq(qq);
-      if (qqq.add_congruence_and_minimize((le+i %= 0) / c_modulus))
+      qqq.add_congruence((le+i %= 0) / c_modulus);
+      if (qqq.is_empty())
 	r.add_disjunct(qqq);
     }
   qq.add_congruence(c);

@@ -5,7 +5,8 @@ This m4 file contains the program code for generating the
 files ppl_prolog_DOMAIN.cc for each interface domain DOMAIN
 in ppl_interface instantiations.m4.
 
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -375,7 +376,7 @@ m4_define(`ppl_@CLASS@_get_disjunct_code',
     PPL_CHECK(it);
 
     @DISJUNCT_TOPOLOGY@@A_DISJUNCT@* disj
-      = const_cast<@DISJUNCT_TOPOLOGY@@A_DISJUNCT@*>(&((*it)->element()));
+      = const_cast<@DISJUNCT_TOPOLOGY@@A_DISJUNCT@*>(&((*it)->pointset()));
     Prolog_term_ref t_d = Prolog_new_term_ref();
     Prolog_put_address(t_d, disj);
 
@@ -479,7 +480,13 @@ ppl_@CLASS@_linear_@PARTITION@(Prolog_term_ref t_ph,
     Prolog_put_address(t_r_second, rsh);
     if (Prolog_unify(t_inters, t_r_first)
         && Prolog_unify(t_pset, t_r_second)) {
+      PPL_REGISTER(rfh);
+      PPL_REGISTER(rsh);
       return PROLOG_SUCCESS;
+    }
+    else {
+      delete rfh;
+      delete rsh;
     }
   }
   CATCH_ALL;
@@ -936,22 +943,6 @@ m4_define(`ppl_@CLASS@_refine_with_@REFINE_REPRESENT@_code',
 
 ')
 
-m4_define(`ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize_code',
-  `extern "C" Prolog_foreign_return_type
-  ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize(Prolog_term_ref t_ph,
-                                               Prolog_term_ref t_c) {
-  static const char* where = "ppl_@CLASS@_add_@CLASS_REPRESENT@_and_minimize/2";
-  try {
-    @CPP_CLASS@* ph = term_to_handle<@CPP_CLASS@ >(t_ph, where);
-    PPL_CHECK(ph);
-    if (ph->add_@CLASS_REPRESENT@_and_minimize(build_@CLASS_REPRESENT@(t_c, where)))
-      return PROLOG_SUCCESS;
-  }
-  CATCH_ALL;
-}
-
-')
-
 m4_define(`ppl_@CLASS@_add_@CLASS_REPRESENT@s_code',
   `extern "C" Prolog_foreign_return_type
   ppl_@CLASS@_add_@CLASS_REPRESENT@s(Prolog_term_ref t_ph,
@@ -1006,33 +997,6 @@ m4_define(`ppl_@CLASS@_refine_with_@REFINE_REPRESENT@s_code',
 
 ')
 
-m4_define(`ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize_code',
-  `extern "C" Prolog_foreign_return_type
-  ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize(Prolog_term_ref t_ph,
-                                                Prolog_term_ref t_clist) {
-  static const char* where = "ppl_@CLASS@_add_@CLASS_REPRESENT@s_and_minimize/2";
-  try {
-    @CPP_CLASS@* ph = term_to_handle<@CPP_CLASS@ >(t_ph, where);
-    PPL_CHECK(ph);
-    @!CLASS_REPRESENT@_System cs;
-    Prolog_term_ref c = Prolog_new_term_ref();
-
-    while (Prolog_is_cons(t_clist)) {
-      Prolog_get_cons(t_clist, c, t_clist);
-      cs.insert(build_@CLASS_REPRESENT@(c, where));
-    }
-
-    // Check the list is properly terminated.
-    check_nil_terminating(t_clist, where);
-
-    if (ph->add_@CLASS_REPRESENT@s_and_minimize(cs))
-      return PROLOG_SUCCESS;
-  }
-  CATCH_ALL;
-}
-
-')
-
 m4_define(`bop_assign_code',
 `namespace Parma_Polyhedra_Library {
 
@@ -1052,23 +1016,6 @@ bop_assign(Prolog_term_ref t_lhs,
     PPL_CHECK(rhs);
     (lhs->*bop_assign)(*rhs);
     return PROLOG_SUCCESS;
-  }
-  CATCH_ALL;
-}
-
-Prolog_foreign_return_type
-bop_assign_and_minimize(Prolog_term_ref t_lhs,
-                        Prolog_term_ref t_rhs,
-                        bool (@CPP_CLASS@::*
-                              bop_assign_and_minimize)(const @CPP_CLASS@&),
-                        const char* where) {
-  try {
-    @CPP_CLASS@* lhs = term_to_handle<@CPP_CLASS@ >(t_lhs, where);
-    const @CPP_CLASS@* rhs = term_to_handle<@CPP_CLASS@ >(t_rhs, where);
-    PPL_CHECK(lhs);
-    PPL_CHECK(rhs);
-    if ((lhs->*bop_assign_and_minimize)(*rhs))
-      return PROLOG_SUCCESS;
   }
   CATCH_ALL;
 }
@@ -1095,24 +1042,6 @@ m4_define(`ppl_@CLASS@_@BINOP@_code',
     PPL_CHECK(rhs);
     lhs->@BINOP@(*rhs);
     return PROLOG_SUCCESS;
-  }
-  CATCH_ALL;
-}
-
-')
-
-m4_define(`ppl_@CLASS@_@BINMINOP@_code',
-  `extern "C" Prolog_foreign_return_type
-  ppl_@CLASS@_@BINMINOP@
-  (Prolog_term_ref t_lhs, Prolog_term_ref t_rhs) {
-  static const char* where = "ppl_@CLASS@_@BINMINOP@";
-  try {
-    @CPP_CLASS@* lhs = term_to_handle<@CPP_CLASS@ >(t_lhs, where);
-    const @CPP_CLASS@* rhs = term_to_handle<@CPP_CLASS@ >(t_rhs, where);
-    PPL_CHECK(lhs);
-    PPL_CHECK(rhs);
-    if (lhs->@BINMINOP@(*rhs))
-      return PROLOG_SUCCESS;
   }
   CATCH_ALL;
 }
@@ -1300,6 +1229,231 @@ m4_define(`ppl_@CLASS@_bounded_@AFFIMAGE@_code',
                            build_linear_expression(t_ub_le, where),
                            term_to_Coefficient(t_d, where));
     return PROLOG_SUCCESS;
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@
+  (Prolog_term_ref t_pset) {
+  static const char* where = "ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@/1";
+  try {
+    @TOPOLOGY@@CPP_CLASS@* pset = term_to_handle<@TOPOLOGY@@CPP_CLASS@ >(t_pset, where);
+    PPL_CHECK(pset);
+    if (Parma_Polyhedra_Library::termination_test_@TERMINATION_ID@(*pset))
+      return PROLOG_SUCCESS;
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2
+  (Prolog_term_ref t_pset_before, Prolog_term_ref t_pset_after) {
+  static const char* where
+      = "ppl_termination_test_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2/2";
+  try {
+    @TOPOLOGY@@CPP_CLASS@* pset_before
+       = term_to_handle<@TOPOLOGY@@CPP_CLASS@ >(t_pset_before, where);
+    @TOPOLOGY@@CPP_CLASS@* pset_after
+       = term_to_handle<@TOPOLOGY@@CPP_CLASS@ >(t_pset_after, where);
+    PPL_CHECK(pset_before);
+    PPL_CHECK(pset_after);
+    if (Parma_Polyhedra_Library
+        ::termination_test_@TERMINATION_ID@_2(*pset_before, *pset_after))
+      return PROLOG_SUCCESS;
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@
+  (Prolog_term_ref t_pset,
+   Prolog_term_ref t_g) {
+  static const char* where
+     = "ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@/2";
+  try {
+    @TOPOLOGY@@CPP_CLASS@* pset = term_to_handle<@TOPOLOGY@@CPP_CLASS@ >(t_pset, where);
+    Generator gg(point());
+    PPL_CHECK(pset);
+    if (Parma_Polyhedra_Library
+        ::one_affine_ranking_function_@TERMINATION_ID@(*pset, gg)
+        && Prolog_unify(t_g, generator_term(gg)))
+      return PROLOG_SUCCESS;
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2
+  (Prolog_term_ref t_pset_before,
+   Prolog_term_ref t_pset_after,
+   Prolog_term_ref t_g) {
+  static const char* where
+     = "ppl_one_affine_ranking_function_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2/3";
+  try {
+    @TOPOLOGY@@CPP_CLASS@* pset_before
+       = term_to_handle<@TOPOLOGY@@CPP_CLASS@ >(t_pset_before, where);
+    @TOPOLOGY@@CPP_CLASS@* pset_after
+       = term_to_handle<@TOPOLOGY@@CPP_CLASS@ >(t_pset_after, where);
+    Generator gg(point());
+    PPL_CHECK(pset_before);
+    PPL_CHECK(pset_after);
+    if (Parma_Polyhedra_Library
+        ::one_affine_ranking_function_@TERMINATION_ID@_2(*pset_before,
+                                                         *pset_after,
+                                                         gg)
+        && Prolog_unify(t_g, generator_term(gg)))
+      return PROLOG_SUCCESS;
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@
+  (Prolog_term_ref t_pset,
+   Prolog_term_ref t_ph) {
+  static const char* where =
+      "ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@/2";
+  try {
+    @TOPOLOGY@@CPP_CLASS@* pset = term_to_handle<@TOPOLOGY@@CPP_CLASS@ >(t_pset, where);
+    PPL_CHECK(pset);
+    @A_TERMINATION_ID@Polyhedron* ph = new @A_TERMINATION_ID@Polyhedron();
+    Parma_Polyhedra_Library
+      ::all_affine_ranking_functions_@TERMINATION_ID@(*pset, *ph);
+    Prolog_term_ref tmp = Prolog_new_term_ref();
+    Prolog_put_address(tmp, ph);
+    if (Prolog_unify(t_ph, tmp)) {
+      PPL_REGISTER(ph);
+      return PROLOG_SUCCESS;
+    }
+    else
+      delete ph;
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2
+  (Prolog_term_ref t_pset_before,
+   Prolog_term_ref t_pset_after,
+   Prolog_term_ref t_ph) {
+  static const char* where =
+      "ppl_all_affine_ranking_functions_@TERMINATION_ID@_@TOPOLOGY@@CLASS@_2/3";
+  try {
+    @TOPOLOGY@@CPP_CLASS@* pset_before
+       = term_to_handle<@TOPOLOGY@@CPP_CLASS@ >(t_pset_before, where);
+    @TOPOLOGY@@CPP_CLASS@* pset_after
+       = term_to_handle<@TOPOLOGY@@CPP_CLASS@ >(t_pset_after, where);
+    PPL_CHECK(pset_before);
+    PPL_CHECK(pset_after);
+    @A_TERMINATION_ID@Polyhedron* ph = new @A_TERMINATION_ID@Polyhedron();
+    Parma_Polyhedra_Library
+      ::all_affine_ranking_functions_@TERMINATION_ID@_2(*pset_before,
+                                                        *pset_after,
+                                                        *ph);
+    Prolog_term_ref tmp = Prolog_new_term_ref();
+    Prolog_put_address(tmp, ph);
+    if (Prolog_unify(t_ph, tmp)) {
+      PPL_REGISTER(ph);
+      return PROLOG_SUCCESS;
+    }
+    else
+      delete ph;
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@
+  (Prolog_term_ref t_pset,
+   Prolog_term_ref t_ph_decreasing,
+   Prolog_term_ref t_ph_bounded) {
+  static const char* where =
+      "ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@/3";
+  try {
+    @TOPOLOGY@@CPP_CLASS@* pset = term_to_handle<@TOPOLOGY@@CPP_CLASS@ >(t_pset, where);
+    PPL_CHECK(pset);
+    C_Polyhedron* ph_decreasing = new C_Polyhedron();
+    C_Polyhedron* ph_bounded = new C_Polyhedron();
+    Parma_Polyhedra_Library
+      ::all_affine_quasi_ranking_functions_MS(*pset,
+                                              *ph_decreasing, *ph_bounded);
+    Prolog_term_ref tmp_decreasing = Prolog_new_term_ref();
+    Prolog_put_address(tmp_decreasing, ph_decreasing);
+    Prolog_term_ref tmp_bounded = Prolog_new_term_ref();
+    Prolog_put_address(tmp_bounded, ph_bounded);
+    if (Prolog_unify(t_ph_decreasing, tmp_decreasing)
+        && Prolog_unify(t_ph_bounded, tmp_bounded)) {
+      PPL_REGISTER(ph_decreasing);
+      PPL_REGISTER(ph_bounded);
+      return PROLOG_SUCCESS;
+    }
+    else {
+      delete ph_decreasing;
+      delete ph_bounded;
+    }
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2
+  (Prolog_term_ref t_pset_before,
+   Prolog_term_ref t_pset_after,
+   Prolog_term_ref t_ph_decreasing,
+   Prolog_term_ref t_ph_bounded) {
+  static const char* where =
+      "ppl_all_affine_quasi_ranking_functions_MS_@TOPOLOGY@@CLASS@_2/4";
+  try {
+    @TOPOLOGY@@CPP_CLASS@* pset_before
+       = term_to_handle<@TOPOLOGY@@CPP_CLASS@ >(t_pset_before, where);
+    @TOPOLOGY@@CPP_CLASS@* pset_after
+       = term_to_handle<@TOPOLOGY@@CPP_CLASS@ >(t_pset_after, where);
+    PPL_CHECK(pset_before);
+    PPL_CHECK(pset_after);
+    C_Polyhedron* ph_decreasing = new C_Polyhedron();
+    C_Polyhedron* ph_bounded = new C_Polyhedron();
+    Parma_Polyhedra_Library
+      ::all_affine_quasi_ranking_functions_MS_2(*pset_before, *pset_after,
+                                                *ph_decreasing, *ph_bounded);
+    Prolog_term_ref tmp_decreasing = Prolog_new_term_ref();
+    Prolog_put_address(tmp_decreasing, ph_decreasing);
+    Prolog_term_ref tmp_bounded = Prolog_new_term_ref();
+    Prolog_put_address(tmp_bounded, ph_bounded);
+    if (Prolog_unify(t_ph_decreasing, tmp_decreasing)
+        && Prolog_unify(t_ph_bounded, tmp_bounded)) {
+      PPL_REGISTER(ph_decreasing);
+      PPL_REGISTER(ph_bounded);
+      return PROLOG_SUCCESS;
+    }
+    else {
+      delete ph_decreasing;
+      delete ph_bounded;
+    }
   }
   CATCH_ALL;
 }
@@ -1729,14 +1883,75 @@ m4_define(`ppl_@CLASS@_map_space_dimensions_code',
       Prolog_get_arg(2, t_pair, t_j);
       dimension_type i = term_to_Variable(t_i, where).id();
       dimension_type j = term_to_Variable(t_j, where).id();
-      if (i >= space_dim || !pfunc.insert(i, j))
+      if (i >= space_dim)
         return PROLOG_FAILURE;
+      pfunc.insert(i, j);
     }
 
     // Check the list is properly terminated.
     check_nil_terminating(t_pfunc, where);
 
     ph->map_space_dimensions(pfunc);
+    return PROLOG_SUCCESS;
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_@CLASS@_drop_some_non_integer_points_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_@CLASS@_drop_some_non_integer_points
+  (Prolog_term_ref t_ph, Prolog_term_ref t_cc) {
+  static const char* where = "ppl_@CLASS@_drop_some_non_integer_points/2";
+  try {
+    @CPP_CLASS@* ph = term_to_handle<@CPP_CLASS@ >(t_ph, where);
+    PPL_CHECK(ph);
+    Prolog_atom p_cc = term_to_complexity_class(t_cc, where);
+    Complexity_Class cc;
+    if (p_cc == a_polynomial)
+      cc = POLYNOMIAL_COMPLEXITY;
+    else if (p_cc == a_simplex)
+      cc = SIMPLEX_COMPLEXITY;
+    else
+      cc = ANY_COMPLEXITY;
+
+    ph->drop_some_non_integer_points(cc);
+    return PROLOG_SUCCESS;
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_@CLASS@_drop_some_non_integer_points_2_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_@CLASS@_drop_some_non_integer_points_2
+  (Prolog_term_ref t_ph, Prolog_term_ref t_vlist, Prolog_term_ref t_cc) {
+  static const char* where = "ppl_@CLASS@_drop_some_non_integer_points_2/3";
+  try {
+    @CPP_CLASS@* ph = term_to_handle<@CPP_CLASS@ >(t_ph, where);
+    PPL_CHECK(ph);
+    Variables_Set variables;
+    Prolog_term_ref v = Prolog_new_term_ref();
+    while (Prolog_is_cons(t_vlist)) {
+      Prolog_get_cons(t_vlist, v, t_vlist);
+      variables.insert(term_to_Variable(v, where).id());
+    }
+
+    // Check the list is properly terminated.
+    check_nil_terminating(t_vlist, where);
+
+    Prolog_atom p_cc = term_to_complexity_class(t_cc, where);
+    Complexity_Class cc;
+    if (p_cc == a_polynomial)
+      cc = POLYNOMIAL_COMPLEXITY;
+    else if (p_cc == a_simplex)
+      cc = SIMPLEX_COMPLEXITY;
+    else
+      cc = ANY_COMPLEXITY;
+
+    ph->drop_some_non_integer_points(variables, cc);
     return PROLOG_SUCCESS;
   }
   CATCH_ALL;
@@ -1771,6 +1986,108 @@ m4_define(`ppl_@CLASS@_@MEMBYTES@_code',
 
     if (unify_ulong(t_m, pps->@MEMBYTES@()))
       return PROLOG_SUCCESS;
+  }
+  CATCH_ALL;
+}
+
+')
+
+m4_define(`ppl_@CLASS@_wrap_assign_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_@CLASS@_wrap_assign
+     (Prolog_term_ref t_ph,
+      Prolog_term_ref t_vars,
+      Prolog_term_ref t_w,
+      Prolog_term_ref t_r,
+      Prolog_term_ref t_o,
+      Prolog_term_ref t_cs,
+      Prolog_term_ref t_complexity,
+      Prolog_term_ref t_ind) {
+  static const char* where = "ppl_@CLASS@_wrap_assign/8";
+  try {
+    @CPP_CLASS@* pph = term_to_handle<@CPP_CLASS@ >(t_ph, where);
+
+    Variables_Set vars;
+    Prolog_term_ref v = Prolog_new_term_ref();
+    while (Prolog_is_cons(t_vars)) {
+      Prolog_get_cons(t_vars, v, t_vars);
+      vars.insert(term_to_Variable(v, where).id());
+    }
+    // Check the list is properly terminated.
+    check_nil_terminating(t_vars, where);
+
+    Prolog_atom p_w = term_to_bounded_integer_type_width(t_w, where);
+    Bounded_Integer_Type_Width w;
+    if (p_w == a_bits_8)
+      w = BITS_8;
+    else if (p_w == a_bits_16)
+      w = BITS_16;
+    else if (p_w == a_bits_32)
+      w = BITS_32;
+    else if (p_w == a_bits_64)
+      w = BITS_64;
+    else
+      w = BITS_128;
+
+    Prolog_atom p_r = term_to_bounded_integer_type_representation(t_r, where);
+    Bounded_Integer_Type_Representation r;
+    if (p_r == a_unsigned)
+      r = UNSIGNED;
+    else
+      r = SIGNED_2_COMPLEMENT;
+    Prolog_atom p_o = term_to_bounded_integer_type_overflow(t_o, where);
+    Bounded_Integer_Type_Overflow o;
+    if (p_o == a_overflow_wraps)
+      o = OVERFLOW_WRAPS;
+    else if (p_o == a_overflow_undefined)
+      o = OVERFLOW_UNDEFINED;
+    else
+      o = OVERFLOW_IMPOSSIBLE;
+
+    Constraint_System cs;
+    Prolog_term_ref c = Prolog_new_term_ref();
+    while (Prolog_is_cons(t_cs)) {
+      Prolog_get_cons(t_cs, c, t_cs);
+      cs.insert(build_constraint(c, where));
+    }
+    // Check the list is properly terminated.
+    check_nil_terminating(t_cs, where);
+
+    unsigned complexity = term_to_unsigned<unsigned>(t_complexity, where);
+
+    Prolog_atom p_ind = term_to_boolean(t_ind, where);
+    bool ind = (p_ind == a_true) ? true : false;
+
+    pph->wrap_assign(vars, w, r, o, &cs, complexity, ind);
+    return PROLOG_SUCCESS;
+  }
+  CATCH_ALL;
+ }
+
+')
+
+m4_define(`ppl_@CLASS@_frequency_code',
+  `extern "C" Prolog_foreign_return_type
+  ppl_@CLASS@_frequency(Prolog_term_ref t_ph,
+                        Prolog_term_ref t_le_expr,
+                        Prolog_term_ref t_freqn, Prolog_term_ref t_freqd,
+                        Prolog_term_ref t_valn, Prolog_term_ref t_vald) {
+  static const char* where = "ppl_@CLASS@_frequency/6";
+  try {
+    const @CPP_CLASS@* ph = term_to_handle<@CPP_CLASS@ >(t_ph, where);
+    PPL_CHECK(ph);
+    const Linear_Expression le = build_linear_expression(t_le_expr, where);
+    PPL_DIRTY_TEMP_COEFFICIENT(freqn);
+    PPL_DIRTY_TEMP_COEFFICIENT(freqd);
+    PPL_DIRTY_TEMP_COEFFICIENT(valn);
+    PPL_DIRTY_TEMP_COEFFICIENT(vald);
+    if (ph->frequency(le, freqn, freqd, valn, vald)) {
+      if (Prolog_unify_Coefficient(t_freqn, freqn)
+          && Prolog_unify_Coefficient(t_freqd, freqd)
+          && Prolog_unify_Coefficient(t_valn, valn)
+          && Prolog_unify_Coefficient(t_vald, vald))
+        return PROLOG_SUCCESS;
+    }
   }
   CATCH_ALL;
 }

@@ -2,7 +2,8 @@
         Pointset_Powerset<PH>::refine_with_constraints().
         Pointset_Powerset<PH>::refine_with_congruence().
         Pointset_Powerset<PH>::refine_with_congruences().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -65,10 +66,10 @@ test01() {
   bool ok = (pps == known_pps);
 
   Pointset_Powerset<C_Polyhedron>::const_iterator i = pps.begin();
-  C_Polyhedron phi = i->element();
+  C_Polyhedron phi = i->pointset();
   print_constraints(phi, "*** phi ***");
   i++;
-  C_Polyhedron phi1 = i->element();
+  C_Polyhedron phi1 = i->pointset();
   print_constraints(phi1, "*** phi1 ***");
 
   return ok;
@@ -116,7 +117,7 @@ test02() {
   bool ok = (pps == known_pps);
 
   Pointset_Powerset<C_Polyhedron>::const_iterator i = pps.begin();
-  C_Polyhedron phi = i->element();
+  C_Polyhedron phi = i->pointset();
   print_constraints(phi, "*** phi ***");
 
   return ok;
@@ -205,10 +206,10 @@ test04() {
   bool ok = (pps == known_pps);
 
   Pointset_Powerset<NNC_Polyhedron>::const_iterator i = pps.begin();
-  NNC_Polyhedron phi = i->element();
+  NNC_Polyhedron phi = i->pointset();
   print_constraints(phi, "*** phi ***");
   i++;
-  NNC_Polyhedron phi1 = i->element();
+  NNC_Polyhedron phi1 = i->pointset();
   print_constraints(phi1, "*** phi1 ***");
 
   return ok;

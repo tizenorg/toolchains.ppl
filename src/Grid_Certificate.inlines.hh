@@ -1,5 +1,6 @@
 /* Grid_Certificate class implementation: inline functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -29,7 +30,7 @@ inline
 Grid_Certificate::Grid_Certificate()
   : num_equalities(0), num_proper_congruences(0) {
   // This is the certificate for a zero-dim universe grid.
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 inline

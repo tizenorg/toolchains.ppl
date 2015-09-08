@@ -1,5 +1,6 @@
 /* MIP_Problem class implementation: non-inline template functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -94,7 +95,7 @@ MIP_Problem::MIP_Problem(const dimension_type dim,
      }
      input_cs.push_back(*i);
    }
-   assert(OK());
+   PPL_ASSERT(OK());
 }
 
 template <typename In>
@@ -150,7 +151,7 @@ MIP_Problem::MIP_Problem(dimension_type dim,
     }
     input_cs.push_back(*i);
   }
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 } // namespace Parma_Polyhedra_Library

@@ -1,6 +1,7 @@
 /* Grid class implementation
    (non-inline operators that may change the dimension of the vector space).
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -25,7 +26,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 
 #include "Grid.defs.hh"
 #include "Variables_Set.defs.hh"
-#include <cassert>
+#include "assert.hh"
 
 namespace PPL = Parma_Polyhedra_Library;
 
@@ -34,8 +35,8 @@ void
 PPL::Grid::add_space_dimensions(Congruence_System& cgs,
 				Grid_Generator_System& gs,
 				const dimension_type dims) {
-  assert(cgs.num_columns() - 1 == gs.space_dimension() + 1);
-  assert(dims > 0);
+  PPL_ASSERT(cgs.num_columns() - 1 == gs.space_dimension() + 1);
+  PPL_ASSERT(dims > 0);
 
   const dimension_type old_modulus_index = cgs.num_columns() - 1;
   cgs.add_zero_columns(dims);
@@ -53,8 +54,8 @@ void
 PPL::Grid::add_space_dimensions(Grid_Generator_System& gs,
 				Congruence_System& cgs,
 				const dimension_type dims) {
-  assert(cgs.num_columns() - 1 == gs.space_dimension() + 1);
-  assert(dims > 0);
+  PPL_ASSERT(cgs.num_columns() - 1 == gs.space_dimension() + 1);
+  PPL_ASSERT(dims > 0);
 
   cgs.add_unit_rows_and_columns(dims);
 
@@ -98,7 +99,7 @@ PPL::Grid::add_space_dimensions_and_embed(dimension_type m) {
   // The case of a zero-dimension space grid.
   if (space_dim == 0) {
     // Since it is not empty, it has to be the universe grid.
-    assert(status.test_zero_dim_univ());
+    PPL_ASSERT(status.test_zero_dim_univ());
     // Swap *this with a newly created `m'-dimensional universe grid.
     Grid gr(m, UNIVERSE);
     swap(gr);
@@ -127,7 +128,7 @@ PPL::Grid::add_space_dimensions_and_embed(dimension_type m) {
     }
   else {
     // Only generators are up-to-date, so modify only them.
-    assert(generators_are_up_to_date());
+    PPL_ASSERT(generators_are_up_to_date());
     gen_sys.add_universe_rows_and_columns(m);
     if (generators_are_minimized())
       dim_kinds.resize(gen_sys.space_dimension() + 1, LINE);
@@ -137,7 +138,7 @@ PPL::Grid::add_space_dimensions_and_embed(dimension_type m) {
 
   // Note: we do not check for satisfiability, because the system of
   // congruences may be unsatisfiable.
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 // (o is a point)       y
@@ -169,7 +170,7 @@ PPL::Grid::add_space_dimensions_and_project(dimension_type m) {
   }
 
   if (space_dim == 0) {
-    assert(status.test_zero_dim_univ());
+    PPL_ASSERT(status.test_zero_dim_univ());
     // Swap *this with a newly created `n'-dimensional universe grid.
     Grid gr(m, UNIVERSE);
     swap(gr);
@@ -195,7 +196,7 @@ PPL::Grid::add_space_dimensions_and_project(dimension_type m) {
     }
   else {
     // Only generators are up-to-date so modify only them.
-    assert(generators_are_up_to_date());
+    PPL_ASSERT(generators_are_up_to_date());
 
     // Add m zero columns onto gs.
     gen_sys.insert(parameter(0*Variable(space_dim + m - 1)));
@@ -210,7 +211,7 @@ PPL::Grid::add_space_dimensions_and_project(dimension_type m) {
 
   // Note: we do not check for satisfiability, because the system of
   // congruences may be unsatisfiable.
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 void
@@ -254,32 +255,32 @@ PPL::Grid::concatenate_assign(const Grid& y) {
 
   // Check that the system is OK, taking into account that the system
   // of congruences may now be empty.
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 void
-PPL::Grid::remove_space_dimensions(const Variables_Set& to_be_removed) {
+PPL::Grid::remove_space_dimensions(const Variables_Set& vars) {
   // The removal of no dimensions from any grid is a no-op.  This case
   // also captures the only legal removal of dimensions from a grid in
   // a 0-dim space.
-  if (to_be_removed.empty()) {
-    assert(OK());
+  if (vars.empty()) {
+    PPL_ASSERT(OK());
     return;
   }
 
   // Dimension-compatibility check.
-  const dimension_type min_space_dim = to_be_removed.space_dimension();
+  const dimension_type min_space_dim = vars.space_dimension();
   if (space_dim < min_space_dim)
     throw_dimension_incompatible("remove_space_dimensions(vs)", min_space_dim);
 
-  const dimension_type new_space_dim = space_dim - to_be_removed.size();
+  const dimension_type new_space_dim = space_dim - vars.size();
 
   if (marked_empty()
       || (!generators_are_up_to_date() && !update_generators())) {
     // Update the space dimension.
     space_dim = new_space_dim;
     set_empty();
-    assert(OK());
+    PPL_ASSERT(OK());
     return;
   }
 
@@ -290,7 +291,7 @@ PPL::Grid::remove_space_dimensions(const Variables_Set& to_be_removed) {
     return;
   }
 
-  gen_sys.remove_space_dimensions(to_be_removed);
+  gen_sys.remove_space_dimensions(vars);
 
   clear_congruences_up_to_date();
   clear_generators_minimized();
@@ -298,7 +299,7 @@ PPL::Grid::remove_space_dimensions(const Variables_Set& to_be_removed) {
   // Update the space dimension.
   space_dim = new_space_dim;
 
-  assert(OK(true));
+  PPL_ASSERT(OK(true));
 }
 
 void
@@ -312,7 +313,7 @@ PPL::Grid::remove_higher_space_dimensions(const dimension_type new_dimension) {
   // Note that this case also captures the only legal removal of
   // dimensions from a grid in a 0-dim space.
   if (new_dimension == space_dim) {
-    assert(OK());
+    PPL_ASSERT(OK());
     return;
   }
 
@@ -321,7 +322,7 @@ PPL::Grid::remove_higher_space_dimensions(const dimension_type new_dimension) {
     // dimension.
     space_dim = new_dimension;
     set_empty();
-    assert(OK());
+    PPL_ASSERT(OK());
     return;
   }
 
@@ -359,7 +360,7 @@ PPL::Grid::remove_higher_space_dimensions(const dimension_type new_dimension) {
     con_sys.swap(cgs);
   }
   else {
-    assert(congruences_are_minimized());
+    PPL_ASSERT(congruences_are_minimized());
     con_sys.remove_higher_space_dimensions(new_dimension);
     // Count the actual number of rows that are now redundant.
     dimension_type num_redundant = 0;
@@ -387,7 +388,7 @@ PPL::Grid::remove_higher_space_dimensions(const dimension_type new_dimension) {
   // Update the space dimension.
   space_dim = new_dimension;
 
-  assert(OK(true));
+  PPL_ASSERT(OK(true));
 }
 
 void
@@ -437,32 +438,31 @@ PPL::Grid::expand_space_dimension(Variable var, dimension_type m) {
     }
   }
   add_recycled_congruences(new_congruences);
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 void
-PPL::Grid::fold_space_dimensions(const Variables_Set& to_be_folded,
-				 Variable var) {
+PPL::Grid::fold_space_dimensions(const Variables_Set& vars, Variable dest) {
   // TODO: this implementation is _really_ an executable specification.
 
-  // `var' should be one of the dimensions of the grid.
-  if (var.space_dimension() > space_dim)
-    throw_dimension_incompatible("fold_space_dimensions(tbf, v)", "v", var);
+  // `dest' should be one of the dimensions of the grid.
+  if (dest.space_dimension() > space_dim)
+    throw_dimension_incompatible("fold_space_dimensions(vs, v)", "v", dest);
 
   // Folding only has effect if dimensions are given.
-  if (to_be_folded.empty())
+  if (vars.empty())
     return;
 
-  // All variables in `to_be_folded' must be dimensions of the grid.
-  if (to_be_folded.space_dimension() > space_dim)
-    throw_dimension_incompatible("fold_space_dimensions(tbf, v)",
-				 "tbf.space_dimension()",
-				 to_be_folded.space_dimension());
+  // All variables in `vars' must be dimensions of the grid.
+  if (vars.space_dimension() > space_dim)
+    throw_dimension_incompatible("fold_space_dimensions(vs, v)",
+				 "vs.space_dimension()",
+				 vars.space_dimension());
 
-  // Moreover, `var.id()' must not occur in `to_be_folded'.
-  if (to_be_folded.find(var.id()) != to_be_folded.end())
-    throw_invalid_argument("fold_space_dimensions(tbf, v)",
-			   "v should not occur in tbf");
+  // Moreover, `dest.id()' must not occur in `vars'.
+  if (vars.find(dest.id()) != vars.end())
+    throw_invalid_argument("fold_space_dimensions(vs, v)",
+			   "v should not occur in vs");
   // All of the affine images we are going to compute are not invertible,
   // hence we will need to compute the grid generators of the polyhedron.
   // Since we keep taking copies, make sure that a single conversion
@@ -471,13 +471,13 @@ PPL::Grid::fold_space_dimensions(const Variables_Set& to_be_folded,
   // Having grid generators, we now know if the grid is empty:
   // in that case, folding is equivalent to just removing space dimensions.
   if (!marked_empty()) {
-    for (Variables_Set::const_iterator i = to_be_folded.begin(),
-           tbf_end = to_be_folded.end(); i != tbf_end; ++i) {
+    for (Variables_Set::const_iterator i = vars.begin(),
+           vs_end = vars.end(); i != vs_end; ++i) {
       Grid copy = *this;
-      copy.affine_image(var, Linear_Expression(Variable(*i)));
+      copy.affine_image(dest, Linear_Expression(Variable(*i)));
       upper_bound_assign(copy);
     }
   }
-  remove_space_dimensions(to_be_folded);
-  assert(OK());
+  remove_space_dimensions(vars);
+  PPL_ASSERT(OK());
 }

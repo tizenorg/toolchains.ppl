@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -70,7 +71,11 @@ ppl-config.sed \
 ppl.lsm.in \
 BUGS \
 CREDITS \
+ChangeLog_2001-2008 \
+README.alpha \
+README.arm \
 README.configure \
+README.solaris \
 STANDARDS
 
 DISTCLEANFILES = \

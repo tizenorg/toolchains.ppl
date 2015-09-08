@@ -4,7 +4,8 @@ m4_divert(-1)
 dnl This m4 file generates the files <CLASS_NAME>.java
 dnl using the code in ppl_interface_generator_java_classes_java_code.m4.
 
-dnl Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+dnl Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 dnl
 dnl This file is part of the Parma Polyhedra Library (PPL).
 dnl
@@ -33,6 +34,18 @@ dnl Ensure any schematic procedure macro that is not defined
 dnl in the code file outputs a warning message.
 m4_define(`m4_default_code', `m4_dumpdef($1`'_code)')
 
+m4_divert
+___END_OF_FILE___
+___BEGIN_OF_FILE___ Termination.java << ___END_OF_FILE___
+/* PPL Java interface: Termination definition.
+m4_include(`ppl_interface_generator_copyright')`'dnl
+*/
+
+package parma_polyhedra_library;
+public class Termination {`'dnl
+
+m4_divert(-1)
+
 dnl m4_pre_extra_class_code(Class, CPP_Class, Class_Kind)
 dnl Prefix extra code for each class.
 m4_define(`m4_pre_extra_class_code', `dnl
@@ -40,7 +53,8 @@ m4_define(`m4_this_class', `m4_interface_class$1')`'dnl
 m4_define(`m4_this_cplusplus_class', `Parma_Polyhedra_Library::`'m4_cplusplus_class$1')`'dnl
 m4_define(`m4_this_class_kind', `m4_class_kind$1')`'dnl
 m4_divert
-%<--%<--%<-- m4_this_class`'.java
+___END_OF_FILE___
+___BEGIN_OF_FILE___ m4_this_class`'.java << ___END_OF_FILE___
 /* PPL Java interface: m4_this_class definition.
 m4_include(`ppl_interface_generator_copyright')`'dnl
 */
@@ -57,7 +71,8 @@ import java.io.IOException;
 public class m4_this_class extends PPL_Object {`'dnl
 m4_ifelse(m4_this_class, Polyhedron,
   `
-%<--%<--%<-- C_Polyhedron.java
+___END_OF_FILE___
+___BEGIN_OF_FILE___ C_Polyhedron.java << ___END_OF_FILE___
 /* PPL Java interface: C_Polyhedron definition.
 m4_include(`ppl_interface_generator_copyright')`'dnl
 */
@@ -69,7 +84,8 @@ package parma_polyhedra_library;
   \ingroup PPL_java_interface
 */
 public class C_Polyhedron extends Polyhedron {
-%<--%<--%<-- NNC_Polyhedron.java
+___END_OF_FILE___
+___BEGIN_OF_FILE___ NNC_Polyhedron.java << ___END_OF_FILE___
 /* PPL Java interface: NNC_Polyhedron definition.
 m4_include(`ppl_interface_generator_copyright')`'dnl
 */
@@ -84,7 +100,8 @@ public class NNC_Polyhedron extends Polyhedron {
 ',
 m4_this_class_kind, Pointset_Powerset,
 `
-%<--%<--%<-- m4_this_class`'_Iterator.java
+___END_OF_FILE___
+___BEGIN_OF_FILE___ m4_this_class`'_Iterator.java << ___END_OF_FILE___
 /* PPL Java interface: m4_this_class`'_Iterator definition.
 m4_include(`ppl_interface_generator_copyright')`'dnl
 */
@@ -92,7 +109,7 @@ m4_include(`ppl_interface_generator_copyright')`'dnl
 package parma_polyhedra_library;
 
 /*! \brief
-  Java class interfacing C++ m4_this_cplusplus_class`'::iterator
+  Java class interfacing C++ m4_this_cplusplus_class`':: iterator
   \ingroup PPL_java_interface
 */
 public class m4_this_class`'_Iterator extends PPL_Object {
@@ -116,19 +133,23 @@ m4_replace_all_patterns($1, m4_class_build_cpp_object2_code)`'dnl
 m4_replace_all_patterns($1, m4_class_build_cpp_object3_code)`'dnl
 m4_define(`m4_this_class', `m4_interface_class$1')`'dnl
 m4_define(`m4_this_class_kind', `m4_class_kind$1')
-%<--%<--%<-- m4_this_class`'.java
+___END_OF_FILE___
+___BEGIN_OF_FILE___ m4_this_class`'.java << ___END_OF_FILE___
 }`'dnl
 m4_ifelse(m4_this_class, Polyhedron,
   `
-%<--%<--%<-- C_Polyhedron.java
+___END_OF_FILE___
+___BEGIN_OF_FILE___ C_Polyhedron.java << ___END_OF_FILE___
 }
 
-%<--%<--%<-- NNC_Polyhedron.java
+___END_OF_FILE___
+___BEGIN_OF_FILE___ NNC_Polyhedron.java << ___END_OF_FILE___
 }
 ',
 m4_this_class_kind, Pointset_Powerset,
   `
-%<--%<--%<-- m4_this_class`'_Iterator.java
+___END_OF_FILE___
+___BEGIN_OF_FILE___ m4_this_class`'_Iterator.java << ___END_OF_FILE___
 }`'dnl
 ')`'dnl
 m4_undefine(`m4_this_class')`'dnl
@@ -140,6 +161,12 @@ dnl Main calls to macro m4_all_code to generate code
 dnl -----------------------------------------------------------------
 m4_divert`'dnl
 m4_all_code`'dnl
+___END_OF_FILE___
 m4_divert(-1)
-
+m4_divert
+___END_OF_FILE___
+___BEGIN_OF_FILE___ Termination.java << ___END_OF_FILE___
+}
+___END_OF_FILE___
+m4_divert(-1)
 dnl End of file generation.

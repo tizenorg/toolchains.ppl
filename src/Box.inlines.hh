@@ -1,5 +1,6 @@
 /* Box class implementation: inline functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -133,7 +134,7 @@ Box<ITV>::max_space_dimension() {
 template <typename ITV>
 inline const ITV&
 Box<ITV>::operator[](const dimension_type k) const {
-  assert(k < seq.size());
+  PPL_ASSERT(k < seq.size());
   return seq[k];
 }
 
@@ -166,7 +167,7 @@ Box<ITV>::set_interval(const Variable var, const ITV& i) {
   seq[var.id()] = i;
   reset_empty_up_to_date();
 
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 template <typename ITV>
@@ -245,7 +246,7 @@ Box<ITV>::expand_space_dimension(const Variable var,
   // To expand the space dimension corresponding to variable `var',
   // we append to the box `m' copies of the corresponding interval.
   seq.insert(seq.end(), m, seq[var.id()]);
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 template <typename ITV>
@@ -258,10 +259,10 @@ template <typename ITV>
 inline bool
 Box<ITV>::get_lower_bound(const dimension_type k, bool& closed,
                           Coefficient& n, Coefficient& d) const {
-  assert(k < seq.size());
+  PPL_ASSERT(k < seq.size());
   const ITV& seq_k = seq[k];
 
-  if (seq_k.lower_is_unbounded())
+  if (seq_k.lower_is_boundary_infinity())
     return false;
 
   closed = !seq_k.lower_is_open();
@@ -278,10 +279,10 @@ template <typename ITV>
 inline bool
 Box<ITV>::get_upper_bound(const dimension_type k, bool& closed,
                           Coefficient& n, Coefficient& d) const {
-  assert(k < seq.size());
+  PPL_ASSERT(k < seq.size());
   const ITV& seq_k = seq[k];
 
-  if (seq_k.upper_is_unbounded())
+  if (seq_k.upper_is_boundary_infinity())
     return false;
 
   closed = !seq_k.upper_is_open();
@@ -372,21 +373,17 @@ Box<ITV>::minimized_congruences() const {
 }
 
 template <typename ITV>
-inline void
-Box<ITV>
-::add_interval_constraint_no_check(const dimension_type var_id,
+inline I_Result
+Box<ITV>::refine_interval_no_check(ITV& itv,
                                    const Constraint::Type type,
                                    Coefficient_traits::const_reference num,
                                    Coefficient_traits::const_reference den) {
-  assert(!marked_empty());
-  assert(var_id < space_dimension());
-  assert(den != 0);
-
+  PPL_ASSERT(den != 0);
   // The interval constraint is of the form
-  // `Variable(var_id) + num / den rel 0', where
-  // `rel' is either the relation `==', `>=', or `>'.
+  // `var + num / den rel 0',
+  // where `rel' is either the relation `==', `>=', or `>'.
   // For the purpose of refining the interval, this is
-  // (morally) turned into `Variable(var_id) rel -num/den'.
+  // (morally) turned into `var rel -num/den'.
   PPL_DIRTY_TEMP0(mpq_class, q);
   assign_r(q.get_num(), num, ROUND_NOT_NEEDED);
   assign_r(q.get_den(), den, ROUND_NOT_NEEDED);
@@ -394,24 +391,46 @@ Box<ITV>
   // Turn `num/den' into `-num/den'.
   q = -q;
 
-  ITV& seq_v = seq[var_id];
+  I_Result res;
   switch (type) {
   case Constraint::EQUALITY:
-    seq_v.refine_existential(EQUAL, q);
+    res = itv.add_constraint(i_constraint(EQUAL, q));
     break;
   case Constraint::NONSTRICT_INEQUALITY:
-    seq_v.refine_existential((den > 0) ? GREATER_OR_EQUAL : LESS_OR_EQUAL, q);
-    assert(seq_v.OK());
+    res = itv.add_constraint(i_constraint(den > 0
+                                          ? GREATER_OR_EQUAL
+                                          : LESS_OR_EQUAL, q));
     break;
   case Constraint::STRICT_INEQUALITY:
-    seq_v.refine_existential((den > 0) ? GREATER_THAN : LESS_THAN, q);
+    res = itv.add_constraint(i_constraint(den > 0
+                                          ? GREATER_THAN
+                                          : LESS_THAN, q));
     break;
+  default:
+    // Silence an annoying GCC warning (should never reach this point).
+    PPL_ASSERT(false);
+    res = I_ANY;
   }
-  // FIXME: do check the value returned by `refine_existential' and
-  // set `empty' and `empty_up_to_date' as appropriate.
+  PPL_ASSERT(itv.OK());
+  return res;
+}
+
+template <typename ITV>
+inline void
+Box<ITV>
+::add_interval_constraint_no_check(const dimension_type var_id,
+                                   const Constraint::Type type,
+                                   Coefficient_traits::const_reference num,
+                                   Coefficient_traits::const_reference den) {
+  PPL_ASSERT(!marked_empty());
+  PPL_ASSERT(var_id < space_dimension());
+  PPL_ASSERT(den != 0);
+  refine_interval_no_check(seq[var_id], type, num, den);
+  // FIXME: do check the value returned and set `empty' and
+  // `empty_up_to_date' as appropriate.
   // This has to be done after reimplementation of intervals.
   reset_empty_up_to_date();
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 template <typename ITV>
@@ -489,7 +508,8 @@ Box<ITV>::propagate_constraint(const Constraint& c) {
 
 template <typename ITV>
 inline void
-Box<ITV>::propagate_constraints(const Constraint_System& cs) {
+Box<ITV>::propagate_constraints(const Constraint_System& cs,
+                                const dimension_type max_iterations) {
   // Dimension-compatibility check.
   if (cs.space_dimension() > space_dimension())
     throw_dimension_incompatible("propagate_constraints(cs)", cs);
@@ -498,28 +518,30 @@ Box<ITV>::propagate_constraints(const Constraint_System& cs) {
   if (marked_empty())
     return;
 
-  propagate_constraints_no_check(cs);
+  propagate_constraints_no_check(cs, max_iterations);
 }
 
 template <typename ITV>
 inline void
 Box<ITV>::unconstrain(const Variable var) {
-  const dimension_type dim = var.id();
+  const dimension_type var_id = var.id();
   // Dimension-compatibility check.
-  if (dim > space_dimension())
-    throw_dimension_incompatible("unconstrain(var)", dim);
+  if (space_dimension() < var_id + 1)
+    throw_dimension_incompatible("unconstrain(var)", var_id + 1);
 
   // If the box is already empty, there is nothing left to do.
   if (marked_empty())
     return;
+
   // Here the box might still be empty (but we haven't detected it yet):
   // check emptiness of the interval for `var' before cylindrification.
-  ITV& seq_var = seq[dim];
+  ITV& seq_var = seq[var_id];
   if (seq_var.is_empty())
     set_empty();
   else
     seq_var.assign(UNIVERSE);
-  assert(OK());
+
+  PPL_ASSERT(OK());
 }
 
 /*! \relates Box */

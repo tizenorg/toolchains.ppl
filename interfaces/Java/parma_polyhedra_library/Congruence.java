@@ -1,5 +1,6 @@
 /* Congruence Java class declaration and implementation.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -41,7 +42,7 @@ import java.io.IOException;
 public class Congruence {
 
     //! The modulus of the congruence.
-    protected Coefficient modulus;
+    protected Coefficient mod;
 
     //! The value of the left hand side of \p this.
     Linear_Expression lhs;
@@ -55,9 +56,24 @@ public class Congruence {
     */
     public Congruence(Linear_Expression e1, Linear_Expression e2,
 		      Coefficient m) {
-	modulus = new Coefficient(m);
+	mod = new Coefficient(m);
 	lhs = e1.clone();
 	rhs = e2.clone();
+    }
+
+    //! Returns the left hand side of \p this.
+    public Linear_Expression left_hand_side() {
+	return lhs;
+    }
+
+    //! Returns the right hand side of \p this.
+    public Linear_Expression right_hand_side() {
+	return rhs;
+    }
+
+    //! Returns the relation symbol of \p this.
+    public Coefficient modulus() {
+	return mod;
     }
 
     //! Returns an ascii formatted internal representation of \p this.
@@ -65,4 +81,9 @@ public class Congruence {
 
     //! Returns a string representation of \p this.
     public native String toString();
+
+    private static native void initIDs();
+    static {
+        initIDs();
+    }
 }

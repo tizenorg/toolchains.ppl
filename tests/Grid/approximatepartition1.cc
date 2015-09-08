@@ -1,5 +1,6 @@
 /* Test approximate_partition().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -92,7 +93,8 @@ test02() {
   Grid known_gr(p);
 
   Pointset_Powerset<Grid>::iterator i = (result.second).begin();
-  return (i->element() == known_gr);
+
+return i->pointset() == known_gr;
 }
 
 BEGIN_MAIN

@@ -1,5 +1,6 @@
 /* Checked_Number class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -34,31 +35,6 @@ namespace Parma_Polyhedra_Library {
 #ifdef PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS
 /*! \ingroup PPL_CXX_interface */
 #endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
-struct Checked_Number_Default_Policy {
-  const_bool_nodef(check_overflow, true);
-  const_bool_nodef(check_inf_add_inf, false);
-  const_bool_nodef(check_inf_sub_inf, false);
-  const_bool_nodef(check_inf_mul_zero, false);
-  const_bool_nodef(check_div_zero, false);
-  const_bool_nodef(check_inf_div_inf, false);
-  const_bool_nodef(check_inf_mod, false);
-  const_bool_nodef(check_sqrt_neg, false);
-  const_bool_nodef(has_nan, false);
-  const_bool_nodef(has_infinity, false);
-  const_bool_nodef(convertible, true);
-  const_bool_nodef(fpu_check_inexact, true);
-  const_bool_nodef(check_nan_result, true);
-  static const Rounding_Dir ROUND_DEFAULT_CONSTRUCTOR = ROUND_NATIVE;
-  static const Rounding_Dir ROUND_DEFAULT_OPERATOR = ROUND_NATIVE;
-  static const Rounding_Dir ROUND_DEFAULT_FUNCTION = ROUND_NATIVE;
-  static const Rounding_Dir ROUND_DEFAULT_INPUT = ROUND_NATIVE;
-  static const Rounding_Dir ROUND_DEFAULT_OUTPUT = ROUND_NATIVE;
-  static void handle_result(Result r);
-};
-
-#ifdef PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS
-/*! \ingroup PPL_CXX_interface */
-#endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
 struct Extended_Number_Policy {
   const_bool_nodef(check_overflow, true);
   const_bool_nodef(check_inf_add_inf, false);
@@ -74,36 +50,7 @@ struct Extended_Number_Policy {
   // The compile time error on conversions is the expected behavior.
   // const_bool_nodef(convertible, false);
   const_bool_nodef(fpu_check_inexact, true);
-  const_bool_nodef(check_nan_result, true);
-  // Do not uncomment the following.
-  // The compile time error is the expected behavior.
-  // static const Rounding_Dir ROUND_DEFAULT_CONSTRUCTOR = ROUND_UP;
-  // static const Rounding_Dir ROUND_DEFAULT_OPERATOR = ROUND_UP;
-  // static const Rounding_Dir ROUND_DEFAULT_FUNCTION = ROUND_UP;
-  // static const Rounding_Dir ROUND_DEFAULT_INPUT = ROUND_UP;
-  // static const Rounding_Dir ROUND_DEFAULT_OUTPUT = ROUND_UP;
-  static void handle_result(Result r);
-};
-
-#ifdef PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS
-/*! \ingroup PPL_CXX_interface */
-#endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
-struct WRD_Extended_Number_Policy {
-  const_bool_nodef(check_overflow, true);
-  const_bool_nodef(check_inf_add_inf, false);
-  const_bool_nodef(check_inf_sub_inf, false);
-  const_bool_nodef(check_inf_mul_zero, false);
-  const_bool_nodef(check_div_zero, false);
-  const_bool_nodef(check_inf_div_inf, false);
-  const_bool_nodef(check_inf_mod, false);
-  const_bool_nodef(check_sqrt_neg, false);
-  const_bool_nodef(has_nan, true);
-  const_bool_nodef(has_infinity, true);
-  // Do not uncomment the following.
-  // The compile time error on conversions is the expected behavior.
-  // const_bool_nodef(convertible, false);
-  const_bool_nodef(fpu_check_inexact, true);
-  const_bool_nodef(check_nan_result, false);
+  const_bool_nodef(fpu_check_nan_result, true);
   // Do not uncomment the following.
   // The compile time error is the expected behavior.
   // static const Rounding_Dir ROUND_DEFAULT_CONSTRUCTOR = ROUND_UP;
@@ -132,7 +79,7 @@ struct Check_Overflow_Policy {
   const_bool_nodef(has_infinity, std::numeric_limits<T>::has_infinity);
   const_bool_nodef(convertible, true);
   const_bool_nodef(fpu_check_inexact, true);
-  const_bool_nodef(check_nan_result, true);
+  const_bool_nodef(fpu_check_nan_result, true);
 };
 
 #ifdef PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS
@@ -222,12 +169,15 @@ public:
   //! Default constructor.
   Checked_Number();
 
-  //! Copy-constructor.
+  //! Copy constructor.
   Checked_Number(const Checked_Number& y);
 
   //! Direct initialization from a Checked_Number and rounding mode.
   template <typename From, typename From_Policy>
   Checked_Number(const Checked_Number<From, From_Policy>& y, Rounding_Dir dir);
+
+  //! Direct initialization from a plain char and rounding mode.
+  Checked_Number(char y, Rounding_Dir dir);
 
   //! Direct initialization from a signed char and rounding mode.
   Checked_Number(signed char y, Rounding_Dir dir);
@@ -290,6 +240,9 @@ public:
   //! Direct initialization from a Checked_Number, default rounding mode.
   template <typename From, typename From_Policy>
   explicit Checked_Number(const Checked_Number<From, From_Policy>& y);
+
+  //! Direct initialization from a plain char, default rounding mode.
+  Checked_Number(char y);
 
   //! Direct initialization from a signed char, default rounding mode.
   Checked_Number(signed char y);
@@ -526,36 +479,40 @@ template <typename To, typename To_Policy>
 typename Enable_If<Is_Native_Or_Checked<To>::value, Result>::type
 assign_r(To& to, char* x, Rounding_Dir dir);
 
-#define FUNC1(name) \
+#define PPL_DECLARE_FUNC1_A(name) \
 template <typename To, typename From> \
 typename Enable_If<Is_Native_Or_Checked<To>::value \
                    && Is_Native_Or_Checked<From>::value, \
                    Result>::type \
 name(To& to, const From& x, Rounding_Dir dir);
 
-FUNC1(assign_r)
-FUNC1(floor_assign_r)
-FUNC1(ceil_assign_r)
-FUNC1(trunc_assign_r)
-FUNC1(neg_assign_r)
-FUNC1(abs_assign_r)
-FUNC1(sqrt_assign_r)
+PPL_DECLARE_FUNC1_A(assign_r)
+PPL_DECLARE_FUNC1_A(floor_assign_r)
+PPL_DECLARE_FUNC1_A(ceil_assign_r)
+PPL_DECLARE_FUNC1_A(trunc_assign_r)
+PPL_DECLARE_FUNC1_A(neg_assign_r)
+PPL_DECLARE_FUNC1_A(abs_assign_r)
+PPL_DECLARE_FUNC1_A(sqrt_assign_r)
 
-#undef FUNC1
+#undef PPL_DECLARE_FUNC1_A
 
-#define FUNC1(name) \
+#define PPL_DECLARE_FUNC1_B(name) \
 template <typename To, typename From> \
 typename Enable_If<Is_Native_Or_Checked<To>::value \
                    && Is_Native_Or_Checked<From>::value, \
                    Result>::type \
 name(To& to, const From& x, int exp, Rounding_Dir dir);
 
-FUNC1(mul2exp_assign_r)
-FUNC1(div2exp_assign_r)
+PPL_DECLARE_FUNC1_B(add_2exp_assign_r)
+PPL_DECLARE_FUNC1_B(sub_2exp_assign_r)
+PPL_DECLARE_FUNC1_B(mul_2exp_assign_r)
+PPL_DECLARE_FUNC1_B(div_2exp_assign_r)
+PPL_DECLARE_FUNC1_B(smod_2exp_assign_r)
+PPL_DECLARE_FUNC1_B(umod_2exp_assign_r)
 
-#undef FUNC1
+#undef PPL_DECLARE_FUNC1_B
 
-#define FUNC2(name) \
+#define PPL_DECLARE_FUNC2(name) \
 template <typename To, typename From1, typename From2> \
 typename Enable_If<Is_Native_Or_Checked<To>::value \
                    && Is_Native_Or_Checked<From1>::value \
@@ -563,20 +520,20 @@ typename Enable_If<Is_Native_Or_Checked<To>::value \
                    Result>::type \
 name(To& to, const From1& x, const From2& y, Rounding_Dir dir);
 
-FUNC2(add_assign_r)
-FUNC2(sub_assign_r)
-FUNC2(mul_assign_r)
-FUNC2(div_assign_r)
-FUNC2(idiv_assign_r)
-FUNC2(rem_assign_r)
-FUNC2(gcd_assign_r)
-FUNC2(lcm_assign_r)
-FUNC2(add_mul_assign_r)
-FUNC2(sub_mul_assign_r)
+PPL_DECLARE_FUNC2(add_assign_r)
+PPL_DECLARE_FUNC2(sub_assign_r)
+PPL_DECLARE_FUNC2(mul_assign_r)
+PPL_DECLARE_FUNC2(div_assign_r)
+PPL_DECLARE_FUNC2(idiv_assign_r)
+PPL_DECLARE_FUNC2(rem_assign_r)
+PPL_DECLARE_FUNC2(gcd_assign_r)
+PPL_DECLARE_FUNC2(lcm_assign_r)
+PPL_DECLARE_FUNC2(add_mul_assign_r)
+PPL_DECLARE_FUNC2(sub_mul_assign_r)
 
-#undef FUNC2
+#undef PPL_DECLARE_FUNC2
 
-#define FUNC4(name) \
+#define PPL_DECLARE_FUNC4(name) \
 template <typename To1, typename To2, typename To3, \
 	  typename From1, typename From2> \
 typename Enable_If<Is_Native_Or_Checked<To1>::value \
@@ -589,9 +546,9 @@ name(To1& to, To2& s, To3& t, \
      const From1& x, const From2& y, \
      Rounding_Dir dir);
 
-FUNC4(gcdext_assign_r)
+PPL_DECLARE_FUNC4(gcdext_assign_r)
 
-#undef FUNC4
+#undef PPL_DECLARE_FUNC4
 
 //! \name Accessor Functions
 //@{
@@ -734,6 +691,22 @@ void
 lcm_assign(Checked_Number<T, Policy>& x,
 	   const Checked_Number<T, Policy>& y,
 	   const Checked_Number<T, Policy>& z);
+
+//! Assigns to \p x the value \f$ y \cdot 2^\mathtt{exp} \f$.
+/*! \relates Checked_Number */
+template <typename T, typename Policy>
+void
+mul_2exp_assign(Checked_Number<T, Policy>& x,
+                const Checked_Number<T, Policy>& y,
+                unsigned int exp);
+
+//! Assigns to \p x the value \f$ y / 2^\mathtt{exp} \f$.
+/*! \relates Checked_Number */
+template <typename T, typename Policy>
+void
+div_2exp_assign(Checked_Number<T, Policy>& x,
+	       const Checked_Number<T, Policy>& y,
+	       unsigned int exp);
 
 /*! \brief
   If \p z divides \p y, assigns to \p x the quotient of the integer
@@ -960,6 +933,10 @@ ascii_dump(std::ostream& s, const T& t);
     <CODE>16^^1*^2</CODE> (meaning \f$256\f$);
   - the C-style hexadecimal prefix <CODE>0x</CODE> is interpreted as
     the Mathematica-style prefix <CODE>16^^</CODE>;
+  - the C-style binary exponent indicator <CODE>p</CODE> can only be used
+    when base 16 has been specified; if used, the exponent will be
+    applied to base 2 (instead of base 16, as is the case when the
+    indicator <CODE>e</CODE> is used);
   - special values like <CODE>inf</CODE> and <CODE>+inf</CODE>
     (meaning \f$+\infty\f$), <CODE>-inf</CODE> (meaning \f$-\infty\f$),
     and <CODE>nan</CODE> (meaning "not a number").
@@ -994,9 +971,9 @@ num     : unum						| '+'
         | SIGN unum					;
 
 unum	: unum1					EXP	: 'e'
-	| HEX unum1					| '*^'
-	| base BASE unum1				;
-	;
+	| HEX unum1					| 'p'
+	| base BASE unum1				| '*^'
+	;                                               ;
 						POINT	: '.'
 unum1	: mantissa					;
 	| mantissa EXP exponent

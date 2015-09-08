@@ -1,5 +1,6 @@
 /* MIP_Problem class implementation: non-inline functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -44,7 +45,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #define PPL_SIMPLEX_USE_MIP_HEURISTIC 1
 #endif
 
-#ifdef PPL_NOISY_SIMPLEX
+#if PPL_NOISY_SIMPLEX
 #include <iostream>
 #endif
 
@@ -55,6 +56,8 @@ namespace PPL = Parma_Polyhedra_Library;
 namespace {
 
 unsigned long num_iterations = 0;
+
+unsigned mip_recursion_level = 0;
 
 } // namespace
 #endif // PPL_NOISY_SIMPLEX
@@ -81,7 +84,7 @@ PPL::MIP_Problem::MIP_Problem(const dimension_type dim)
 			    "mode):\n"
 			    "dim exceeds the maximum allowed "
 			    "space dimension.");
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 PPL::MIP_Problem::MIP_Problem(const dimension_type dim,
@@ -132,7 +135,7 @@ PPL::MIP_Problem::MIP_Problem(const dimension_type dim,
 				"cs contains strict inequalities.");
   // Actually copy the constraints.
   input_cs.insert(input_cs.end(), cs.begin(), cs.end());
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 void
@@ -150,7 +153,7 @@ PPL::MIP_Problem::add_constraint(const Constraint& c) {
   input_cs.push_back(c);
   if (status != UNSATISFIABLE)
     status = PARTIALLY_SATISFIABLE;
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 void
@@ -169,7 +172,7 @@ PPL::MIP_Problem::add_constraints(const Constraint_System& cs) {
   input_cs.insert(input_cs.end(), cs.begin(), cs.end());
   if (status != UNSATISFIABLE)
     status = PARTIALLY_SATISFIABLE;
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 void
@@ -185,7 +188,7 @@ PPL::MIP_Problem::set_objective_function(const Linear_Expression& obj) {
   input_obj_function = obj;
   if (status == UNBOUNDED || status == OPTIMIZED)
     status = SATISFIABLE;
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 const PPL::Generator&
@@ -211,40 +214,39 @@ PPL::MIP_Problem::is_satisfiable() const {
   // Check `status' to filter out trivial cases.
   switch (status) {
   case UNSATISFIABLE:
-    assert(OK());
+    PPL_ASSERT(OK());
     return false;
   case SATISFIABLE:
     // Intentionally fall through
   case UNBOUNDED:
     // Intentionally fall through.
   case OPTIMIZED:
-    assert(OK());
+    PPL_ASSERT(OK());
     return true;
   case PARTIALLY_SATISFIABLE:
-    { // LP case.
-      if (i_variables.empty())
-	return is_lp_satisfiable();
-      // MIP Case.
-      const Variables_Set this_variables_set = integer_space_dimensions();
+    {
       MIP_Problem& x = const_cast<MIP_Problem&>(*this);
-      Generator p = point();
-      // This disable the Variable integrality check in OK() until we will
-      // find a feasible point.
-      x.i_variables.clear();
-      x.is_lp_satisfiable();
-      if (is_mip_satisfiable(x, p, this_variables_set)) {
-	x.last_generator = p;
-	x.status = SATISFIABLE;
-	// Restore i_variables;
-    	x.i_variables = this_variables_set;
-	return true;
-      }
-      else {
-	x.status = UNSATISFIABLE;
-	// Restore i_variables;
-    	x.i_variables = this_variables_set;
-	return false;
-      }
+      // LP case.
+      if (x.i_variables.empty())
+	return x.is_lp_satisfiable();
+
+      // MIP case.
+      {
+        // Temporarily relax the MIP into an LP problem.
+        RAII_Temporary_Real_Relaxation relaxed(x);
+        Generator p = point();
+        relaxed.lp.is_lp_satisfiable();
+#if PPL_NOISY_SIMPLEX
+        mip_recursion_level = 0;
+#endif // PPL_NOISY_SIMPLEX
+        if (is_mip_satisfiable(relaxed.lp, relaxed.i_vars, p)) {
+          x.last_generator = p;
+          x.status = SATISFIABLE;
+        }
+        else
+          x.status = UNSATISFIABLE;
+      } // `relaxed' destroyed here: relaxation automatically reset.
+      return (x.status == SATISFIABLE);
     }
   }
   // We should not be here!
@@ -255,60 +257,57 @@ PPL::MIP_Problem_Status
 PPL::MIP_Problem::solve() const{
   switch (status) {
   case UNSATISFIABLE:
-    assert(OK());
+    PPL_ASSERT(OK());
     return UNFEASIBLE_MIP_PROBLEM;
   case UNBOUNDED:
-    assert(OK());
+    PPL_ASSERT(OK());
     return UNBOUNDED_MIP_PROBLEM;
   case OPTIMIZED:
-    assert(OK());
+    PPL_ASSERT(OK());
     return OPTIMIZED_MIP_PROBLEM;
   case SATISFIABLE:
     // Intentionally fall through
   case PARTIALLY_SATISFIABLE:
     {
       MIP_Problem& x = const_cast<MIP_Problem&>(*this);
-      if (i_variables.empty()) {
-	// LP Problem case.
-	if (is_lp_satisfiable()) {
+      if (x.i_variables.empty()) {
+	// LP case.
+	if (x.is_lp_satisfiable()) {
 	  x.second_phase();
 	  if (x.status == UNBOUNDED)
 	    return UNBOUNDED_MIP_PROBLEM;
 	  else {
-	    assert(x.status == OPTIMIZED);
+	    PPL_ASSERT(x.status == OPTIMIZED);
 	    return OPTIMIZED_MIP_PROBLEM;
 	  }
 	}
 	return UNFEASIBLE_MIP_PROBLEM;
       }
-      // MIP Problem case.
-      // This disable the Variable integrality check in OK() until we will find
-      // an optimizing point.
-      const Variables_Set this_variables_set = integer_space_dimensions();
-      x.i_variables.clear();
-      if (x.is_lp_satisfiable())
-	x.second_phase();
-      else {
-	x.status = UNSATISFIABLE;
-	// Restore i_variables;
-	x.i_variables = this_variables_set;
-	return UNFEASIBLE_MIP_PROBLEM;
-      }
-      PPL_DIRTY_TEMP0(mpq_class, incumbent_solution);
-      Generator g = point();
-      bool have_incumbent_solution = false;
 
-      MIP_Problem mip_copy(*this);
-      // Treat this MIP_Problem as an LP one: we have to deal with
-      // the relaxation in solve_mip().
-      mip_copy.i_variables.clear();
-      MIP_Problem_Status mip_status = solve_mip(have_incumbent_solution,
-						incumbent_solution, g,
-						mip_copy,
-						this_variables_set);
-      // Restore i_variables;
-      x.i_variables = this_variables_set;
-      switch (mip_status) {
+      // MIP case.
+      MIP_Problem_Status return_value;
+      Generator g = point();
+      {
+        // Temporarily relax the MIP into an LP problem.
+        RAII_Temporary_Real_Relaxation relaxed(x);
+        if (relaxed.lp.is_lp_satisfiable())
+          relaxed.lp.second_phase();
+        else {
+          x.status = UNSATISFIABLE;
+          // NOTE: `relaxed' destroyed: relaxation automatically reset.
+          return UNFEASIBLE_MIP_PROBLEM;
+        }
+        PPL_DIRTY_TEMP0(mpq_class, incumbent_solution);
+        bool have_incumbent_solution = false;
+
+        MIP_Problem lp_copy(relaxed.lp);
+        PPL_ASSERT(lp_copy.integer_space_dimensions().empty());
+        return_value = solve_mip(have_incumbent_solution,
+                                 incumbent_solution, g,
+                                 lp_copy, relaxed.i_vars);
+      } // `relaxed' destroyed here: relaxation automatically reset.
+
+      switch (return_value) {
       case UNFEASIBLE_MIP_PROBLEM:
 	x.status = UNSATISFIABLE;
 	break;
@@ -324,8 +323,8 @@ PPL::MIP_Problem::solve() const{
 	x.last_generator = g;
 	break;
       }
-      assert(OK());
-      return mip_status;
+      PPL_ASSERT(OK());
+      return return_value;
     }
   }
   // We should not be here!
@@ -344,7 +343,7 @@ PPL::MIP_Problem::add_space_dimensions_and_embed(const dimension_type m) {
   external_space_dim += m;
   if (status != UNSATISFIABLE)
     status = PARTIALLY_SATISFIABLE;
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 void
@@ -372,60 +371,61 @@ PPL::MIP_Problem::is_in_base(const dimension_type var_index,
   return false;
 }
 
-void
-PPL::MIP_Problem::merge_split_variables(dimension_type var_index,
-					std::vector<dimension_type>&
-					unfeasible_tableau_rows) {
-  const dimension_type tableau_nrows = tableau.num_rows();
-  const dimension_type column = mapping[var_index].second;
+PPL::dimension_type
+PPL::MIP_Problem::merge_split_variable(dimension_type var_index) {
+  // Initialize the return value to a dummy index.
+  dimension_type unfeasible_tableau_row = not_a_dimension();
 
-  for (dimension_type i = 0; i < tableau_nrows; ++i) {
-    // In the following case the negative side of the split variable is
-    // in base: this means that the constraint will be nonfeasible.
-    if (base[i] == mapping[var_index].second) {
-      // CHECKME: we do not know if is possible that the positive and
-      // the negative part of a split variable can be together in
-      // base: it seems that this case is not possible. The algorithm
-      // requires that condition.
+  const dimension_type removing_column = mapping[1+var_index].second;
+
+  // Check if the negative part of the split variable is in base:
+  // if so, the corresponding tableau row becomes nonfeasible.
+  {
+    dimension_type base_index;
+    if (is_in_base(removing_column, base_index)) {
+      // Set the return value.
+      unfeasible_tableau_row = base_index;
+      // Reset base[base_index] to zero to remember nonfeasibility.
+      base[base_index] = 0;
 #ifndef NDEBUG
-      for (dimension_type j = 0; j < tableau_nrows; ++j) {
- 	dimension_type dummy = 0;
-	assert(!is_in_base(mapping[var_index].first, dummy));
-      }
+      // Since the negative part of the variable is in base,
+      // the positive part can not be in base too.
+      PPL_ASSERT(!is_in_base(mapping[1+var_index].first, base_index));
 #endif
-      // We set base[i] to zero to keep track that that the constraint is not
-      // feasible by `last_generator'.
-      base[i] = 0;
-      unfeasible_tableau_rows.push_back(i);
     }
   }
 
-  const dimension_type tableau_cols = tableau.num_columns();
-  // Remove the column.
-  if (column != tableau_cols - 1) {
+  // Remove the column:
+  // first, make sure it is the last one in the tableau ...
+  const dimension_type tableau_num_cols = tableau.num_columns();
+  if (removing_column != tableau_num_cols - 1) {
     std::vector<dimension_type> cycle;
-    for (dimension_type j = tableau_cols - 1; j >= column; --j)
+    for (dimension_type j = tableau_num_cols - 1; j >= removing_column; --j)
       cycle.push_back(j);
     cycle.push_back(0);
     tableau.permute_columns(cycle);
   }
+  // ... and then actually remove it.
   tableau.remove_trailing_columns(1);
 
   // var_index is no longer split.
-  mapping[var_index].second = 0;
+  mapping[1+var_index].second = 0;
 
   // Adjust data structured, `shifting' the proper columns to the left by 1.
   const dimension_type base_size = base.size();
-  for (dimension_type i = base_size; i-- > 0; )
-    if (base[i] > column)
+  for (dimension_type i = base_size; i-- > 0; ) {
+    if (base[i] > removing_column)
       --base[i];
+  }
   const dimension_type mapping_size = mapping.size();
   for (dimension_type i = mapping_size; i-- > 0; ) {
-    if (mapping[i].first > column)
+    if (mapping[i].first > removing_column)
       --mapping[i].first;
-    if (mapping[i].second > column)
+    if (mapping[i].second > removing_column)
       --mapping[i].second;
   }
+
+  return unfeasible_tableau_row;
 }
 
 bool
@@ -440,8 +440,8 @@ PPL::MIP_Problem::is_satisfied(const Constraint& c, const Generator& g) {
 
 bool
 PPL::MIP_Problem::is_saturated(const Constraint& c, const Generator& g) {
-  // Scalar_Products::sign() requires the second argument to be at least
-  // as large as the first one.
+  // Scalar_Products::sign() requires the space dimension of the second
+  // argument to be at least as large as the one of the first one.
   int sp_sign = g.space_dimension() <= c.space_dimension()
     ? Scalar_Products::sign(g, c)
     : Scalar_Products::sign(c, g);
@@ -449,50 +449,67 @@ PPL::MIP_Problem::is_saturated(const Constraint& c, const Generator& g) {
 }
 
 bool
-PPL::MIP_Problem::parse_constraints(dimension_type& tableau_num_rows,
-				    dimension_type& num_slack_variables,
-				    std::deque<bool>& is_tableau_constraint,
-				    std::deque<bool>& nonnegative_variable,
-				    std::vector<dimension_type>&
-				    unfeasible_tableau_rows,
-				    std::deque<bool>& satisfied_ineqs) {
-  satisfied_ineqs.clear();
-  satisfied_ineqs.insert(satisfied_ineqs.end(), input_cs.size(),
-			 false);
+PPL::MIP_Problem
+::parse_constraints(dimension_type& additional_tableau_rows,
+                    dimension_type& additional_slack_variables,
+                    std::deque<bool>& is_tableau_constraint,
+                    std::deque<bool>& is_satisfied_inequality,
+                    std::deque<bool>& is_nonnegative_variable,
+                    std::deque<bool>& is_remergeable_variable) const {
+  // Initially all containers are empty.
+  PPL_ASSERT(is_tableau_constraint.empty()
+             && is_satisfied_inequality.empty()
+             && is_nonnegative_variable.empty()
+             && is_remergeable_variable.empty());
 
-  const dimension_type cs_num_rows = input_cs.size();
   const dimension_type cs_space_dim = external_space_dim;
+  const dimension_type cs_num_rows = input_cs.size();
+  const dimension_type cs_num_pending = cs_num_rows - first_pending_constraint;
 
-  // Step 1:
-  // determine variables that are constrained to be nonnegative,
-  // detect (non-negativity or tautology) constraints that will not
-  // be part of the tableau and count the number of slack variables.
+  // Counters determining the change in dimensions of the tableau:
+  // initialized here, they will be updated while examining `input_cs'.
+  additional_tableau_rows = cs_num_pending;
+  additional_slack_variables = 0;
 
-  // Counters determining the dimensions of the tableau:
-  // initialized here, they will be updated while examining `cs'.
-  tableau_num_rows = cs_num_rows;
-  dimension_type tableau_num_cols = 2*cs_space_dim;
-  num_slack_variables = 0;
+  // Resize containers appropriately.
 
   // On exit, `is_tableau_constraint[i]' will be true if and only if
-  // `cs[i]' is neither a tautology (e.g., 1 >= 0) nor a non-negativity
-  // constraint (e.g., X >= 0).
-  is_tableau_constraint = std::deque<bool> (cs_num_rows, true);
+  // `input_cs[first_pending_constraint + i]' is neither a tautology
+  // (e.g., 1 >= 0) nor a non-negativity constraint (e.g., X >= 0).
+  is_tableau_constraint.insert(is_tableau_constraint.end(),
+                               cs_num_pending, true);
 
-  // On exit, `nonnegative_variable[j]' will be true if and only if
-  // Variable(j) is bound to be nonnegative in `cs'.
-  nonnegative_variable = std::deque<bool> (cs_space_dim, false);
+  // On exit, `is_satisfied_inequality[i]' will be true if and only if
+  // `input_cs[first_pending_constraint + i]' is an inequality and it is
+  // satisfied by `last_generator'.
+  is_satisfied_inequality.insert(is_satisfied_inequality.end(),
+                                 cs_num_pending, false);
 
-  // Check for already known information about space dimensions and
-  // store them in `nonnegative_variable'.
+  // On exit, `is_nonnegative_variable[j]' will be true if and only if
+  // Variable(j) is bound to be nonnegative in `input_cs'.
+  is_nonnegative_variable.insert(is_nonnegative_variable.end(),
+                                 cs_space_dim, false);
+
+  // On exit, `is_remergeable_variable[j]' will be true if and only if
+  // Variable(j) was initially split and is now remergeable.
+  is_remergeable_variable.insert(is_remergeable_variable.end(),
+                                 internal_space_dim, false);
+
+  // Check for variables that are already known to be nonnegative
+  // due to nonpending constraints.
   const dimension_type mapping_size = mapping.size();
-  for (dimension_type i = std::min(mapping_size, cs_space_dim+1); i-- > 1; )
-    if (mapping[i].second == 0) {
-      nonnegative_variable[i-1] = true;
-      --tableau_num_cols;
-    }
+  if (mapping_size > 0) {
+    // Note: mapping[0] is associated to the cost function.
+    for (dimension_type i = std::min(mapping_size - 1, cs_space_dim); i-- > 0; )
+      if (mapping[i + 1].second == 0)
+        is_nonnegative_variable[i] = true;
+  }
 
-  // Process each row of the `cs' matrix.
+  // Process each pending constraint in `input_cs' and
+  //  - detect variables that are constrained to be nonnegative;
+  //  - detect (non-negativity or tautology) pending constraints that
+  //    will not be part of the tableau;
+  //  - count the number of new slack variables.
   for (dimension_type i = cs_num_rows; i-- > first_pending_constraint; ) {
     const Constraint& cs_i = input_cs[i];
     bool found_a_nonzero_coeff = false;
@@ -503,7 +520,7 @@ PPL::MIP_Problem::parse_constraints(dimension_type& tableau_num_rows,
 	if (found_a_nonzero_coeff) {
 	  found_many_nonzero_coeffs = true;
 	  if (cs_i.is_inequality())
-	    ++num_slack_variables;
+	    ++additional_slack_variables;
 	  break;
 	}
 	else {
@@ -521,7 +538,7 @@ PPL::MIP_Problem::parse_constraints(dimension_type& tableau_num_rows,
       // Check for satisfiability of the inequality. This can be done if we
       // have a feasible point of *this.
       if (cs_i.is_inequality() && is_satisfied(cs_i, last_generator))
-	satisfied_ineqs[i] = true;
+        is_satisfied_inequality[i - first_pending_constraint] = true;
       continue;
     }
 
@@ -529,9 +546,9 @@ PPL::MIP_Problem::parse_constraints(dimension_type& tableau_num_rows,
       // All coefficients are 0.
       // The constraint is either trivially true or trivially false.
       if (cs_i.is_inequality()) {
-	if (cs_i.inhomogeneous_term() < 0)
-	  // A constraint such as -1 >= 0 is trivially false.
-	  return false;
+        if (cs_i.inhomogeneous_term() < 0)
+          // A constraint such as -1 >= 0 is trivially false.
+          return false;
       }
       else
 	// The constraint is an equality.
@@ -539,8 +556,8 @@ PPL::MIP_Problem::parse_constraints(dimension_type& tableau_num_rows,
 	  // A constraint such as 1 == 0 is trivially false.
 	  return false;
       // Here the constraint is trivially true.
-      is_tableau_constraint[i] = false;
-      --tableau_num_rows;
+      is_tableau_constraint[i - first_pending_constraint] = false;
+      --additional_tableau_rows;
       continue;
     }
     else {
@@ -578,48 +595,40 @@ PPL::MIP_Problem::parse_constraints(dimension_type& tableau_num_rows,
       // The variable index is not equal to the column index.
       const dimension_type nonzero_var_index = nonzero_coeff_column_index - 1;
 
-      const int sgn_a
-	= sgn(cs_i.coefficient(Variable(nonzero_coeff_column_index-1)));
+      const int sgn_a = sgn(cs_i.coefficient(Variable(nonzero_var_index)));
       const int sgn_b = sgn(cs_i.inhomogeneous_term());
+
       // Cases 1-3: apply method A.
       if (sgn_a == sgn_b) {
 	if (cs_i.is_inequality())
-	  ++num_slack_variables;
+	  ++additional_slack_variables;
       }
       // Cases 4-5: apply method B.
-      else if (cs_i.is_equality()) {
-	if (!nonnegative_variable[nonzero_var_index]) {
-	  nonnegative_variable[nonzero_var_index] = true;
-	  --tableau_num_cols;
-	}
-      }
+      else if (cs_i.is_equality())
+        is_nonnegative_variable[nonzero_var_index] = true;
       // Case 6: apply method B.
       else if (sgn_b < 0) {
-	if (!nonnegative_variable[nonzero_var_index]) {
-	  nonnegative_variable[nonzero_var_index] = true;
-	  --tableau_num_cols;
-	}
-	++num_slack_variables;
+	is_nonnegative_variable[nonzero_var_index] = true;
+	++additional_slack_variables;
       }
       // Case 7: apply method C.
       else if (sgn_a > 0) {
-	// This is the most important case in the incrementality solving:
-	// merge two variables.
-	if (!nonnegative_variable[nonzero_var_index]) {
-	  nonnegative_variable[nonzero_var_index] = true;
-	  --tableau_num_cols;
-	  if (nonzero_coeff_column_index < mapping_size)
-	    merge_split_variables(nonzero_coeff_column_index,
-				  unfeasible_tableau_rows);
-	  is_tableau_constraint[i] = false;
-	}
-	else
-	  is_tableau_constraint[i] = false;
-	--tableau_num_rows;
+	if (!is_nonnegative_variable[nonzero_var_index]) {
+	  is_nonnegative_variable[nonzero_var_index] = true;
+	  if (nonzero_coeff_column_index < mapping_size) {
+            // Remember to merge back the positive and negative parts.
+            PPL_ASSERT(nonzero_var_index < internal_space_dim);
+            is_remergeable_variable[nonzero_var_index] = true;
+          }
+        }
+        is_tableau_constraint[i - first_pending_constraint] = false;
+	--additional_tableau_rows;
       }
       // Cases 8-9: apply method A.
-      else
-	++num_slack_variables;
+      else {
+        PPL_ASSERT(cs_i.is_inequality());
+	++additional_slack_variables;
+      }
     }
   }
   return true;
@@ -627,146 +636,196 @@ PPL::MIP_Problem::parse_constraints(dimension_type& tableau_num_rows,
 
 bool
 PPL::MIP_Problem::process_pending_constraints() {
-  const dimension_type num_original_rows = tableau.num_rows();
-  dimension_type new_rows = 0;
-  dimension_type new_slacks = 0;
-  dimension_type new_var_columns = 0;
+  // Check the pending constraints to adjust the data structures.
+  // If `false' is returned, they are trivially unfeasible.
+  dimension_type additional_tableau_rows = 0;
+  dimension_type additional_slack_vars = 0;
   std::deque<bool> is_tableau_constraint;
-  std::deque<bool> nonnegative_variable;
-  std::vector<dimension_type> unfeasible_tableau_rows;
-  std::deque<bool> satisfied_ineqs;
-  // Check the new constraints to adjust the data structures.
-  // If `false' is returned, the pending constraints are trivially
-  // unfeasible.
-  if (!parse_constraints(new_rows, new_slacks, is_tableau_constraint,
-			 nonnegative_variable, unfeasible_tableau_rows,
-			 satisfied_ineqs)) {
+  std::deque<bool> is_satisfied_inequality;
+  std::deque<bool> is_nonnegative_variable;
+  std::deque<bool> is_remergeable_variable;
+  if (!parse_constraints(additional_tableau_rows,
+                         additional_slack_vars,
+                         is_tableau_constraint,
+                         is_satisfied_inequality,
+			 is_nonnegative_variable,
+			 is_remergeable_variable)) {
     status = UNSATISFIABLE;
     return false;
   };
 
-  const dimension_type first_free_tableau_index = tableau.num_columns()-1;
+  // Merge back any variable that was previously split into a positive
+  // and a negative part and is now known to be nonnegative.
+  std::vector<dimension_type> unfeasible_tableau_rows;
+  for (dimension_type i = internal_space_dim; i-- > 0; ) {
+    if (!is_remergeable_variable[i])
+      continue;
+    // TODO: merging all rows in a single shot may be more efficient
+    // as it would require a single call to permute_columns().
+    const dimension_type unfeasible_row = merge_split_variable(i);
+    if (unfeasible_row != not_a_dimension())
+      unfeasible_tableau_rows.push_back(unfeasible_row);
+  }
 
+  const dimension_type old_tableau_num_rows = tableau.num_rows();
+  const dimension_type old_tableau_num_cols = tableau.num_columns();
+  const dimension_type first_free_tableau_index = old_tableau_num_cols - 1;
+
+  // Update mapping for the new problem variables (if any).
+  dimension_type additional_problem_vars = 0;
   if (external_space_dim > internal_space_dim) {
     const dimension_type space_diff = external_space_dim - internal_space_dim;
-    for (dimension_type i = 0, j = 0; i < space_diff; ++i, ++j) {
-      // Set `mapping' properly to store that every variable is split.
-      // In the following case the value of the original variable can be
-      // negative.
-      if (!nonnegative_variable[internal_space_dim+i]) {
-	mapping.push_back(std::make_pair(first_free_tableau_index+j,
-					 first_free_tableau_index+1+j));
-	++j;
-	new_var_columns += 2;
+    for (dimension_type i = 0, j = 0; i < space_diff; ++i) {
+      // Let `mapping' associate the variable index with the corresponding
+      // tableau column: split the variable into positive and negative
+      // parts if it is not known to be nonnegative.
+      const dimension_type positive = first_free_tableau_index + j;
+      if (is_nonnegative_variable[internal_space_dim + i]) {
+        // Do not split.
+	mapping.push_back(std::make_pair(positive, 0));
+        ++j;
+        ++additional_problem_vars;
       }
-      // The variable is nonnegative.
       else {
-	mapping.push_back(std::make_pair(first_free_tableau_index+j, 0));
-	++new_var_columns;
+        // Split: negative index is positive + 1.
+	mapping.push_back(std::make_pair(positive, positive + 1));
+	j += 2;
+	additional_problem_vars += 2;
       }
     }
   }
 
-  // Resize the tableau and adding the necessary columns for artificial and
-  // slack variables.
-  dimension_type num_satisfied_ineqs = std::count(satisfied_ineqs.begin(),
-						  satisfied_ineqs.end(),
-						  true);
+  // Resize the tableau: first add additional rows ...
+  if (additional_tableau_rows > 0)
+    tableau.add_zero_rows(additional_tableau_rows, Row::Flags());
+
+  // ... then add additional columns.
+  // We need columns for additional (split) problem variables, additional
+  // slack variables and additional artificials.
+  // The number of artificials to be added is computed as:
+  // * number of pending constraints entering the tableau
+  //     minus
+  // * pending constraints that are inequalities and are already satisfied
+  //   by `last_generator'
+  //     plus
+  // * number of non-pending constraints that are no longer satisfied
+  //   due to re-merging of splitted variables.
+
+  dimension_type num_satisfied_ineqs
+    = std::count(is_satisfied_inequality.begin(),
+                 is_satisfied_inequality.end(),
+                 true);
   const dimension_type unfeasible_tableau_rows_size
     = unfeasible_tableau_rows.size();
-  const dimension_type artificial_cols
-    = new_rows + unfeasible_tableau_rows_size - num_satisfied_ineqs;
-  const dimension_type new_total_columns
-    = new_var_columns + new_slacks + artificial_cols;
-  if (new_rows > 0)
-    tableau.add_zero_rows(new_rows, Row::Flags());
-  if (new_total_columns > 0)
-    tableau.add_zero_columns(new_total_columns);
-  dimension_type tableau_num_rows = tableau.num_rows();
+
+  const dimension_type additional_artificial_vars
+    = (additional_tableau_rows - num_satisfied_ineqs)
+    + unfeasible_tableau_rows_size;
+
+  const dimension_type additional_tableau_columns
+    = additional_problem_vars
+    + additional_slack_vars
+    + additional_artificial_vars;
+
+  if (additional_tableau_columns > 0)
+    tableau.add_zero_columns(additional_tableau_columns);
+
+  // Dimensions of the tableau after resizing.
+  const dimension_type tableau_num_rows = tableau.num_rows();
+  const dimension_type tableau_num_cols = tableau.num_columns();
 
   // The following vector will be useful know if a constraint is feasible
   // and does not require an additional artificial variable.
   std::deque<bool> worked_out_row (tableau_num_rows, false);
-  dimension_type tableau_num_columns = tableau.num_columns();
 
-  // Sync the `base' vector size to the new tableau: fill with zeros to encode
-  // that these rows are not OK and must be adjusted.
-  base.insert(base.end(), new_rows, 0);
+  // Sync the `base' vector size to the new tableau: fill with zeros
+  // to encode that these rows are not OK and must be adjusted.
+  base.insert(base.end(), additional_tableau_rows, 0);
   const dimension_type base_size = base.size();
 
-  // These indexes will be used to insert slack and artificial variables.
-  dimension_type slack_index = tableau_num_columns - artificial_cols - 1;
+  // These indexes will be used to insert slack and artificial variables
+  // in the appropriate position.
+  dimension_type slack_index
+    = tableau_num_cols - additional_artificial_vars - 1;
   dimension_type artificial_index = slack_index;
 
-  // The first column index of the tableau that contains an
-  // artificial variable. Encode with 0 the fact the there are not
-  // artificial variables.
-  const dimension_type begin_artificials = artificial_cols > 0
-    ? artificial_index : 0;
+  // The first column of the tableau containing an artificial variable.
+  // Encode with 0 the fact that there are no artificial variables at all.
+  const dimension_type begin_artificials
+    = additional_artificial_vars > 0 ? artificial_index : 0;
 
-  // Proceed with the insertion of the constraints.
-  for (dimension_type k = tableau_num_rows, i = input_cs.size();
-       i-- > first_pending_constraint;  )
-    if (is_tableau_constraint[i]) {
-      // Copy the original constraint in the tableau.
-      Row& tableau_k = tableau[--k];
-      const Constraint& cs_i = input_cs[i];
-      for (dimension_type sd = cs_i.space_dimension(); sd-- > 0; ) {
-	tableau_k[mapping[sd+1].first] = cs_i.coefficient(Variable(sd));
-	// Split if needed.
-	if (mapping[sd+1].second != 0)
-	  neg_assign(tableau_k[mapping[sd+1].second],
-		     tableau_k[mapping[sd+1].first]);
+  // Proceed with the insertion of the pending constraints.
+  for (dimension_type k = tableau_num_rows,
+         i = input_cs.size() - first_pending_constraint; i-- > 0; ) {
+    // Skip if trivially redundant.
+    if (!is_tableau_constraint[i])
+      continue;
+    const Constraint& c = input_cs[i + first_pending_constraint];
+    // Copy the original constraint in the tableau.
+    --k;
+    Row& tableau_k = tableau[k];
+    for (dimension_type sd = c.space_dimension(); sd-- > 0; ) {
+      const Coefficient& coeff_sd = c.coefficient(Variable(sd));
+      if (coeff_sd != 0) {
+        tableau_k[mapping[sd+1].first] = coeff_sd;
+        // Split if needed.
+        if (mapping[sd+1].second != 0)
+          neg_assign(tableau_k[mapping[sd+1].second], coeff_sd);
       }
-      tableau_k[mapping[0].first] = cs_i.inhomogeneous_term();
+    }
+    const Coefficient& inhomo = c.inhomogeneous_term();
+    if (inhomo != 0) {
+      tableau_k[mapping[0].first] = inhomo;
       // Split if needed.
       if (mapping[0].second != 0)
-	tableau_k[mapping[0].second] = -cs_i.inhomogeneous_term();
-
-      // Add the slack variable, if needed.
-      if (cs_i.is_inequality()) {
-	tableau_k[--slack_index] = -1;
-	// If the constraint is already satisfied, we will not use artificial
-	// variables to compute a feasible base: this to speed up
-	// the algorithm.
-        if (satisfied_ineqs[i]) {
-          base[k] = slack_index;
-          worked_out_row[k] = true;
-        }
-      }
-      for (dimension_type j = base_size; j-- > 0; )
-	if (k != j && tableau_k[base[j]] != 0 && base[j] != 0)
-	  linear_combine(tableau_k, tableau[j], base[j]);
+        neg_assign(tableau_k[mapping[0].second], inhomo);
     }
 
-  // We negate the row if tableau[i][0] <= 0 to get the inhomogeneous term > 0.
-  // This simplifies the insertion of the artificial variables: the value of
-  // each artificial variable will be 1.
+    // Add the slack variable, if needed.
+    if (c.is_inequality()) {
+      --slack_index;
+      tableau_k[slack_index] = -1;
+      // If the constraint is already satisfied, we will not add an
+      // artificial variable and put instead the slack variable in base.
+      if (is_satisfied_inequality[i]) {
+        base[k] = slack_index;
+        worked_out_row[k] = true;
+      }
+    }
+    for (dimension_type j = base_size; j-- > 0; )
+      if (k != j && tableau_k[base[j]] != 0 && base[j] != 0)
+        linear_combine(tableau_k, tableau[j], base[j]);
+  }
+
+  // Let all inhomogeneous terms in the tableau be nonpositive,
+  // so as to simplify the insertion of artificial variables
+  // (the coefficient of each artificial variable will be 1).
   for (dimension_type i = tableau_num_rows; i-- > 0 ; ) {
     Row& tableau_i = tableau[i];
     if (tableau_i[0] > 0)
-      for (dimension_type j = tableau_num_columns; j-- > 0; )
+      for (dimension_type j = tableau_num_cols; j-- > 0; )
 	neg_assign(tableau_i[j]);
   }
 
-  // Set the working cost function with the right size.
-  working_cost = Row(tableau_num_columns, Row::Flags());
+  // Reset the working cost function to have the right size.
+  working_cost = Row(tableau_num_cols, Row::Flags());
 
-  // Insert artificial variables for the nonfeasible constraints.
+  // Set up artificial variables: these will have coefficient 1 in the
+  // constraint, will enter the base and will have coefficient -1 in
+  // the cost function.
+
+  // First go through nonpending constraints that became unfeasible
+  // due to re-merging of split variables.
   for (dimension_type i = 0; i < unfeasible_tableau_rows_size; ++i) {
     tableau[unfeasible_tableau_rows[i]][artificial_index] = 1;
     working_cost[artificial_index] = -1;
     base[unfeasible_tableau_rows[i]] = artificial_index;
     ++artificial_index;
   }
-
-  // Modify the tableau and the new cost function by adding
-  // the artificial variables (which enter the base). Note that if an
-  // inequality was satisfied by `last_generator', this will be not processed.
-  // This information in encoded in `worked_out_row'.
-  // As for the cost function, all the artificial variables should have
-  // coefficient -1.
-  for (dimension_type i = num_original_rows; i < tableau_num_rows; ++i) {
+  // Then go through newly added tableau rows, disregarding inequalities
+  // that are already satisfied by `last_generator' (this information
+  // is encoded in `worked_out_row').
+  for (dimension_type i = old_tableau_num_rows; i < tableau_num_rows; ++i) {
     if (worked_out_row[i])
       continue;
     tableau[i][artificial_index] = 1;
@@ -774,8 +833,8 @@ PPL::MIP_Problem::process_pending_constraints() {
     base[i] = artificial_index;
     ++artificial_index;
   }
-  // The last column index of the tableau containing an artificial variable.
-  const dimension_type end_artificials = artificial_index - 1;
+  // One past the last tableau column index containing an artificial variable.
+  const dimension_type end_artificials = artificial_index;
 
   // Set the extra-coefficient of the cost functions to record its sign.
   // This is done to keep track of the possible sign's inversion.
@@ -825,7 +884,7 @@ PPL::MIP_Problem::process_pending_constraints() {
     status = OPTIMIZED;
     // Ensure the right space dimension is obtained.
     last_generator = point(0*Variable(space_dimension()-1));
-    assert(OK());
+    PPL_ASSERT(OK());
     return true;
   }
 
@@ -836,9 +895,10 @@ PPL::MIP_Problem::process_pending_constraints() {
     : compute_simplex_using_exact_pricing();
 
 #if PPL_NOISY_SIMPLEX
-  std::cout << "MIP_Problem::solve: 1st phase ended at iteration "
- 	    << num_iterations << "." << std::endl;
-#endif
+  std::cout << "MIP_Problem::process_pending_constraints(): "
+            << "1st phase ended at iteration " << num_iterations
+            << "." << std::endl;
+#endif // PPL_NOISY_SIMPLEX
 
   if (!first_phase_succesful || working_cost[0] != 0) {
     // The feasible region is empty.
@@ -851,11 +911,19 @@ PPL::MIP_Problem::process_pending_constraints() {
     erase_artificials(begin_artificials, end_artificials);
   compute_generator();
   status = SATISFIABLE;
-  assert(OK());
+  PPL_ASSERT(OK());
   return true;
 }
 
 namespace {
+
+// NOTE: the following two `assign' helper functions are needed to
+// handle the assignment of a Coefficient to a double in method
+//     MIP_Problem::steepest_edge_float_entering_index().
+// We cannot use assign_r(double, Coefficient, Rounding_Dir) as it would
+// lead to a compilation error on those platforms (e.g., ARM) where
+// controlled floating point rounding is not available (even if the
+// rounding mode would be set to ROUND_IGNORE).
 
 inline void
 assign(double& d, const mpz_class& c) {
@@ -873,21 +941,23 @@ assign(double& d,
 
 PPL::dimension_type
 PPL::MIP_Problem::steepest_edge_float_entering_index() const {
-  PPL_DIRTY_TEMP0(mpq_class, real_coeff);
   const dimension_type tableau_num_rows = tableau.num_rows();
-  assert(tableau_num_rows == base.size());
+  PPL_ASSERT(tableau_num_rows == base.size());
   double challenger_num = 0.0;
   double challenger_den = 0.0;
   double current_value = 0.0;
+  double float_tableau_value = 0.0;
+  double float_tableau_denum = 0.0;
   dimension_type entering_index = 0;
   const int cost_sign = sgn(working_cost[working_cost.size() - 1]);
   for (dimension_type j = tableau.num_columns() - 1; j-- > 1; ) {
     const Coefficient& cost_j = working_cost[j];
     if (sgn(cost_j) == cost_sign) {
+      WEIGHT_BEGIN();
       // We cannot compute the (exact) square root of abs(\Delta x_j).
       // The workaround is to compute the square of `cost[j]'.
       assign(challenger_num, cost_j);
-      challenger_num = fabs(challenger_num);
+      challenger_num = std::abs(challenger_num);
       // Due to our integer implementation, the `1' term in the denominator
       // of the original formula has to be replaced by `squared_lcm_basis'.
       challenger_den = 1.0;
@@ -895,12 +965,10 @@ PPL::MIP_Problem::steepest_edge_float_entering_index() const {
 	const Row& tableau_i = tableau[i];
 	const Coefficient& tableau_ij = tableau_i[j];
 	if (tableau_ij != 0) {
-	  assert(tableau_i[base[i]] != 0);
-	  assign_r(real_coeff.get_num(), tableau_ij, ROUND_NOT_NEEDED);
-	  assign_r(real_coeff.get_den(), tableau_i[base[i]], ROUND_NOT_NEEDED);
-	  real_coeff.canonicalize();
-	  double float_tableau_value;
-	  assign(float_tableau_value, real_coeff);
+	  PPL_ASSERT(tableau_i[base[i]] != 0);
+	  assign(float_tableau_value, tableau_ij);
+	  assign(float_tableau_denum, tableau_i[base[i]]);
+	  float_tableau_value /= float_tableau_denum;
 	  challenger_den += float_tableau_value * float_tableau_value;
 	}
       }
@@ -911,6 +979,7 @@ PPL::MIP_Problem::steepest_edge_float_entering_index() const {
 	current_value = challenger_value;
 	entering_index = j;
       }
+      WEIGHT_ADD_MUL(338, tableau_num_rows);
     }
   }
   return entering_index;
@@ -919,12 +988,13 @@ PPL::MIP_Problem::steepest_edge_float_entering_index() const {
 PPL::dimension_type
 PPL::MIP_Problem::steepest_edge_exact_entering_index() const {
   const dimension_type tableau_num_rows = tableau.num_rows();
-  assert(tableau_num_rows == base.size());
+  PPL_ASSERT(tableau_num_rows == base.size());
   // The square of the lcm of all the coefficients of variables in base.
   PPL_DIRTY_TEMP_COEFFICIENT(squared_lcm_basis);
   // The normalization factor for each coefficient in the tableau.
   std::vector<Coefficient> norm_factor(tableau_num_rows);
   {
+    WEIGHT_BEGIN();
     // Compute the lcm of all the coefficients of variables in base.
     PPL_DIRTY_TEMP_COEFFICIENT(lcm_basis);
     lcm_basis = 1;
@@ -937,6 +1007,7 @@ PPL::MIP_Problem::steepest_edge_exact_entering_index() const {
     // `lcm_basis' will no longer be needed.
     lcm_basis *= lcm_basis;
     std::swap(squared_lcm_basis, lcm_basis);
+    WEIGHT_ADD_MUL(444, tableau_num_rows);
   }
 
   // Defined here to avoid repeated (de-)allocations.
@@ -953,6 +1024,7 @@ PPL::MIP_Problem::steepest_edge_exact_entering_index() const {
   for (dimension_type j = tableau.num_columns() - 1; j-- > 1; ) {
     const Coefficient& cost_j = working_cost[j];
     if (sgn(cost_j) == cost_sign) {
+      WEIGHT_BEGIN();
       // We cannot compute the (exact) square root of abs(\Delta x_j).
       // The workaround is to compute the square of `cost[j]'.
       challenger_num = cost_j * cost_j;
@@ -983,6 +1055,7 @@ PPL::MIP_Problem::steepest_edge_exact_entering_index() const {
 	std::swap(current_den, challenger_den);
 	entering_index = j;
       }
+      WEIGHT_ADD_MUL(47, tableau_num_rows);
     }
   }
   return entering_index;
@@ -1000,7 +1073,7 @@ PPL::MIP_Problem::textbook_entering_index() const {
   // Get the "sign" of the cost function.
   const dimension_type cost_sign_index = working_cost.size() - 1;
   const int cost_sign = sgn(working_cost[cost_sign_index]);
-  assert(cost_sign != 0);
+  PPL_ASSERT(cost_sign != 0);
   for (dimension_type i = 1; i < cost_sign_index; ++i)
     if (sgn(working_cost[i]) == cost_sign)
       return i;
@@ -1013,15 +1086,17 @@ void
 PPL::MIP_Problem::linear_combine(Row& x,
 				 const Row& y,
 				 const dimension_type k) {
-  assert(x.size() == y.size());
-  assert(y[k] != 0 && x[k] != 0);
+  WEIGHT_BEGIN();
+  const dimension_type x_size = x.size();
+  PPL_ASSERT(x_size == y.size());
+  PPL_ASSERT(y[k] != 0 && x[k] != 0);
   // Let g be the GCD between `x[k]' and `y[k]'.
   // For each i the following computes
   //   x[i] = x[i]*y[k]/g - y[i]*x[k]/g.
   PPL_DIRTY_TEMP_COEFFICIENT(normalized_x_k);
   PPL_DIRTY_TEMP_COEFFICIENT(normalized_y_k);
   normalize2(x[k], y[k], normalized_x_k, normalized_y_k);
-  for (dimension_type i = x.size(); i-- > 0; )
+  for (dimension_type i = x_size; i-- > 0; )
     if (i != k) {
       Coefficient& x_i = x[i];
       x_i *= normalized_y_k;
@@ -1033,6 +1108,7 @@ PPL::MIP_Problem::linear_combine(Row& x,
     }
   x[k] = 0;
   x.normalize();
+  WEIGHT_ADD_MUL(83, x_size);
 }
 
 // See pages 42-43 of [PapadimitriouS98].
@@ -1088,6 +1164,7 @@ PPL::MIP_Problem
     const Coefficient& t_ib = t_i[base[i]];
     const int t_ie_sign = sgn(t_ie);
     if (t_ie_sign != 0 && t_ie_sign == sgn(t_ib)) {
+      WEIGHT_BEGIN();
       const Row& t_e = tableau[exiting_base_index];
       const Coefficient& t_ee = t_e[entering_var_index];
       lcm_assign(lcm, t_ee, t_ie);
@@ -1102,6 +1179,7 @@ PPL::MIP_Problem
       if (sign > 0
 	  || (sign == 0 && base[i] < base[exiting_base_index]))
 	exiting_base_index = i;
+      WEIGHT_ADD(1044);
     }
   }
   return exiting_base_index;
@@ -1126,7 +1204,7 @@ PPL::MIP_Problem::compute_simplex_using_steepest_edge_float() {
   if (cost_sgn_coeff < 0)
     neg_assign(current_num);
   abs_assign(current_den, cost_sgn_coeff);
-  assert(tableau.num_columns() == working_cost.size());
+  PPL_ASSERT(tableau.num_columns() == working_cost.size());
   const dimension_type tableau_num_rows = tableau.num_rows();
 
   while (true) {
@@ -1157,6 +1235,7 @@ PPL::MIP_Problem::compute_simplex_using_steepest_edge_float() {
     // feasible region.
     pivot(entering_var_index, exiting_base_index);
 
+    WEIGHT_BEGIN();
     // Now begins the objective function's value check to choose between
     // the `textbook' and the float `steepest-edge' technique.
     cost_sgn_coeff = working_cost[working_cost.size()-1];
@@ -1170,11 +1249,11 @@ PPL::MIP_Problem::compute_simplex_using_steepest_edge_float() {
 #if PPL_NOISY_SIMPLEX
     ++num_iterations;
     if (num_iterations % 200 == 0)
-      std::cout << "Primal Simplex: iteration "
-		<< num_iterations << "." << std::endl;
-#endif
+      std::cout << "Primal simplex: iteration " << num_iterations
+                << "." << std::endl;
+#endif // PPL_NOISY_SIMPLEX
     // If the following condition fails, probably there's a bug.
-    assert(challenger >= current);
+    PPL_ASSERT(challenger >= current);
     // If the value of the objective function does not improve,
     // keep track of that.
     if (challenger == current) {
@@ -1194,13 +1273,14 @@ PPL::MIP_Problem::compute_simplex_using_steepest_edge_float() {
     if (cost_sgn_coeff < 0)
       neg_assign(current_num);
     abs_assign(current_den, cost_sgn_coeff);
+    WEIGHT_ADD(566);
   }
 }
 
 bool
 PPL::MIP_Problem::compute_simplex_using_exact_pricing() {
-  assert(tableau.num_columns() == working_cost.size());
-  assert(get_control_parameter(PRICING) == PRICING_STEEPEST_EDGE_EXACT
+  PPL_ASSERT(tableau.num_columns() == working_cost.size());
+  PPL_ASSERT(get_control_parameter(PRICING) == PRICING_STEEPEST_EDGE_EXACT
          || get_control_parameter(PRICING) == PRICING_TEXTBOOK);
 
   const dimension_type tableau_num_rows = tableau.num_rows();
@@ -1236,9 +1316,9 @@ PPL::MIP_Problem::compute_simplex_using_exact_pricing() {
 #if PPL_NOISY_SIMPLEX
     ++num_iterations;
     if (num_iterations % 200 == 0)
-      std::cout << "Primal Simplex: iteration "
-                << num_iterations << "." << std::endl;
-#endif
+      std::cout << "Primal simplex: iteration " << num_iterations
+                << "." << std::endl;
+#endif // PPL_NOISY_SIMPLEX
   }
 }
 
@@ -1247,16 +1327,18 @@ PPL::MIP_Problem::compute_simplex_using_exact_pricing() {
 void
 PPL::MIP_Problem::erase_artificials(const dimension_type begin_artificials,
 				    const dimension_type end_artificials) {
-  const dimension_type tableau_last_index = tableau.num_columns() - 1;
+  PPL_ASSERT(0 < begin_artificials && begin_artificials < end_artificials);
+
+  const dimension_type old_last_column = tableau.num_columns() - 1;
   dimension_type tableau_n_rows = tableau.num_rows();
   // Step 1: try to remove from the base all the remaining slack variables.
   for (dimension_type i = 0; i < tableau_n_rows; ++i)
-    if (begin_artificials <= base[i] && base[i] <= end_artificials) {
+    if (begin_artificials <= base[i] && base[i] < end_artificials) {
       // Search for a non-zero element to enter the base.
       Row& tableau_i = tableau[i];
       bool redundant = true;
-      for (dimension_type j = end_artificials+1; j-- > 1; )
-	if (!(begin_artificials <= j && j <= end_artificials)
+      for (dimension_type j = end_artificials; j-- > 1; )
+	if (!(begin_artificials <= j && j < end_artificials)
 	    && tableau_i[j] != 0) {
 	  pivot(j, i);
 	  redundant = false;
@@ -1281,24 +1363,21 @@ PPL::MIP_Problem::erase_artificials(const dimension_type begin_artificials,
 
   // Step 2: Adjust data structures so as to enter phase 2 of the simplex.
 
-  // Compute the dimensions of the new tableau.
-  dimension_type num_artificials = 0;
-  for (dimension_type i = end_artificials + 1; i-- > 1; )
-    if (begin_artificials <= i && i <= end_artificials) {
-      ++num_artificials;
-      tableau.remove_trailing_columns(1);
-    }
+  // Resize the tableau.
+  const dimension_type num_artificials = end_artificials - begin_artificials;
+  tableau.remove_trailing_columns(num_artificials);
 
   // Zero the last column of the tableau.
+  const dimension_type new_last_column = tableau.num_columns() - 1;
   for (dimension_type i = tableau_n_rows; i-- > 0; )
-    tableau[i][tableau.num_columns()-1] = 0;
+    tableau[i][new_last_column] = 0;
 
   // ... then properly set the element in the (new) last column,
   // encoding the kind of optimization; ...
-  working_cost[tableau.num_columns()-1] = working_cost[tableau_last_index];
+  working_cost[new_last_column] = working_cost[old_last_column];
   // ... and finally remove redundant columns.
-  const dimension_type working_cost_new_size = working_cost.size() -
-    num_artificials;
+  const dimension_type working_cost_new_size
+    = working_cost.size() - num_artificials;
   working_cost.shrink(working_cost_new_size);
 }
 
@@ -1347,12 +1426,12 @@ PPL::MIP_Problem::compute_generator() const {
       if (is_in_base(split_var, row)) {
 	const Row& t_row = tableau[row];
 	if (t_row[split_var] > 0) {
-	  split_num = -t_row[0];
+	  neg_assign(split_num, t_row[0]);
 	  split_den = t_row[split_var];
 	}
 	else {
 	  split_num = t_row[0];
- 	  split_den = -t_row[split_var];
+ 	  neg_assign(split_den, t_row[split_var]);
 	}
 	// We compute the lcm to compute subsequently the difference
 	// between the 2 variables.
@@ -1385,7 +1464,7 @@ PPL::MIP_Problem::compute_generator() const {
   // Finally, build the generator.
   Linear_Expression expr;
   for (dimension_type i = external_space_dim; i-- > 0; )
-    expr += num[i] * Variable(i);
+    add_mul_assign(expr, num[i], Variable(i));
 
   MIP_Problem& x = const_cast<MIP_Problem&>(*this);
   x.last_generator = point(expr, lcm);
@@ -1394,7 +1473,7 @@ PPL::MIP_Problem::compute_generator() const {
 void
 PPL::MIP_Problem::second_phase() {
   // Second_phase requires that *this is satisfiable.
-  assert(status == SATISFIABLE || status == UNBOUNDED || status == OPTIMIZED);
+  PPL_ASSERT(status == SATISFIABLE || status == UNBOUNDED || status == OPTIMIZED);
   // In the following cases the problem is already solved.
   if (status == UNBOUNDED || status == OPTIMIZED)
     return;
@@ -1424,7 +1503,7 @@ PPL::MIP_Problem::second_phase() {
     const dimension_type split_var = mapping[i].second;
     working_cost[original_var] = new_cost[i];
     if (mapping[i].second != 0)
-      working_cost[split_var] = - new_cost[i];
+      neg_assign(working_cost[split_var], new_cost[i]);
   }
   // Here the first phase problem succeeded with optimum value zero.
   // Express the old cost function in terms of the computed base.
@@ -1440,11 +1519,12 @@ PPL::MIP_Problem::second_phase() {
     : compute_simplex_using_exact_pricing();
   compute_generator();
 #if PPL_NOISY_SIMPLEX
-  std::cout << "MIP_Problem::solve: 2nd phase ended at iteration "
-	    << num_iterations << "." << std::endl;
-#endif
+  std::cout << "MIP_Problem::second_phase(): 2nd phase ended at iteration "
+	    << num_iterations
+            << "." << std::endl;
+#endif // PPL_NOISY_SIMPLEX
   status = second_phase_successful ? OPTIMIZED : UNBOUNDED;
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 void
@@ -1480,7 +1560,7 @@ bool
 PPL::MIP_Problem::is_lp_satisfiable() const {
 #if PPL_NOISY_SIMPLEX
   num_iterations = 0;
-#endif
+#endif // PPL_NOISY_SIMPLEX
   switch (status) {
   case UNSATISFIABLE:
     return false;
@@ -1513,8 +1593,8 @@ PPL::MIP_Problem::is_lp_satisfiable() const {
       x.first_pending_constraint = input_cs.size();
       // Update also `internal_space_dim'.
       x.internal_space_dim = x.external_space_dim;
-      assert(OK());
-      return (status != UNSATISFIABLE);
+      PPL_ASSERT(OK());
+      return status != UNSATISFIABLE;
     }
   }
   // We should not be here!
@@ -1546,13 +1626,13 @@ PPL::MIP_Problem::solve_mip(bool& have_incumbent_solution,
   if (lp_status == UNBOUNDED_MIP_PROBLEM)
     p = lp.last_generator;
   else {
-    assert(lp_status == OPTIMIZED_MIP_PROBLEM);
+    PPL_ASSERT(lp_status == OPTIMIZED_MIP_PROBLEM);
     // Do not call optimizing_point().
     p = lp.last_generator;
     lp.evaluate_objective_function(p, tmp_coeff1, tmp_coeff2);
     assign_r(tmp_rational.get_num(), tmp_coeff1, ROUND_NOT_NEEDED);
     assign_r(tmp_rational.get_den(), tmp_coeff2, ROUND_NOT_NEEDED);
-    assert(is_canonical(tmp_rational));
+    PPL_ASSERT(is_canonical(tmp_rational));
     if (have_incumbent_solution
 	&& ((lp.optimization_mode() == MAXIMIZATION
  	     && tmp_rational <= incumbent_solution_value)
@@ -1565,7 +1645,7 @@ PPL::MIP_Problem::solve_mip(bool& have_incumbent_solution,
   bool found_satisfiable_generator = true;
   PPL_DIRTY_TEMP_COEFFICIENT(gcd);
   const Coefficient& p_divisor = p.divisor();
-  dimension_type nonint_dim;
+  dimension_type nonint_dim = lp.space_dimension();
   for (Variables_Set::const_iterator v_begin = i_vars.begin(),
 	 v_end = i_vars.end(); v_begin != v_end; ++v_begin) {
     gcd_assign(gcd, p.coefficient(Variable(*v_begin)), p_divisor);
@@ -1595,13 +1675,15 @@ PPL::MIP_Problem::solve_mip(bool& have_incumbent_solution,
       PPL_DIRTY_TEMP_COEFFICIENT(num);
       PPL_DIRTY_TEMP_COEFFICIENT(den);
       lp.evaluate_objective_function(p, num, den);
-      std::cerr << "new value found: " << num << "/" << den << std::endl;
-#endif
+      std::cout << "MIP_Problem::solve_mip(): "
+                << "new value found: " << num << "/" << den
+                << "." << std::endl;
+#endif // PPL_NOISY_SIMPLEX
     }
     return lp_status;
   }
 
-  assert(nonint_dim < lp.space_dimension());
+  PPL_ASSERT(nonint_dim < lp.space_dimension());
 
   assign_r(tmp_rational.get_num(), p.coefficient(Variable(nonint_dim)),
 	   ROUND_NOT_NEEDED);
@@ -1612,23 +1694,37 @@ PPL::MIP_Problem::solve_mip(bool& have_incumbent_solution,
   {
     MIP_Problem lp_aux = lp;
     lp_aux.add_constraint(Variable(nonint_dim) <= tmp_coeff1);
+#if PPL_NOISY_SIMPLEX
+    using namespace IO_Operators;
+    std::cout << "MIP_Problem::solve_mip(): "
+              << "descending with: "
+              << (Variable(nonint_dim) <= tmp_coeff1)
+              << "." << std::endl;
+#endif // PPL_NOISY_SIMPLEX
     solve_mip(have_incumbent_solution, incumbent_solution_value,
 	      incumbent_solution_point, lp_aux, i_vars);
   }
   // TODO: change this when we will be able to remove constraints.
   lp.add_constraint(Variable(nonint_dim) >= tmp_coeff2);
+#if PPL_NOISY_SIMPLEX
+  using namespace IO_Operators;
+  std::cout << "MIP_Problem::solve_mip(): "
+            << "descending with: "
+            << (Variable(nonint_dim) >= tmp_coeff2)
+            << "." << std::endl;
+#endif // PPL_NOISY_SIMPLEX
   solve_mip(have_incumbent_solution, incumbent_solution_value,
 	    incumbent_solution_point, lp, i_vars);
   return have_incumbent_solution ? lp_status : UNFEASIBLE_MIP_PROBLEM;
 }
 
 bool
-PPL::MIP_Problem::choose_branching_variable(const MIP_Problem& mip,
+PPL::MIP_Problem::choose_branching_variable(const MIP_Problem& lp,
 					    const Variables_Set& i_vars,
 					    dimension_type& branching_index) {
   // Insert here the variables that don't satisfy the integrality condition.
-  const Constraint_Sequence& input_cs = mip.input_cs;
-  const Generator& last_generator = mip.last_generator;
+  const Constraint_Sequence& input_cs = lp.input_cs;
+  const Generator& last_generator = lp.last_generator;
   const Coefficient& last_generator_divisor = last_generator.divisor();
   Variables_Set candidate_variables;
 
@@ -1677,19 +1773,34 @@ PPL::MIP_Problem::choose_branching_variable(const MIP_Problem& mip,
 }
 
 bool
-PPL::MIP_Problem::is_mip_satisfiable(MIP_Problem& lp, Generator& p,
-				     const Variables_Set& i_vars) {
-  // Solve the problem as a non MIP one, it must be done internally.
-  if (!lp.is_lp_satisfiable())
-    return false;
-  PPL_DIRTY_TEMP0(mpq_class, tmp_rational);
+PPL::MIP_Problem::is_mip_satisfiable(MIP_Problem& lp,
+				     const Variables_Set& i_vars,
+                                     Generator& p) {
+#if PPL_NOISY_SIMPLEX
+  ++mip_recursion_level;
+  std::cout << "MIP_Problem::is_mip_satisfiable(): "
+            << "entering recursion level " << mip_recursion_level
+            << "." << std::endl;
+#endif // PPL_NOISY_SIMPLEX
+  PPL_ASSERT(lp.integer_space_dimensions().empty());
 
+  // Solve the LP problem.
+  if (!lp.is_lp_satisfiable()) {
+#if PPL_NOISY_SIMPLEX
+    std::cout << "MIP_Problem::is_mip_satisfiable(): "
+              << "exiting from recursion level " << mip_recursion_level
+              << "." << std::endl;
+    --mip_recursion_level;
+#endif // PPL_NOISY_SIMPLEX
+    return false;
+  }
+
+  PPL_DIRTY_TEMP0(mpq_class, tmp_rational);
   PPL_DIRTY_TEMP_COEFFICIENT(tmp_coeff1);
   PPL_DIRTY_TEMP_COEFFICIENT(tmp_coeff2);
-  p = lp.last_generator;
-
   bool found_satisfiable_generator = true;
   dimension_type nonint_dim;
+  p = lp.last_generator;
   const Coefficient& p_divisor = p.divisor();
 
 #if PPL_SIMPLEX_USE_MIP_HEURISTIC
@@ -1711,8 +1822,7 @@ PPL::MIP_Problem::is_mip_satisfiable(MIP_Problem& lp, Generator& p,
   if (found_satisfiable_generator)
     return true;
 
-
-  assert(nonint_dim < lp.space_dimension());
+  PPL_ASSERT(nonint_dim < lp.space_dimension());
 
   assign_r(tmp_rational.get_num(), p.coefficient(Variable(nonint_dim)),
 	   ROUND_NOT_NEEDED);
@@ -1723,11 +1833,39 @@ PPL::MIP_Problem::is_mip_satisfiable(MIP_Problem& lp, Generator& p,
   {
     MIP_Problem lp_aux = lp;
     lp_aux.add_constraint(Variable(nonint_dim) <= tmp_coeff1);
-    if (is_mip_satisfiable(lp_aux, p, i_vars))
+#if PPL_NOISY_SIMPLEX
+    using namespace IO_Operators;
+    std::cout << "MIP_Problem::is_mip_satisfiable(): "
+              << "descending with: "
+              << (Variable(nonint_dim) <= tmp_coeff1)
+              << "." << std::endl;
+#endif // PPL_NOISY_SIMPLEX
+    if (is_mip_satisfiable(lp_aux, i_vars, p)) {
+#if PPL_NOISY_SIMPLEX
+      std::cout << "MIP_Problem::is_mip_satisfiable(): "
+                << "exiting from recursion level " << mip_recursion_level
+                << "." << std::endl;
+      --mip_recursion_level;
+#endif // PPL_NOISY_SIMPLEX
       return true;
+    }
   }
   lp.add_constraint(Variable(nonint_dim) >= tmp_coeff2);
-  return is_mip_satisfiable(lp, p, i_vars);
+#if PPL_NOISY_SIMPLEX
+  using namespace IO_Operators;
+  std::cout << "MIP_Problem::is_mip_satisfiable(): "
+            << "descending with: "
+            << (Variable(nonint_dim) >= tmp_coeff2)
+            << "." << std::endl;
+#endif // PPL_NOISY_SIMPLEX
+  bool satisfiable = is_mip_satisfiable(lp, i_vars, p);
+#if PPL_NOISY_SIMPLEX
+  std::cout << "MIP_Problem::is_mip_satisfiable(): "
+            << "exiting from recursion level " << mip_recursion_level
+            << "." << std::endl;
+  --mip_recursion_level;
+#endif // PPL_NOISY_SIMPLEX
+  return satisfiable;
 }
 
 bool
@@ -2149,7 +2287,7 @@ PPL::MIP_Problem::ascii_load(std::istream& s) {
   if (!i_variables.ascii_load(s))
     return false;
 
-  assert(OK());
+  PPL_ASSERT(OK());
   return true;
 }
 
@@ -2167,5 +2305,5 @@ PPL::IO_Operators::operator<<(std::ostream& s, const MIP_Problem& lp) {
 	? "MAXIMIZATION"
 	: "MINIMIZATION");
   s << "\nInteger variables: " << lp.integer_space_dimensions();
- return s;
+  return s;
 }

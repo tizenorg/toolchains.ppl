@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -70,20 +71,43 @@ C_interface.dox
 #	    0.10		    2:0:0
 #	    0.10.1		    2:0:0 (was not updated by mistake)
 #	    0.10.2		    3:0:1
+#	    0.11		    4:0:0
 
-LIBPPL_C_LT_CURRENT =  3
+LIBPPL_C_LT_CURRENT =  4
 LIBPPL_C_LT_REVISION = 0
-LIBPPL_C_LT_AGE =      1
+LIBPPL_C_LT_AGE =      0
+
+
+if BUILD_WATCHDOG_LIBRARY
+
+WATCHDOG_LIBRARY = $(top_builddir)/Watchdog/src/libpwl.la
+WATCHDOG_INCLUDE_OPTIONS = -I$(top_builddir)/Watchdog/src
+
+endif BUILD_WATCHDOG_LIBRARY
+
+if HAVE_PERL
 
 ppl_c.h: ppl_c_header.h ppl_c_version.h ppl_c_domains.h Makefile $(top_builddir)/utils/build_header
 	$(top_builddir)/utils/build_header \
 		-I $(top_builddir)/interfaces/C -I $(top_srcdir)/src \
 		$(top_srcdir)/interfaces/C/ppl_c_header.h >$@
 
+else !HAVE_PERL
+
+ppl_c.h:	ppl_c.h.dist
+	cp -f $< $@
+
+endif !HAVE_PERL
+
 BUILT_SOURCES = \
 ppl_c.h \
 ppl_c_implementation_domains.hh \
 ppl_c_implementation_domains.cc.stamp
+
+# ppl_c.h is not distributed.
+# ppl_c.h.dist, which is distributed, is a copy of ppl_c.h.
+dist-hook:
+	mv -f $(distdir)/ppl_c.h $(distdir)/ppl_c.h.dist
 
 interface_generator_dependencies = \
 $(top_builddir)/interfaces/ppl_interface_instantiations.m4 \
@@ -101,8 +125,8 @@ ppl_c_implementation_domains.cc.stamp: $(interface_generator_dependencies)
 	$(M4) --prefix-builtin -I.. -I$(srcdir) -I$(srcdir)/.. \
            $(srcdir)/ppl_interface_generator_c_cc_files.m4 \
                 > ppl_c_cc_blob
-	$(top_srcdir)/utils/cm_cleaner.sh < ppl_c_cc_blob
-	$(top_srcdir)/utils/cm_splitter.sh < ppl_c_cc_blob
+	$(top_srcdir)/utils/cm_cleaner.sh ./ppl_c_cc_blob
+	$(top_srcdir)/utils/cm_splitter.sh ./ppl_c_cc_blob
 	rm -f ppl_c_cc_blob
 	echo timestamp >$@
 
@@ -110,14 +134,15 @@ ppl_c_implementation_domains.hh: $(interface_generator_dependencies)
 	$(M4) --prefix-builtin -I.. -I$(srcdir) -I$(srcdir)/.. \
            $(srcdir)/ppl_interface_generator_c_hh_files.m4 \
                 > ppl_c_hh_blob
-	$(top_srcdir)/utils/cm_cleaner.sh < ppl_c_hh_blob
-	$(top_srcdir)/utils/cm_splitter.sh < ppl_c_hh_blob
+	$(top_srcdir)/utils/cm_cleaner.sh ./ppl_c_hh_blob
+	$(top_srcdir)/utils/cm_splitter.sh ./ppl_c_hh_blob
 	rm -f ppl_c_hh_blob
 
 AM_CPPFLAGS = \
 -I$(top_srcdir)/interfaces \
 -I$(top_builddir)/interfaces/C \
 -I$(top_builddir)/src \
+$(WATCHDOG_INCLUDE_OPTIONS) \
 @extra_includes@
 
 lib_LTLIBRARIES = libppl_c.la
@@ -211,6 +236,7 @@ endif NO_UNDEFINED
 libppl_c_la_LIBADD = \
 @required_instantiations_c_cxx_objects@ \
 $(top_builddir)/src/libppl.la \
+$(WATCHDOG_LIBRARY) \
 @extra_libraries@
 
 libppl_c_la_DEPENDENCIES = \
@@ -220,7 +246,7 @@ libppl_c_la_LDFLAGS = \
 $(NO_UNDEFINED_FLAG) \
 -version-info $(LIBPPL_C_LT_CURRENT):$(LIBPPL_C_LT_REVISION):$(LIBPPL_C_LT_AGE)
 
-nodist_include_HEADERS = ppl_c.h
+include_HEADERS = ppl_c.h
 
 nodist_noinst_HEADERS = \
 ppl_c_domains.h \

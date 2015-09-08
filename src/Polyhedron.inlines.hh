@@ -1,5 +1,6 @@
 /* Polyhedron class implementation: inline functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -288,15 +289,15 @@ Polyhedron::clear_generators_up_to_date() {
 
 inline bool
 Polyhedron::process_pending() const {
-  assert(space_dim > 0 && !marked_empty());
-  assert(has_something_pending());
+  PPL_ASSERT(space_dim > 0 && !marked_empty());
+  PPL_ASSERT(has_something_pending());
 
   Polyhedron& x = const_cast<Polyhedron&>(*this);
 
   if (x.has_pending_constraints())
     return x.process_pending_constraints();
 
-  assert(x.has_pending_generators());
+  PPL_ASSERT(x.has_pending_generators());
   x.process_pending_generators();
   return true;
 }
@@ -343,7 +344,7 @@ Polyhedron::minimize(const Linear_Expression& expr,
 
 inline Constraint_System
 Polyhedron::simplified_constraints() const {
-  assert(constraints_are_up_to_date());
+  PPL_ASSERT(constraints_are_up_to_date());
   Constraint_System cs(con_sys);
   if (cs.num_pending_rows() > 0)
     cs.unset_pending_rows();
@@ -367,26 +368,9 @@ Polyhedron::minimized_grid_generators() const {
   return grid_generators();
 }
 
-inline bool
-Polyhedron::add_congruence_and_minimize(const Congruence& cg) {
-  add_congruence(cg);
-  return minimize();
-}
-
-inline bool
-Polyhedron::add_congruences_and_minimize(const Congruence_System& cgs) {
-  add_congruences(cgs);
-  return minimize();
-}
-
 inline void
 Polyhedron::add_recycled_congruences(Congruence_System& cgs) {
   add_congruences(cgs);
-}
-
-inline bool
-Polyhedron::add_recycled_congruences_and_minimize(Congruence_System& cgs) {
-  return add_congruences_and_minimize(cgs);
 }
 
 /*! \relates Polyhedron */
@@ -400,6 +384,19 @@ Polyhedron::strictly_contains(const Polyhedron& y) const {
   const Polyhedron& x = *this;
   return x.contains(y) && !y.contains(x);
 }
+
+inline void
+Polyhedron::drop_some_non_integer_points(Complexity_Class complexity) {
+  const Variables_Set* p_vs = 0;
+  drop_some_non_integer_points(p_vs, complexity);
+}
+
+inline void
+Polyhedron::drop_some_non_integer_points(const Variables_Set& vars,
+					 Complexity_Class complexity) {
+  drop_some_non_integer_points(&vars, complexity);
+}
+
 
 namespace Interfaces {
 

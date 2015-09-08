@@ -1,5 +1,6 @@
 /* Test Polyhedron::ascii_dump() and Polyhedron::ascii_load().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -518,7 +519,7 @@ test17() {
 
   open(f, my_file, ios_base::in);
   C_Polyhedron ph2;
-  bool ok =! ph2.ascii_load(f);
+  bool ok = !ph2.ascii_load(f);
   close(f);
 
   return ok;
@@ -535,7 +536,7 @@ test18() {
 
   open(f, my_file, ios_base::in);
   C_Polyhedron ph2;
-  bool ok =! ph2.ascii_load(f);
+  bool ok = !ph2.ascii_load(f);
   close(f);
 
   return ok;
@@ -552,7 +553,7 @@ test19() {
 
   open(f, my_file, ios_base::in);
   C_Polyhedron ph2;
-  bool ok =! ph2.ascii_load(f);
+  bool ok = !ph2.ascii_load(f);
   close(f);
 
   return ok;

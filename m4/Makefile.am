@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -45,6 +46,7 @@ ac_cxx_ieee_inexact_flag.m4 \
 ac_cxx_limit_memory.m4 \
 ac_cxx_long_double_binary_format.m4 \
 ac_cxx_long_double_exact_output.m4 \
+ac_cxx_plain_char_is_signed.m4 \
 ac_cxx_proper_long_double.m4 \
 ac_cxx_remainder_bug.m4 \
 ac_prog_jar.m4 \

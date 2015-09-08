@@ -1,5 +1,6 @@
 /* Grid_Generator_System class implementation (non-inline functions).
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -25,7 +26,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "Grid_Generator_System.inlines.hh"
 #include "Scalar_Products.defs.hh"
 #include "Variables_Set.defs.hh"
-#include <cassert>
+#include "assert.hh"
 #include <iostream>
 
 namespace PPL = Parma_Polyhedra_Library;
@@ -92,7 +93,7 @@ PPL::Grid_Generator_System::insert(const Grid_Generator& g) {
 	add_zero_columns(g_space_dim - initial_space_dim);
 	// Swap the parameter divisor column into the new last column.
 	swap_columns(g_space_dim + 1, initial_space_dim + 1);
-	assert(OK());
+	PPL_ASSERT(OK());
       }
       return;
     }
@@ -104,7 +105,7 @@ PPL::Grid_Generator_System::insert(const Grid_Generator& g) {
 
     // We are sure that the matrix has no pending rows
     // and that the new row is not a pending generator.
-    assert(num_pending_rows() == 0);
+    PPL_ASSERT(num_pending_rows() == 0);
 
     // TODO: Consider whether, if possible, it would be better to wrap
     //       an NNC Generator, storing the generator divisor in the
@@ -117,16 +118,16 @@ PPL::Grid_Generator_System::insert(const Grid_Generator& g) {
 
     // The added row must be strongly normalized and have the same
     // topology as the system.
-    assert(topology() == g.topology());
+    PPL_ASSERT(topology() == g.topology());
     // This method is only used when the system has no pending rows.
-    assert(num_pending_rows() == 0);
+    PPL_ASSERT(num_pending_rows() == 0);
 
     const dimension_type old_num_rows = num_rows();
     const dimension_type old_num_columns = num_columns();
     const dimension_type g_size = g.size();
 
     // Resize the system, if necessary.
-    assert(is_necessarily_closed());
+    PPL_ASSERT(is_necessarily_closed());
     if (g_size > old_num_columns) {
       add_zero_columns(g_size - old_num_columns);
       if (old_num_rows > 0)
@@ -154,7 +155,7 @@ PPL::Grid_Generator_System::insert(const Grid_Generator& g) {
   set_index_first_pending_row(num_rows());
   set_sorted(false);
 
-  assert(OK());
+  PPL_ASSERT(OK());
 }
 
 void
@@ -167,9 +168,9 @@ PPL::Grid_Generator_System
   Grid_Generator_System& x = *this;
   // `v' is the index of a column corresponding to a "user" variable
   // (i.e., it cannot be the inhomogeneous term).
-  assert(v > 0 && v <= x.space_dimension());
-  assert(expr.space_dimension() <= x.space_dimension());
-  assert(denominator > 0);
+  PPL_ASSERT(v > 0 && v <= x.space_dimension());
+  PPL_ASSERT(expr.space_dimension() <= x.space_dimension());
+  PPL_ASSERT(denominator > 0);
 
   const dimension_type num_columns = x.num_columns();
   const dimension_type num_rows = x.num_rows();
@@ -233,7 +234,7 @@ PPL::Grid_Generator_System::ascii_load(std::istream& s) {
       return false;
 
   // Check invariants.
-  assert(OK());
+  PPL_ASSERT(OK());
 
   return true;
 }
@@ -243,14 +244,14 @@ PPL::Grid_Generator_System::zero_dim_univ_p = 0;
 
 void
 PPL::Grid_Generator_System::initialize() {
-  assert(zero_dim_univ_p == 0);
+  PPL_ASSERT(zero_dim_univ_p == 0);
   zero_dim_univ_p
     = new Grid_Generator_System(Grid_Generator::zero_dim_point());
 }
 
 void
 PPL::Grid_Generator_System::finalize() {
-  assert(zero_dim_univ_p != 0);
+  PPL_ASSERT(zero_dim_univ_p != 0);
   delete zero_dim_univ_p;
   zero_dim_univ_p = 0;
 }
@@ -308,7 +309,7 @@ PPL::IO_Operators::operator<<(std::ostream& s,
 void
 PPL::Grid_Generator_System
 ::add_universe_rows_and_columns(dimension_type dims) {
-  assert(num_columns() > 0);
+  PPL_ASSERT(num_columns() > 0);
   dimension_type col = num_columns() - 1;
   add_zero_rows_and_columns(dims, dims,
 			    Linear_Row::Flags(NECESSARILY_CLOSED,
@@ -324,26 +325,26 @@ PPL::Grid_Generator_System
 
 void
 PPL::Grid_Generator_System
-::remove_space_dimensions(const Variables_Set& to_be_removed) {
+::remove_space_dimensions(const Variables_Set& vars) {
   // Dimension-compatibility assertion.
-  assert(space_dimension() >= to_be_removed.space_dimension());
+  PPL_ASSERT(space_dimension() >= vars.space_dimension());
 
   // The removal of no dimensions from any system is a no-op.  This
   // case also captures the only legal removal of dimensions from a
   // 0-dim system.
-  if (to_be_removed.empty())
+  if (vars.empty())
     return;
 
   // For each variable to be removed, replace the corresponding column
   // by shifting left the columns to the right that will be kept.
-  Variables_Set::const_iterator tbr = to_be_removed.begin();
-  Variables_Set::const_iterator tbr_end = to_be_removed.end();
-  dimension_type dst_col = *tbr+1;
+  Variables_Set::const_iterator vsi = vars.begin();
+  Variables_Set::const_iterator vsi_end = vars.end();
+  dimension_type dst_col = *vsi+1;
   dimension_type src_col = dst_col + 1;
-  for (++tbr; tbr != tbr_end; ++tbr) {
-    const dimension_type tbr_col = *tbr+1;
+  for (++vsi; vsi != vsi_end; ++vsi) {
+    const dimension_type vsi_col = *vsi+1;
     // Move all columns in between to the left.
-    while (src_col < tbr_col)
+    while (src_col < vsi_col)
       Matrix::swap_columns(dst_col++, src_col++);
     ++src_col;
   }
@@ -361,7 +362,7 @@ PPL::Grid_Generator_System
 ::remove_higher_space_dimensions(const dimension_type new_dimension) {
   dimension_type space_dim = space_dimension();
 
-  assert(new_dimension <= space_dim);
+  PPL_ASSERT(new_dimension <= space_dim);
 
   // The removal of no dimensions from any system is a no-op.  Note
   // that this case also captures the only legal removal of dimensions
@@ -373,5 +374,5 @@ PPL::Grid_Generator_System
   // become the last column.
   swap_columns(new_dimension + 1, space_dim + 1);
   Matrix::remove_trailing_columns(space_dim - new_dimension);
-  assert(OK());
+  PPL_ASSERT(OK());
 }

@@ -1,5 +1,6 @@
 # Automake source file for the Parma Polyhedra Library.
-# Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+# Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 #
 # This file is part of the Parma Polyhedra Library (PPL).
 #
@@ -63,6 +64,7 @@ AM_CPPFLAGS = \
 -I$(top_buildir)/interfaces/Prolog \
 -I$(top_builddir)/src \
 $(WATCHDOG_INCLUDE_OPTIONS) \
+$(YAP_PROLOG_INCLUDE_OPTIONS) \
 @extra_includes@
 
 if NO_UNDEFINED
@@ -156,11 +158,15 @@ nodist_EXTRA_ppl_yap_la_SOURCES = \
 ../ppl_prolog_Constraints_Product_C_Polyhedron_Grid.cc \
 ../ppl_prolog_Constraints_Product_NNC_Polyhedron_Grid.cc \
 ../ppl_prolog_Constraints_Product_Grid_C_Polyhedron.cc \
-../ppl_prolog_Constraints_Product_Grid_NNC_Polyhedron.cc
+../ppl_prolog_Constraints_Product_Grid_NNC_Polyhedron.cc \
+../ppl_prolog_Shape_Preserving_Product_C_Polyhedron_Grid.cc \
+../ppl_prolog_Shape_Preserving_Product_NNC_Polyhedron_Grid.cc \
+../ppl_prolog_Shape_Preserving_Product_Grid_C_Polyhedron.cc \
+../ppl_prolog_Shape_Preserving_Product_Grid_NNC_Polyhedron.cc
 
 ppl_yap_la_LIBADD = \
 @required_instantiations_prolog_cxx_objects@ \
--lYap \
+$(YAP_PROLOG_LD_OPTIONS) \
 $(top_builddir)/src/libppl.la \
 $(WATCHDOG_LIBRARY) \
 @extra_libraries@
@@ -213,7 +219,7 @@ pl_check_test: yap_pl_check.pl ppl_yap.pl ../tests/pl_check.pl $(EXPECTED_PCHK)
 		-dlopen ../../../src/libppl.la \
 		$(WATCHDOG_DLOPEN) \
 		-dlopen ppl_yap.la \
-		yap -l $(srcdir)/yap_pl_check.pl \
+		$(YAP_PROLOG) -l $(srcdir)/yap_pl_check.pl \
 			<script_pchk >obtained_pchk
 	diff -u --ignore-all-space $(EXPECTED_PCHK) obtained_pchk
 
@@ -227,7 +233,7 @@ clpq_test: yap_clpq.pl ppl_yap.pl ../tests/clpq.pl ../tests/script_clpq $(EXPECT
 		-dlopen ../../../src/libppl.la \
 		$(WATCHDOG_DLOPEN) \
 		-dlopen ppl_yap.la \
-		yap -l $(srcdir)/yap_clpq.pl \
+		$(YAP_PROLOG) -l $(srcdir)/yap_clpq.pl \
 			<script_clpq >obtained_clpq
 	diff -u --ignore-all-space $(EXPECTED_CLPQ) obtained_clpq
 
@@ -238,13 +244,13 @@ clpq2_test: yap_clpq2.pl ppl_yap.pl ../tests/clpq2.pl ../tests/script_clpq2 $(EX
 		-dlopen ../../../src/libppl.la \
 		$(WATCHDOG_DLOPEN) \
 		-dlopen ppl_yap.la \
-		yap -l $(srcdir)/yap_clpq2.pl \
+		$(YAP_PROLOG) -l $(srcdir)/yap_clpq2.pl \
 			<script_clpq2 >obtained_clpq2
 	diff -u --ignore-all-space $(EXPECTED_CLPQ2) obtained_clpq2
 
 ppl_prolog_generated_test: yap_prolog_generated_test.pl ppl_yap.pl  ../tests/expected_pgt
-	if [ $(srcdir) != `pwd` ]; then \
-	  cp -f $(srcdir)/../tests/ppl_prolog_generated_test_common.pl . ; \
+	cp -f $(srcdir)/../tests/ppl_prolog_generated_test_common.pl .
+	if [ $(abs_srcdir) != `pwd` ]; then \
           cp -f $(srcdir)/yap_prolog_generated_test.pl . ; \
           cp -f $(srcdir)/ppl_yap.pl . ; \
 	fi
@@ -254,14 +260,14 @@ ppl_prolog_generated_test: yap_prolog_generated_test.pl ppl_yap.pl  ../tests/exp
 		-dlopen ../../../src/libppl.la \
 		$(WATCHDOG_DLOPEN) \
 		-dlopen ppl_yap.la \
-		yap -l yap_prolog_generated_test.pl \
+		$(YAP_PROLOG) -l yap_prolog_generated_test.pl \
 			<script_pgt >obtained_pgt
-	if [ $(srcdir) != `pwd` ]; then \
-	  rm -f ppl_prolog_generated_test_common.pl; \
+	rm -f ppl_prolog_generated_test_common.pl
+	if [ $(abs_srcdir) != `pwd` ]; then \
 	  rm -f yap_prolog_generated_test.pl; \
 	  rm -f ppl_yap.pl; \
         fi
-	rm -f ppl_prolog_generated_test_main.pl; \
+	rm -f ppl_prolog_generated_test_main.pl
 	diff -u --ignore-all-space $(srcdir)/../tests/expected_pgt obtained_pgt
 
 endif ENABLE_SHARED

@@ -1,5 +1,6 @@
 /* Test reduction and conversion of grids created from congruences.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -24,7 +25,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 
 namespace {
 
-// add_congruence_and_minimize, one dimension.
+// add_congruence, one dimension.
 bool
 test01() {
   Variable A(0);
@@ -36,7 +37,7 @@ test01() {
 
   Congruence cg(A %= 0);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruence_and_minimize(cg);
+  gr.add_congruence(cg);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point(0*A));
@@ -46,12 +47,12 @@ test01() {
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruence_and_minimize(cg) ***");
+  print_congruences(gr, "*** gr.add_congruence(cg) ***");
 
   return ok;
 }
 
-// add_congruence_and_minimize, two dimensions.
+// add_congruence, two dimensions.
 bool
 test02() {
   Variable A(0);
@@ -64,7 +65,7 @@ test02() {
 
   Congruence cg((2*A - B %= 3) / 4);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruence_and_minimize(cg);
+  gr.add_congruence(cg);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point(0*A - 15*B, 5));
@@ -75,12 +76,12 @@ test02() {
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruence_and_minimize(cg) ***");
+  print_congruences(gr, "*** gr.add_congruence(cg) ***");
 
   return ok;
 }
 
-// add_congruences_and_minimize, one dimension.
+// add_congruences, one dimension.
 bool
 test03() {
   Variable A(0);
@@ -90,7 +91,7 @@ test03() {
 
   Grid gr(1);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point(0*A));
@@ -100,12 +101,12 @@ test03() {
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruences_and_minimize(cgs) ***");
+  print_congruences(gr, "*** gr.add_congruences(cgs) ***");
 
   return ok;
 }
 
-// add_congruences_and_minimize, one dimension with factors.
+// add_congruences, one dimension with factors.
 bool
 test04() {
   Variable A(0);
@@ -115,7 +116,7 @@ test04() {
 
   Grid gr(1);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point(1*A));
@@ -125,12 +126,12 @@ test04() {
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_recycled_congruences(cgs) ***");
+  print_congruences(gr, "*** gr.add_congruences(cgs) ***");
 
   return ok;
 }
 
-// add_congruences_and_minimize, two dimensions.
+// add_congruences, two dimensions.
 bool
 test05() {
   Variable A(0);
@@ -140,7 +141,7 @@ test05() {
   cgs.insert((A - B %= 0) / 3);
 
   Grid gr(2);
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point());
@@ -152,7 +153,7 @@ test05() {
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruences_and_minimize(cgs) ***");
+  print_congruences(gr, "*** gr.add_congruences(cgs) ***");
 
   return ok;
 }
@@ -170,7 +171,7 @@ test06() {
 
   Grid gr(3);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point());
@@ -182,7 +183,7 @@ test06() {
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruences_and_minimize(cgs) ***");
+  print_congruences(gr, "*** gr.add_congruences(cgs) ***");
 
   return ok;
 }
@@ -200,7 +201,7 @@ test07() {
 
   Grid gr(3);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point());
@@ -228,13 +229,13 @@ test08() {
 
   Grid gr(3);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid known_gr(3, EMPTY);
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruences_and_minimize(cgs) ***");
+  print_congruences(gr, "*** gr.add_congruences(cgs) ***");
 
   return ok;
  }
@@ -252,7 +253,7 @@ test09() {
 
   Grid gr(3);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point());
@@ -264,7 +265,7 @@ test09() {
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruences_and_minimize(cgs) ***");
+  print_congruences(gr, "*** gr.add_congruences(cgs) ***");
 
   return ok;
 }
@@ -284,7 +285,7 @@ test10() {
 
   Grid gr(3);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point(  A       - 3*C));
@@ -296,7 +297,7 @@ test10() {
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruences_and_minimize(cgs) ***");
+  print_congruences(gr, "*** gr.add_congruences(cgs) ***");
 
   return ok;
 }
@@ -314,7 +315,7 @@ test11() {
 
   Grid gr(3);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point(-2*A -  3*B - 6*C, 3));
@@ -326,7 +327,7 @@ test11() {
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruences_and_minimize(cgs) ***");
+  print_congruences(gr, "*** gr.add_congruences(cgs) ***");
 
   return ok;
 }
@@ -344,7 +345,7 @@ test12() {
 
   Grid gr(3);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point(A + B + C));
@@ -353,7 +354,7 @@ test12() {
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruences_and_minimize(cgs) ***");
+  print_congruences(gr, "*** gr.add_congruences(cgs) ***");
 
   return ok;
 }
@@ -371,7 +372,7 @@ test13() {
 
   Grid gr(3);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point(A + C));
@@ -381,7 +382,7 @@ test13() {
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruences_and_minimize(cgs) ***");
+  print_congruences(gr, "*** gr.add_congruences(cgs) ***");
 
   return ok;
 }
@@ -397,13 +398,13 @@ test14() {
 
   Grid gr(3);
   print_congruences(gr, "*** gr ***");
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid known_gr(3, EMPTY);
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruences_and_minimize(cgs) ***");
+  print_congruences(gr, "*** gr.add_congruences(cgs) ***");
 
   return ok;
 }
@@ -420,7 +421,7 @@ test15() {
   cgs1.insert(B %= 2);
 
   Grid gr(2);
-  gr.add_congruences_and_minimize(cgs1);
+  gr.add_congruences(cgs1);
 
   gr.add_space_dimensions_and_embed(1);
   print_congruences(gr, "*** gr ***");
@@ -432,7 +433,7 @@ test15() {
 
   // cgs2 is likely to now have more capacity than gr.con_sys does.
 
-  gr.add_congruences_and_minimize(cgs2);
+  gr.add_congruences(cgs2);
 
   Congruence_System cgs3;
   cgs3.insert(B %= 2);
@@ -442,7 +443,7 @@ test15() {
 
   bool ok = (gr == known_gr);
 
-  print_congruences(gr, "*** gr.add_congruences_and_minimize(cgs2) ***");
+  print_congruences(gr, "*** gr.add_congruences(cgs2) ***");
 
   return ok;
 }
@@ -534,7 +535,7 @@ test20() {
 
   Grid gr(3);
 
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   Grid_Generator_System known_gs;
   known_gs.insert(grid_point(-2*A + 0*B +  7*C, 3));
@@ -546,7 +547,7 @@ test20() {
 
   bool ok = (gr == known_gr);
 
-  print_generators(gr, "*** gr.add_congruences_and_minimize(cgs) ***");
+  print_generators(gr, "*** gr.add_congruences(cgs) ***");
 
   return ok;
 }
@@ -563,10 +564,10 @@ test21() {
 
   Grid gr(3);
 
-  gr.add_congruences_and_minimize(cgs);
+  gr.add_congruences(cgs);
 
   bool ok = (gr.OK(true) && gr.OK(false));
-  print_generators(gr, "*** gr.add_congruences_and_minimize(cgs) ***");
+  print_generators(gr, "*** gr.add_congruences(cgs) ***");
 
   Grid gr1(1, EMPTY);
 

@@ -8,23 +8,20 @@
 
 Name:       ppl
 Summary:    The Parma Polyhedra Library: a library of numerical abstractions
-Version:    0.10.2
-Release:    10
+Version:    0.11.2
+Release:    1
 Group:      Development/Libraries
-License:    GPLv3+
-URL:        http://www.cs.unipr.it/ppl/
-Source0:    ftp://ftp.cs.unipr.it/pub/ppl/releases/%{version}/%{name}-%{version}.tar.bz2
+License:    GPL-3.0+
+URL:        http://bugseng.com/products/ppl/
+Source0:    http://bugseng.com/products/ppl/download/ftp/releases/%{version}/%{name}-%{version}.tar.bz2
 Source1:    ppl.hh
 Source2:    ppl_c.h
 Source3:    pwl.hh
 Source100:  ppl.yaml
-Patch0:     ppl-0.10.2-Makefile.patch
-Patch1:     ppl-missing-macro.patch
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  gmp-devel >= 4.1.3
 BuildRequires:  m4 >= 1.4.8
-
 
 %description
 The Parma Polyhedra Library (PPL) is a library for the manipulation of
@@ -39,8 +36,6 @@ exception-safe, rather efficient, thoroughly documented, and free
 software.  This package provides all what is necessary to run
 applications using the PPL through its C and C++ interfaces.
 
-
-
 %package pwl-devel
 Summary:    Development tools for the Parma Watchdog Library
 Group:      Development/Libraries
@@ -52,7 +47,6 @@ Requires:   %{name}-pwl = %{version}-%{release}
 The header files, documentation and static libraries for developing
 applications using the Parma Watchdog Library.
 
-
 %package pwl-static
 Summary:    Static archive for the Parma Watchdog Library
 Group:      Development/Libraries
@@ -62,7 +56,6 @@ Requires:   %{name}-pwl-devel = %{version}-%{release}
 %description pwl-static
 -static
 This package contains the static archive for the Parma Watchdog Library.
-
 
 %package devel
 Summary:    Development tools for the Parma Polyhedra Library C and C++ interfaces
@@ -104,19 +97,12 @@ Library, but is totally independent from it.
 %prep
 %setup -q -n %{name}-%{version}
 
-# ppl-0.10.2-Makefile.patch
-%patch0 -p1
-# ppl-missing-macro.patch
-%patch1 -p1
 # >> setup
 # << setup
 
 %build
 # >> build pre
 # << build pre
-
-
-
 # >> build post
 CPPFLAGS="-I%{_includedir}/glpk"
 CPPFLAGS="$CPPFLAGS -I%{_libdir}/gprolog-`gprolog --version 2>&1 | head -1 | sed -e "s/.* \([^ ]*\)$/\1/g"`/include"
@@ -152,8 +138,12 @@ rm -f %{buildroot}%{_libdir}/*.la %{buildroot}%{_libdir}/%{name}/*.la
 
 %ifarch %{arm}
 normalized_arch=arm
-%else
+%endif
+%ifarch %{ix86}
 normalized_arch=i386
+%endif
+%ifarch x86_64
+normalized_arch=x86_64
 %endif
 
 mv %{buildroot}/%{_includedir}/ppl.hh %{buildroot}/%{_includedir}/ppl-${normalized_arch}.hh
@@ -166,8 +156,6 @@ install -m644 %{SOURCE3} %{buildroot}/%{_includedir}/pwl.hh
 rm -rf %{buildroot}%{_datadir}/doc/%{name}-%{version}/*
 
 # << install post
-
-
 
 %post -p /sbin/ldconfig
 
@@ -183,6 +171,8 @@ rm -rf %{buildroot}%{_datadir}/doc/%{name}-%{version}/*
 %{_libdir}/libppl.so.*
 %{_libdir}/libppl_c.so.*
 %{_bindir}/ppl-config
+%{_bindir}/ppl_pips
+%{_mandir}/man1/ppl_pips.1.gz
 %{_mandir}/man1/ppl-config.1.gz
 /usr/share/man/man1/ppl_lcdd.1.gz
 /usr/bin/ppl_lcdd

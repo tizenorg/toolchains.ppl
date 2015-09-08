@@ -1,5 +1,6 @@
 /* Declaration of Rounding_Dir and related functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -48,7 +49,9 @@ enum Rounding_Dir {
   ROUND_NATIVE = ROUND_IGNORE,
 
   /*! \hideinitializer
-    Rounding is not needed: client code must ensure the operation is exact.
+    Rounding is not needed: client code must ensure that the operation
+    result is exact and representable in the destination type.
+    Result info is evaluated lazily.
   */
   ROUND_NOT_NEEDED = 7,
 
@@ -57,9 +60,13 @@ enum Rounding_Dir {
 
   ROUND_DIR_MASK = 7,
 
-  ROUND_FPU_CHECK_INEXACT = 8,
+  /*! \hideinitializer
+    The client code is willing to pay an extra price to know the exact
+    relation beetwen the exact result and the computed one.
+   */
+  ROUND_STRICT_RELATION = 8,
 
-  ROUND_CHECK = ROUND_DIRECT | ROUND_FPU_CHECK_INEXACT
+  ROUND_CHECK = ROUND_DIRECT | ROUND_STRICT_RELATION
 };
 
 /*! \brief
@@ -72,10 +79,12 @@ Rounding_Dir round_dir(Rounding_Dir dir);
 bool round_down(Rounding_Dir dir);
 bool round_up(Rounding_Dir dir);
 bool round_ignore(Rounding_Dir dir);
+bool round_not_needed(Rounding_Dir dir);
+bool round_not_requested(Rounding_Dir dir);
 bool round_direct(Rounding_Dir dir);
 bool round_inverse(Rounding_Dir dir);
 
-bool round_fpu_check_inexact(Rounding_Dir dir);
+bool round_strict_relation(Rounding_Dir dir);
 
 fpu_rounding_direction_type round_fpu_dir(Rounding_Dir dir);
 

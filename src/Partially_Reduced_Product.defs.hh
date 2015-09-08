@@ -1,5 +1,6 @@
 /* Partially_Reduced_Product class declaration.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -162,6 +163,113 @@ public:
 
   //! Destructor.
   ~Constraints_Reduction();
+};
+
+/*! \brief
+  This class provides the reduction method for the Congruences_Product
+  domain.
+
+  \ingroup PPL_CXX_interface
+  The reduction classes are used to instantiate the Partially_Reduced_Product
+  domain.
+
+  This class uses the minimized congruences defining each of the components.
+  For each of the congruences, it checks if the other component
+  intersects none, one or more than one hyperplane defined by the congruence
+  and adds equalities or emptiness as appropriate; in more detail:
+  Letting the components be d1 and d2, then, for each congruence cg
+  representing d1:
+  - if more than one hyperplane defined by cg intersects
+    d2, then d1 and d2 are unchanged;
+  - if exactly one hyperplane intersects d2, then d1 and d2 are
+    refined with the corresponding equality ;
+  - otherwise, d1 and d2 are set to empty.
+  Unless d1 and d2 are already empty, the process is repeated where the
+  roles of d1 and d2 are reversed.
+  If d1 or d2 is empty, then the emptiness is propagated.
+
+*/
+template <typename D1, typename D2>
+class Parma_Polyhedra_Library::Congruences_Reduction {
+public:
+  //! Default constructor.
+  Congruences_Reduction();
+
+  /*! \brief
+    The congruences reduction operator for detect emptiness or any equalities
+    implied by each of the congruences defining one of the components
+    and the bounds of the other component. It is assumed that the
+    components are already constraints reduced.
+
+    The minimized congruence system defining the domain element \p d1
+    is used to check if \p d2 intersects none, one or more than one
+    of the hyperplanes defined by the congruences: if it intersects none,
+    then product is set empty; if it intersects one, then the equality
+    defining this hyperplane is added to both components; otherwise,
+    the product is unchanged.
+    In each case, the donor domain must provide a congruence system
+    in minimal form.
+
+    \param d1
+    A pointset domain element;
+
+    \param d2
+    A pointset domain element;
+  */
+  void product_reduce(D1& d1, D2& d2);
+
+  //! Destructor.
+  ~Congruences_Reduction();
+};
+
+/*! \brief
+  This class provides the reduction method for the Shape_Preserving_Product
+  domain.
+
+  \ingroup PPL_CXX_interface
+  The reduction classes are used to instantiate the Partially_Reduced_Product
+  domain.
+
+  This reduction method includes the congruences reduction.
+  This class uses the minimized constraints defining each of the components.
+  For each of the constraints, it checks the frequency and value for the same
+  linear expression in the other component. If the constraint does not satisfy
+  the implied congruence, the inhomogeneous term is adjusted so that it does.
+  Note that unless the congruences reduction adds equalitites
+  the shapes of the domains are unaltered.
+
+*/
+template <typename D1, typename D2>
+class Parma_Polyhedra_Library::Shape_Preserving_Reduction {
+public:
+  //! Default constructor.
+  Shape_Preserving_Reduction();
+
+  /*! \brief
+    The congruences reduction operator for detect emptiness or any equalities
+    implied by each of the congruences defining one of the components
+    and the bounds of the other component. It is assumed that the
+    components are already constraints reduced.
+
+    The minimized congruence system defining the domain element \p d1
+    is used to check if \p d2 intersects none, one or more than one
+    of the hyperplanes defined by the congruences: if it intersects none,
+    then product is set empty; if it intersects one, then the equality
+    defining this hyperplane is added to both components; otherwise,
+    the product is unchanged.
+    In each case, the donor domain must provide a congruence system
+    in minimal form.
+
+    \param d1
+    A pointset domain element;
+
+    \param d2
+    A pointset domain element;
+  */
+  void product_reduce(D1& d1, D2& d2);
+
+  //! Destructor.
+  ~Shape_Preserving_Reduction();
 };
 
 /*! \brief
@@ -331,13 +439,9 @@ public:
     \param cgs
     The system of congruences to be approximated by the pair.
 
-    \exception std::invalid_argument
-    Thrown if the system of congruences is imcompatible with one of the
-    components.
-
     \exception std::length_error
-    Thrown if the space dimension of \p cgs exceeds the maximum allowed
-    space dimension.
+    Thrown if \p num_dimensions exceeds the maximum allowed space
+    dimension.
   */
   explicit Partially_Reduced_Product(const Congruence_System& cgs);
 
@@ -349,13 +453,9 @@ public:
     The system of congruences to be approximates by the pair.
     Its data-structures may be recycled to build the pair.
 
-    \exception std::invalid_argument
-    Thrown if the system of congruences is imcompatible with one of the
-    components.
-
     \exception std::length_error
-    Thrown if the space dimension of \p cgs exceeds the maximum allowed
-    space dimension.
+    Thrown if \p num_dimensions exceeds the maximum allowed space
+    dimension.
   */
   explicit Partially_Reduced_Product(Congruence_System& cgs);
 
@@ -366,13 +466,9 @@ public:
     \param cs
     The system of constraints to be approximated by the pair.
 
-    \exception std::invalid_argument
-    Thrown if the system of constraints is imcompatible with one of the
-    components.
-
     \exception std::length_error
-    Thrown if the space dimension of \p cs exceeds the maximum allowed
-    space dimension.
+    Thrown if \p num_dimensions exceeds the maximum allowed space
+    dimension.
   */
   explicit Partially_Reduced_Product(const Constraint_System& cs);
 
@@ -382,10 +478,6 @@ public:
 
     \param cs
     The system of constraints to be approximated by the pair.
-
-    \exception std::invalid_argument
-    Thrown if the system of constraints is imcompatible with one of the
-    components.
 
     \exception std::length_error
     Thrown if the space dimension of \p cs exceeds the maximum allowed
@@ -468,8 +560,8 @@ public:
     The complexity is ignored.
 
     \exception std::length_error
-    Thrown if the space dimension of \p box exceeds the maximum allowed
-    space dimension.
+    Thrown if the space dimension of \p box exceeds the maximum
+    allowed space dimension.
   */
   template <typename Interval>
   Partially_Reduced_Product(const Box<Interval>& box,
@@ -487,8 +579,8 @@ public:
     The complexity is ignored.
 
     \exception std::length_error
-    Thrown if the space dimension of \p bd exceeds the maximum allowed
-    space dimension.
+    Thrown if the space dimension of \p bd exceeds the maximum
+    allowed space dimension.
   */
   template <typename U>
   Partially_Reduced_Product(const BD_Shape<U>& bd,
@@ -506,36 +598,20 @@ public:
     The complexity is ignored.
 
     \exception std::length_error
-    Thrown if the space dimension of \p os exceeds the maximum allowed
-    space dimension.
+    Thrown if the space dimension of \p os exceeds the maximum
+    allowed space dimension.
   */
   template <typename U>
   Partially_Reduced_Product(const Octagonal_Shape<U>& os,
                             Complexity_Class complexity = ANY_COMPLEXITY);
 
-  //! Ordinary copy-constructor.
+  //! Ordinary copy constructor.
   Partially_Reduced_Product(const Partially_Reduced_Product& y,
                             Complexity_Class complexity = ANY_COMPLEXITY);
 
   //! Builds a conservative, upward approximation of \p y.
   /*!
-    Builds a product containing \p y using algorithms whose
-    complexity does not exceed the one specified by \p complexity.
-    If \p complexity is \p ANY_COMPLEXITY, then the built product is the
-    smallest one containing \p y.
-    The product inherits the space dimension of y.
-
-    \param y
-    The product to be approximated.
-
-    \param complexity
-    The complexity that will not be exceeded.
-
-    \exception std::length_error
-    Thrown if the space dimension of \p y exceeds the maximum allowed
-    space dimension.
-
-    The built product is independent of the order of the components of \p y.
+    The complexity argument is ignored.
   */
   template <typename E1, typename E2, typename S>
   explicit
@@ -960,17 +1036,17 @@ public:
 
   /*! \brief
     Computes the \ref Cylindrification "cylindrification" of \p *this with
-    respect to the set of space dimensions \p to_be_unconstrained,
+    respect to the set of space dimensions \p vars,
     assigning the result to \p *this.
 
-    \param to_be_unconstrained
+    \param vars
     The set of space dimension that will be unconstrained.
 
     \exception std::invalid_argument
     Thrown if \p *this is dimension-incompatible with one of the
-    Variable objects contained in \p to_be_removed.
+    Variable objects contained in \p vars.
   */
-  void unconstrain(const Variables_Set& to_be_unconstrained);
+  void unconstrain(const Variables_Set& vars);
 
   /*! \brief
     Assigns to \p *this the componentwise intersection of \p *this and \p y.
@@ -1257,8 +1333,8 @@ public:
 
   // TODO: Add a way to call other widenings.
 
-  // CHECKME: This is a real widening for all the existing reduction
-  // operations. When new reductions are added, this must be rechecked.
+  // CHECKME: This may not be a real widening; it depends on the reduction
+  //          class R and the widening used.
 
   /*! \brief
     Assigns to \p *this the result of computing the
@@ -1281,6 +1357,39 @@ public:
   */
   void widening_assign(const Partially_Reduced_Product& y,
                        unsigned* tp = NULL);
+
+  /*! \brief
+    Possibly tightens \p *this by dropping some points with non-integer
+    coordinates.
+
+    \param complexity
+    The maximal complexity of any algorithms used.
+
+    \note
+    Currently there is no optimality guarantee, not even if
+    \p complexity is <CODE>ANY_COMPLEXITY</CODE>.
+  */
+  void drop_some_non_integer_points(Complexity_Class complexity
+                                    = ANY_COMPLEXITY);
+
+  /*! \brief
+    Possibly tightens \p *this by dropping some points with non-integer
+    coordinates for the space dimensions corresponding to \p vars.
+
+    \param vars
+    Points with non-integer coordinates for these variables/space-dimensions
+    can be discarded.
+
+    \param complexity
+    The maximal complexity of any algorithms used.
+
+    \note
+    Currently there is no optimality guarantee, not even if
+    \p complexity is <CODE>ANY_COMPLEXITY</CODE>.
+  */
+  void drop_some_non_integer_points(const Variables_Set& vars,
+                                    Complexity_Class complexity
+                                    = ANY_COMPLEXITY);
 
   //@} // Space Dimension Preserving Member Functions that May Modify [...]
 
@@ -1317,7 +1426,7 @@ public:
     Assigns to the first (resp., second) component of \p *this
     the "concatenation" of the first (resp., second) components
     of \p *this and \p y, taken in this order.
-    See also \ref Concatenating_Polyhedra and \ref Grid_Concatenate.
+    See also \ref Concatenating_Polyhedra.
 
     \exception std::length_error
     Thrown if the concatenation would cause the vector space
@@ -1327,15 +1436,15 @@ public:
 
   //! Removes all the specified dimensions from the vector space.
   /*!
-    \param to_be_removed
+    \param vars
     The set of Variable objects corresponding to the space dimensions
     to be removed.
 
     \exception std::invalid_argument
     Thrown if \p *this is dimension-incompatible with one of the
-    Variable objects contained in \p to_be_removed.
+    Variable objects contained in \p vars.
   */
-  void remove_space_dimensions(const Variables_Set& to_be_removed);
+  void remove_space_dimensions(const Variables_Set& vars);
 
   /*! \brief
     Removes the higher dimensions of the vector space so that the
@@ -1423,31 +1532,31 @@ public:
   */
   void expand_space_dimension(Variable var, dimension_type m);
 
-  //! Folds the space dimensions in \p to_be_folded into \p var.
+  //! Folds the space dimensions in \p vars into \p dest.
   /*!
-    \param to_be_folded
+    \param vars
     The set of Variable objects corresponding to the space dimensions
     to be folded;
 
-    \param var
+    \param dest
     The variable corresponding to the space dimension that is the
     destination of the folding operation.
 
     \exception std::invalid_argument
-    Thrown if \p *this is dimension-incompatible with \p var or with
-    one of the Variable objects contained in \p to_be_folded.  Also
-    thrown if \p var is contained in \p to_be_folded.
+    Thrown if \p *this is dimension-incompatible with \p dest or with
+    one of the Variable objects contained in \p vars.  Also
+    thrown if \p dest is contained in \p vars.
 
     If \p *this has space dimension \f$n\f$, with \f$n > 0\f$,
-    <CODE>var</CODE> has space dimension \f$k \leq n\f$,
-    \p to_be_folded is a set of variables whose maximum space dimension
-    is also less than or equal to \f$n\f$, and \p var is not a member
-    of \p to_be_folded, then the space dimensions corresponding to
-    variables in \p to_be_folded are
+    <CODE>dest</CODE> has space dimension \f$k \leq n\f$,
+    \p vars is a set of variables whose maximum space dimension
+    is also less than or equal to \f$n\f$, and \p dest is not a member
+    of \p vars, then the space dimensions corresponding to
+    variables in \p vars are
     \ref Folding_Multiple_Dimensions_of_the_Vector_Space_into_One_Dimension
     "folded" into the \f$k\f$-th space dimension.
   */
-  void fold_space_dimensions(const Variables_Set& to_be_folded, Variable var);
+  void fold_space_dimensions(const Variables_Set& vars, Variable dest);
 
   //@} // Member Functions that May Modify the Dimension of the Vector Space
 
@@ -1531,25 +1640,6 @@ protected:
     to each other and the reduction class.
   */
   bool reduced;
-
-#ifdef PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS
-  //! \name Exception Throwers
-  //@{
-#endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
-protected:
-  void throw_runtime_error(const char* method) const;
-  void throw_invalid_argument(const char* method, const char* reason) const;
-
-
-  // Note: it has to be a static method, because it can be called inside
-  // constructors (before actually constructing the polyhedron object).
-  static void throw_space_dimension_overflow(const char* method,
-					     const char* reason);
-
-#ifdef PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS
-  //@} // Exception Throwers
-#endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
-
 };
 
 namespace Parma_Polyhedra_Library {
@@ -1573,6 +1663,12 @@ public:
 
   typedef Partially_Reduced_Product<D1, D2, Constraints_Reduction<D1, D2> >
   Constraints_Product;
+
+  typedef Partially_Reduced_Product<D1, D2, Congruences_Reduction<D1, D2> >
+  Congruences_Product;
+
+  typedef Partially_Reduced_Product<D1, D2, Shape_Preserving_Reduction<D1, D2> >
+  Shape_Preserving_Product;
 };
 
 } // namespace Parma_Polyhedra_Library

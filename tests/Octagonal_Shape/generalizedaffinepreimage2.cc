@@ -1,5 +1,6 @@
 /* Test Octagonal_Shape::generalized_affine_preimage().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -596,10 +597,7 @@ test20() {
 } // namespace
 
 BEGIN_MAIN
-#ifndef __alpha__
-  // Exception handling is broken in GCC on the Alpha.
   DO_TEST(test01);
-#endif
   DO_TEST(test02);
   DO_TEST(test03);
   DO_TEST(test04);

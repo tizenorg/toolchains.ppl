@@ -1,5 +1,6 @@
 /* Test BD_Shape::concatenate_assign().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -134,7 +135,7 @@ test04() {
   TBD_Shape bds1(3);
   bds1.add_constraint(A >= 0);
   bds1.add_constraint(B >= 0);
-  bds1.add_constraint_and_minimize(C >= 0);
+  bds1.add_constraint(C >= 0);
 
   TBD_Shape bds2(2);
   bds2.add_constraint(A >= 0);
@@ -142,7 +143,7 @@ test04() {
   bds2.add_constraint(B >= 0);
   bds2.add_constraint(B <= 2);
   bds2.add_constraint(A - B <= 0);
-  bds2.add_constraint_and_minimize(B - A <= 1);
+  bds2.add_constraint(B - A <= 1);
 
   print_constraints(bds1, "*** bds1 ***");
   print_constraints(bds2, "*** bds2 ***");

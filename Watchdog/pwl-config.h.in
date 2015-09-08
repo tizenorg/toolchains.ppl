@@ -4,6 +4,14 @@
    */
 #undef PWL_HAVE_DECL_GETENV
 
+/* Define to 1 if you have the declaration of `setitimer', and to 0 if you
+   don't. */
+#undef PWL_HAVE_DECL_SETITIMER
+
+/* Define to 1 if you have the declaration of `sigaction', and to 0 if you
+   don't. */
+#undef PWL_HAVE_DECL_SIGACTION
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef PWL_HAVE_DLFCN_H
 
@@ -16,11 +24,8 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef PWL_HAVE_MEMORY_H
 
-/* Define to 1 if you have the `setitimer' function. */
-#undef HAVE_SETITIMER
-
 /* Define to 1 if the system has the type `siginfo_t'. */
-#undef HAVE_SIGINFO_T
+#undef PWL_HAVE_SIGINFO_T
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef PWL_HAVE_STDINT_H
@@ -50,9 +55,6 @@
    */
 #undef LT_OBJDIR
 
-/* Assertions are disabled when this is defined */
-#undef NDEBUG
-
 /* Define to the address where bug reports for this package should be sent. */
 #undef PWL_PACKAGE_BUGREPORT
 
@@ -65,8 +67,14 @@
 /* Define to the one symbol short name of this package. */
 #undef PWL_PACKAGE_TARNAME
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
 #undef PWL_PACKAGE_VERSION
+
+/* Assertions are disabled when this is defined */
+#undef PWL_NDEBUG
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef PWL_STDC_HEADERS
@@ -78,7 +86,7 @@
 #undef const
 
 
-#ifdef PWL_NDEBUG
+#if defined(PWL_NDEBUG) && !defined(NDEBUG)
 # define NDEBUG PWL_NDEBUG
 #endif
 

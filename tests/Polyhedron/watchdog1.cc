@@ -1,5 +1,6 @@
 /* Test the timeout facility of the library.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -41,7 +42,7 @@ class Timeout : virtual public std::exception,
 		public Parma_Polyhedra_Library::Throwable {
 public:
   const char* what() const throw() {
-    return "Timeout in watchdog1.cc";
+    return "timeout in watchdog1.cc";
   }
 
   void throw_me() const {
@@ -81,7 +82,20 @@ timed_compute_open_hypercube_generators(dimension_type dimension,
     nout << " s" << endl;
     return false;
   }
+#if !PWL_WATCHDOG_OBJECTS_ARE_SUPPORTED
+  // If Watchdog objects are not supported, an std::logic_error exception
+  // will be thrown: this is normal.
+  catch (const std::logic_error& e) {
+  nout << "std::logic_error exception caught: \n" << e.what() << std::endl;
+  exit(0);
+}
+#endif // !PWL_WATCHDOG_OBJECTS_ARE_SUPPORTED
+  catch (const std::exception& e) {
+    nout << "unexpected std::exception caught: \n" << e.what() << endl;
+    exit(1);
+  }
   catch (...) {
+    nout << "unexpected unknown exception caught" << endl;
     exit(1);
   }
   // Should never get here.

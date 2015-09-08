@@ -1,5 +1,6 @@
 /* IA-32 floating point unit non-inline related functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -29,6 +30,10 @@ site: http://www.cs.unipr.it/ppl/ . */
 #include "fpu.defs.hh"
 #include <csetjmp>
 #include <csignal>
+// This inclusion is to work around a bug present in some versions
+// of GCC under mingw-w64.
+// See http://www.cs.unipr.it/pipermail/ppl-devel/2011-February/017342.html
+#include <cstddef>
 
 namespace {
 
@@ -36,7 +41,6 @@ jmp_buf env;
 
 void
 illegal_instruction_catcher(int) {
-  signal(SIGILL, SIG_DFL);
   longjmp(env, 1);
 }
 
@@ -48,6 +52,7 @@ bool have_sse_unit = true;
 
 void
 detect_sse_unit() {
+  void (*old)(int);
   if (setjmp(env)) {
     // We will end up here if sse_get_control() raises SIGILL.
     have_sse_unit = false;
@@ -55,14 +60,14 @@ detect_sse_unit() {
   }
 
   // Install our own signal handler for SIGILL.
-  signal(SIGILL, illegal_instruction_catcher);
+  old = signal(SIGILL, illegal_instruction_catcher);
   (void) sse_get_control();
   // sse_get_control() did not raise SIGILL: we have an SSE unit.
   have_sse_unit = true;
 
  restore_sigill_handler:
-  // Restore the default signal handler for SIGILL.
-  signal(SIGILL, SIG_DFL);
+  // Restore the previous signal handler for SIGILL.
+  signal(SIGILL, old);
 }
 
 } // namespace Parma_Polyhedra_Library

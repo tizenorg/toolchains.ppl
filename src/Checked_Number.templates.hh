@@ -1,5 +1,6 @@
 /* Checked_Number class implementation: non-inline template functions.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -23,7 +24,7 @@ site: http://www.cs.unipr.it/ppl/ . */
 #ifndef PPL_Checked_Number_templates_hh
 #define PPL_Checked_Number_templates_hh 1
 
-#include <cassert>
+#include "assert.hh"
 #include <iomanip>
 #include <limits>
 
@@ -56,7 +57,7 @@ typename Enable_If<Is_Native_Or_Checked<T>::value, bool>::type
 ascii_load(std::istream& s, T& t) {
   if (std::numeric_limits<T>::is_exact)
     // An exact datatype: input from pretty printed version is accurate.
-    return (s >> t);
+    return s >> t;
   else {
     // An inexact datatype (probably floating point):
     // first load its hexadecimal representation ...
@@ -131,7 +132,7 @@ ascii_load(std::istream& s, T& t) {
         }
         byte_value += half_byte_value;
       }
-      assert(byte_value <= 255);
+      PPL_ASSERT(byte_value <= 255);
       p[i] = static_cast<unsigned char>(byte_value);
     }
     // ... then read and discard pretty printed value.

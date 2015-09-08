@@ -1,3 +1,7 @@
+Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
+See below for the copying conditions.
+
 
 Coding Standards for the Parma Polyhedra Library
 ================================================
@@ -95,28 +99,6 @@ Macros should be used only if really needed (in many cases, macros can
 be replaced by inline functions).
 
 
-Length of source lines
-----------------------
-
-Avoid, when possible, source lines longer than 78 characters.
-
-
-Trailing whitespace
--------------------
-
-Always avoid trailing whitespace.
-If you use Emacs, then all the trailing whitespace in the current
-buffer can be removed by using the command
-
-  M-x delete-trailing-whitespace
-
-If you keep inserting trailing whitespace when coding, then you may
-want to put the following two lines in your .emacs:
-
-;; Show trailing whitespace.
-(setq-default show-trailing-whitespace t)
-
-
 Block closures
 --------------
 
@@ -147,28 +129,6 @@ extern "C" {
 #endif // !defined(PPL_Class_defs_hh)
 
 
-Namespace indentation
----------------------
-
-The entire library is in its own namespace.  We sometimes specialize
-std::swap() and std::iter_swap().  Other namespaces may be involved
-but only in restricted contexts.  Therefore, we have unindented
-namespace-level declarations, thus saving some precious horizontal
-space.  For example:
-
-namespace Parma_Polyhedra_Library {
-
-non-empty lines here start at column 0;
-
-} // namespace Parma_Polyhedra_Library
-
-If you use Emacs, you may want to put the following two lines in your
-.emacs:
-
-;; Disable indentation when in namespace blocks.
-(c-set-offset 'innamespace 0)
-
-
 Negation
 --------
 
@@ -197,6 +157,83 @@ For example, use
 instead of
 
 	assert(sys.num_rows());
+
+
+Formatting Conventions
+======================
+
+Indent each level using two spaces.
+Insert a space: after each comma, before and after each operator, after
+if/do/while keywords. As an exception to this rule, spaces can be omitted near
+arithmetic multiplication and division operator, if they would harm
+readability.
+Don't insert spaces between the name of a function and the following
+parenthesis.
+Braces should be cuddled on the preceding/following line.
+Avoid, when possible, source lines longer than 78 characters.
+In a function declaration, the return type of a function and the modifiers
+must be placed alone in one line.
+In pointer and reference types, the * and & characters should be followed, but
+not preceded, by a space.
+
+This is bad:
+
+inline void C::f(int *x,int y)
+{
+if( x!=0 )
+{
+    int &z=y;
+    foo (x / 2+y * 3,z/bar(5));
+}
+}
+
+This is good:
+
+inline void
+C::f(int* x, int y) {
+  if (x != 0) {
+    int& z = y;
+    foo(x/2 + y*3, z / bar(5));
+  }
+}
+
+
+Namespace indentation
+---------------------
+
+The entire library is in its own namespace.  We sometimes specialize
+std::swap() and std::iter_swap().  Other namespaces may be involved
+but only in restricted contexts.  Therefore, we have unindented
+namespace-level declarations, thus saving some precious horizontal
+space.  For example:
+
+namespace Parma_Polyhedra_Library {
+
+non-empty lines here start at column 0;
+
+} // namespace Parma_Polyhedra_Library
+
+If you use Emacs, you may want to put the following two lines in your
+.emacs:
+
+;; Disable indentation when in namespace blocks.
+(c-set-offset 'innamespace 0)
+
+
+Trailing whitespace
+-------------------
+
+Always avoid trailing whitespace.
+If you use Emacs, then all the trailing whitespace in the current
+buffer can be removed by using the command
+
+  M-x delete-trailing-whitespace
+
+If you keep inserting trailing whitespace when coding, then you may
+want to put the following two lines in your .emacs:
+
+;; Show trailing whitespace.
+(setq-default show-trailing-whitespace t)
 
 
 Standards for Structuring the Source Code in Files
@@ -559,19 +596,72 @@ o  Refer to the existing tests for examples. Many tests are written along
 o  Ideally the tests should exercise every line of code in the library.
    To help ensure that, the test-coverage facilities provided by GCC
    are very useful.  They are described in Chapter 9 of the GCC manual
-   ("`gcov'---a Test Coverage Program").  For a shorter introduction,
-   the build tree under test must be configured with the
-   `--enable-coverage' and `--disable-optimization options' (and possibly
-   also with --enable-profiling).  For example:
+   ("`gcov'---a Test Coverage Program").  For a simpler user interaction
+   with gcov, also including the generation of nicer HTML output, the
+   adoption of `lcov' is recommended (LCOV, the Linux Test Project GCOV
+   extension, http://ltp.sourceforge.net/coverage/lcov.php).
+   Here we summarize the steps needed to produce coverage information
+   using `lcov' (see below for a few hints on the direct use of `gcov').
+   The build tree under test must be configured with the
+   `--enable-coverage' and `--disable-optimization' options (and possibly
+   also with --enable-profiling). Furthermore, according to this thread
+       http://gcc.gnu.org/bugzilla/show_bug.cgi?id=12076
+   GCC performs NRV (Named Return Value) transformations even when
+   optimizations are turned off; hence, to avoid spurious zero counts
+   in return statements, the compilation flag `-fno-elide-constructors'
+   is recommended. For example:
 
-     $ configure --enable-coverage --disable-optimization \
-                 --enable-profiling \
-                 --enable-assertions --enable-more-assertions
+     $ configure --enable-coverage --enable-profiling \
+         --disable-optimization --with-cxxflags='-fno-elide-constructors' \
+         --enable-assertions --enable-more-assertions
 
    Running the tests (with `make check') produces many .gcno and .gcda
    files in src/.libs and in the test directories.  These are data
-   files for the `gcov' program.  The `gcov' program produces coverage
-   information.  For example:
+   files for the `gcov' program. All the coverage data produced can be
+   automatically collected by `lcov' using the following command:
+
+     $ lcov --directory . --capture --output-file ppl-lcov.info
+
+   To generate HTML pages with the graphical view of the captured data,
+   use the `genhtml' command:
+
+     $ genhtml ppl-lcov.info --output-directory ppl-lcov-html
+
+   Coverage info can now be seen by pointing your favorite browser to
+   file ppl-lcov-html/index.html. The annotated sources will look like
+   the following (plus color information), where the value on the left
+   hand side of the colon is the number of executions of the corresponding
+   line of code (see also below on the use of coverage counters):
+
+    1636 :   PPL_DIRTY_TEMP(N, sum);
+    9828 :   for (dimension_type k = num_dimensions + 1; k-- > 0; ) {
+    6556 :     const DB_Row<N>& x_dbm_k = x.dbm[k];
+   39648 :     for (dimension_type i = num_dimensions + 1; i-- > 0; ) {
+   26536 :       DB_Row<N>& x_dbm_i = x.dbm[i];
+   26536 :       const N& x_dbm_i_k = x_dbm_i[k];
+   26536 :       if (!is_plus_infinity(x_dbm_i_k))
+   55128 :         for (dimension_type j = num_dimensions + 1; j-- > 0; ) {
+   36904 :           const N& x_dbm_k_j = x_dbm_k[j];
+   36904 :           if (!is_plus_infinity(x_dbm_k_j)) {
+         :             // Rounding upward for correctness.
+   12136 :             add_assign_r(sum, x_dbm_i_k, x_dbm_k_j, ROUND_UP);
+   12136 :             min_assign(x_dbm_i[j], sum);
+         :           }
+         :         }
+         :     }
+         :   }
+
+   Note that the collection of coverage information is incremental:
+   running again any tests will add to coverage counters (in order
+   to see the changes, coverage data has to be re-captured using the
+   `lcov' command and HTML pages re-generated using the `genhtml' command).
+   Coverage counters can be reset to zero by issuing the command:
+
+     $ lcov --directory . --zerocounters
+
+   As said above, `lcov' is just a wrapper on top of `gcov'. The direct
+   use of `gcov' produces plain-text based coverage information.
+   For example:
 
      $ cd src
      $ gcov -o .libs Grid_public.cc
@@ -613,3 +703,37 @@ o  Ideally the tests should exercise every line of code in the library.
         -: 1015:  // All checks passed.
     48245: 1016:  return true;
         -: 1017:}
+
+
+--------
+
+Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
+
+This file is part of the Parma Polyhedra Library (PPL).
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.2 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+The license is included, in various formats, in the `doc' subdirectory
+of each distribution of the PPL in files called `fdl.*'.
+
+The PPL is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 3 of the License, or (at your
+option) any later version.  The license is included, in various
+formats, in the `doc' subdirectory of each distribution of the PPL in
+files called `gpl.*'.
+
+The PPL is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+If you have not received a copy of one or both the above mentioned
+licenses along with the PPL, write to the Free Software Foundation,
+Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02111-1307, USA.
+
+For the most up-to-date information see the Parma Polyhedra Library
+site: http://www.cs.unipr.it/ppl/ .

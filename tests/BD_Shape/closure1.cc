@@ -1,5 +1,6 @@
 /* Test shortest path closure.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -327,9 +328,9 @@ add_edges(BD_Shape<T>& bds, const Edge* edges, unsigned n) {
   for (unsigned i = 0; i < n; ++i) {
     const mpq_class& q = perturbate(edges[i].distance);
     Coefficient a;
-    assign_r(a, q.get_den(), ROUND_NOT_NEEDED);
+    a = q.get_den();
     Coefficient b;
-    assign_r(b, q.get_num(), ROUND_NOT_NEEDED);
+    b = q.get_num();
 
     nout << "a = " << a << "; b = " << b << endl;
 
@@ -593,7 +594,7 @@ test03() {
 } // namespace
 
 BEGIN_MAIN
-  DO_TEST(test01);
+  DO_TEST_F32(test01);
   DO_TEST_MAY_OVERFLOW_IF_INEXACT(test02, TBD_Shape);
   DO_TEST(test03);
 END_MAIN

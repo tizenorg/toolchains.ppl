@@ -1,5 +1,6 @@
 /* Metaprogramming utilities.
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -39,7 +40,7 @@ namespace Parma_Polyhedra_Library {
 */
 #endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
 #define const_bool_nodef(name, value)		\
-  enum { name = (value) }
+  enum anonymous_enum_ ## name { name = (value) }
 
 #ifdef PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS
 /*! \brief
@@ -53,7 +54,7 @@ namespace Parma_Polyhedra_Library {
 */
 #endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
 #define const_int_nodef(name, value) \
-  enum { name = (value) }
+  enum anonymous_enum_ ## name { name = (value) }
 
 #ifdef PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS
 /*! \brief
@@ -116,7 +117,7 @@ struct Compile_Time_Check<true> {
 
 #define PPL_COMPILE_TIME_CHECK_NAME(suffix) compile_time_check_ ## suffix
 #define PPL_COMPILE_TIME_CHECK_AUX(e, suffix)				\
-  enum {								\
+  enum anonymous_enum_compile_time_check_ ## suffix {			\
     /* If e evaluates to false, then the sizeof cannot be compiled. */  \
     PPL_COMPILE_TIME_CHECK_NAME(suffix)					\
     = sizeof(Parma_Polyhedra_Library::					\
@@ -141,7 +142,7 @@ struct Compile_Time_Check<true> {
 #endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
 template <bool b>
 struct Bool {
-  enum {
+  enum anonymous_enum {
     value = b
   };
 };
@@ -206,8 +207,8 @@ struct Is_Same<T, T> : public True {
   template <typename T> struct B;
   template <typename T> struct D : public B<T>;
   \endcode
-  Of course, we cannot test if, for some type variable <CODE>U</CODE>,
-  we have <CODE>Is_Same_Or_Derived<B<U>, Type>::value == true</CODE>.
+  Of course, we cannot test if, for some type variable <CODE>U</CODE>, we have
+  <CODE>Is_Same_Or_Derived<B<U>, Type>:: anonymous_enum:: value == true</CODE>.
   But we can do as follows:
   \code
   struct B_Base {
@@ -216,7 +217,7 @@ struct Is_Same<T, T> : public True {
   template <typename T> struct B : public B_Base;
   \endcode
   This enables us to enquire
-  <CODE>Is_Same_Or_Derived<B_Base, Type>::value</CODE>.
+  <CODE>Is_Same_Or_Derived<B_Base, Type>:: anonymous_enum:: value</CODE>.
 */
 #endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
 template <typename Base, typename Derived>
@@ -244,12 +245,13 @@ struct Is_Same_Or_Derived {
                          "architecture with sizeof(char) == sizeof(double)"
                          " (!?)");
 
-  enum {
+  enum anonymous_enum {
     /*!
       Assuming <CODE>sizeof(char) != sizeof(double)</CODE>, the C++
-      overload resolution mechanism guarantees that \p value evaluates
-      to <CODE>true</CODE> if and only if \p Base is the same type
-      as \p Derived or \p Derived is a class derived from \p Base.
+      overload resolution mechanism guarantees that <CODE>value</CODE>
+      evaluates to <CODE>true</CODE> if and only if <CODE>Base</CODE>
+      is the same type as <CODE>Derived</CODE> or <CODE>Derived</CODE>
+      is a class derived from <CODE>Base</CODE>.
     */
     value = (sizeof(func(derived_object())) == sizeof(char))
   };
@@ -309,6 +311,7 @@ template <typename T>
 struct Is_Native : public False {
 };
 
+template <> struct Is_Native<char> : public True { };
 template <> struct Is_Native<signed char> : public True { };
 template <> struct Is_Native<signed short> : public True { };
 template <> struct Is_Native<signed int> : public True { };

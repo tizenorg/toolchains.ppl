@@ -1,5 +1,6 @@
 /* Test BD_Shape::unconstrain().
-   Copyright (C) 2001-2009 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2001-2010 Roberto Bagnara <bagnara@cs.unipr.it>
+   Copyright (C) 2010-2011 BUGSENG srl (http://bugseng.com)
 
 This file is part of the Parma Polyhedra Library (PPL).
 
@@ -213,6 +214,27 @@ test09() {
   return ok;
 }
 
+bool
+test10() {
+  try {
+    TBD_Shape bds(7);
+    // This is an invalid use of the method unconstrain(Variable):
+    // it is illegal to (try to) unconstrain a space dimension
+    // that is not in the polyhedron.
+    bds.unconstrain(Variable(7));
+
+    // It is an error if the exception is not thrown.
+  }
+  catch (std::invalid_argument& e) {
+    nout << "invalid_argument: " << e.what() << endl << endl;
+    return true;
+  }
+  catch (...) {
+    // It is an error if the wrong exception is thrown.
+  }
+  return false;
+}
+
 } // namespace
 
 BEGIN_MAIN
@@ -225,4 +247,5 @@ BEGIN_MAIN
   DO_TEST(test07);
   DO_TEST(test08);
   DO_TEST(test09);
+  DO_TEST(test10);
 END_MAIN
